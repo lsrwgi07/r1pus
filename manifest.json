@@ -7,13 +7,13 @@
   "theme_color": "#3182ce",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/bpkblbr/Register_PUS/refs/heads/main/Logo3.png",
+      "src": "https://raw.githubusercontent.com/lsrwgi07/r1pus/refs/heads/main/Logo3.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://raw.githubusercontent.com/bpkblbr/Register_PUS/refs/heads/main/Logo2.png",
+      "src": "https://raw.githubusercontent.com/lsrwgi07/r1pus/refs/heads/main/Logo2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
