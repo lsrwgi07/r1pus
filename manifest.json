@@ -1,0 +1,22 @@
+{
+  "name": "REGISTER PUS",
+  "short_name": "R/I/PUS",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3182ce",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/bpkblbr/Register_PUS/refs/heads/main/Logo3.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/bpkblbr/Register_PUS/refs/heads/main/Logo2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

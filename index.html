@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REGISTER PUS</title>
+
+  <!-- 1. Favicon untuk Tab Browser -->
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/bpkblbr/Register_PUS/refs/heads/main/Logo3.png">
+
+  <!-- 2. Pengaturan khusus Android / PWA -->
+  <meta name="theme-color" content="#3182ce">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="R/I/PUS">
+
+  <!-- 3. Ikon khusus iOS (Apple Safari) -->
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/bpkblbr/Register_PUS/refs/heads/main/Logo3.png">
+
+  <!-- 4. Panggil File Manifest Terpisah -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Font Awesome untuk Ikon Loading -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+    }
+
+    .loading-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #4a5568;
+      z-index: 1;
+    }
+
+    .loading-icon {
+      font-size: 3rem;
+      color: #3182ce;
+      margin-bottom: 12px;
+    }
+
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading-container">
+    <i class="fa-solid fa-spinner fa-spin loading-icon"></i>
+    <p>Memuat aplikasi...</p>
+  </div>
+
+  <iframe 
+    src="https://script.google.com/macros/s/AKfycbzrfHYl5BB-OE4O2O-yQnyclOVO5aM3B5n5eM9IHbno8fDtvde3EwIYvVQMHYDr2xcmpg/exec" 
+    allow="geolocation; microphone; camera">
+  </iframe>
+
+  <script>
+  window.addEventListener("message", function(event) {
+    // Memastikan pesan yang diterima adalah "keluar_aplikasi"
+    if (event.data === "keluar_aplikasi") {
+      
+      // 1. Coba tutup jendela/tab browser jika memungkinkan (PWA/Mobile)
+      try {
+        window.open('', '_self', '');
+        window.close();
+      } catch (e) {
+        console.log("Window close diblokir oleh browser:", e);
+      }
+
+      // 2. Ganti tampilan layar utama GitHub Pages dengan layar penutup yang rapi
+      document.body.innerHTML = `
+        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; font-family:'Segoe UI', Arial, sans-serif; text-align:center; background-color:#f4f6f9; padding:20px; box-sizing:border-box;">
+          <div style="background:#ffffff; padding:30px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); max-width:400px; width:100%;">
+            <div style="font-size: 4rem; color: #38a169; margin-bottom: 16px;">✔️</div>
+            <h2 style="color:#2d3748; margin-bottom:10px; font-size:20px;">Anda Telah Keluar</h2>
+            <p style="color:#718096; font-size:14px; line-height:1.5; margin:0;">
+              Terima kasih telah menggunakan <b>REGISTER PUS</b>.<br>Silakan tutup jendela browser ini.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+  });
+</script>
+  
+</body>
+</html>
