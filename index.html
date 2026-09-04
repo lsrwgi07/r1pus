@@ -2552,7 +2552,9 @@ function onRecapKabupatenChange() {
   }
 }
 
-  if (typeof resetRecapFilters === "function") resetRecapFilters();
+  function showDashboardView() {
+    // Reset otomatis filter modul-modul laporan saat ditutup / kembali ke dashboard
+    if (typeof resetRecapFilters === "function") resetRecapFilters();
     if (typeof resetBnbaFilters === "function") resetBnbaFilters();
     if (typeof resetChartFilters === "function") resetChartFilters();
     resetInputForm();
@@ -2575,9 +2577,10 @@ function onRecapKabupatenChange() {
     // 2. Tombol TAMBAH TAHUN HANYA muncul untuk Admin Prov (hilang dari Admin Kab)
     if (btnTambahTahun) {
       btnTambahTahun.style.display = isProvRole() ? "inline-block" : "none";
-    
+    }
+
     checkPendingMutasiNotifications();
-  }  
+  }
 
   /// =========================================================================
   // FUNGSI INBOX & NOTIFIKASI MUTASI MASUK (BERDIRI SENDIRI DI TOP-LEVEL)
@@ -4566,7 +4569,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
     }
   }
-
+  
   async function handleSaveMasterWilayah(event) {
     event.preventDefault();
     const btn = document.getElementById("btnSaveMw");
