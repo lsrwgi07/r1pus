@@ -6019,7 +6019,7 @@ function onUserKabChange() {
 
         const payloadList = rows.slice(1).map(r => ({
           provinsi: String(r[0] || "").trim().toUpperCase(),
-          kode_prov: String(r[1] || "").trim().padStart(2, '0'),
+          kode_prov: String(r[1] || userKodeProv || "52").trim().padStart(2, '0'),
           kabupaten: String(r[2] || "").trim().toUpperCase(),
           kode_kab: String(r[3] || "").trim().padStart(2, '0'),
           kecamatan: String(r[4] || "").trim().toUpperCase(),
@@ -6029,9 +6029,12 @@ function onUserKabChange() {
           dusun: String(r[8] || "").trim().toUpperCase(),
           kode_dusun: String(r[9] || "").trim().padStart(4, '0'),
           jumlah_rt: parseInt(r[10] || 1, 10)
-        })).filter(item => item.dusun !== "");
+        })).filter(item => item.dusun !== "" && item.kode_dusun !== "");
 
-        const { error } = await db.from('master_wilayah').upsert(payloadList, { onConflict: 'kode_kec,kode_desa,kode_dusun' });
+        // KOREKSI ON CONFLICT: Sesuaikan persis dengan Unique Constraint database
+        const { error } = await db.from('master_wilayah')
+          .upsert(payloadList, { onConflict: 'kode_kab,kode_kec,kode_desa,kode_dusun' });
+
         if (error) throw error;
 
         Swal.fire("Berhasil", `Sebanyak ${payloadList.length} wilayah berhasil diimpor!`, "success");
