@@ -6281,38 +6281,51 @@ function onUserKabChange() {
     XLSX.writeFile(wb, "TEMPLATE_MASTER_WILAYAH.xlsx");
   }
 
-  async function handleUploadWilayahExcel(file) {
+  async function handleUploadWilayahExcel() {
+    const fileInput = document.getElementById('excelWilayahInput');
+    const file = fileInput ? fileInput.files[0] : null;
+
     if (!file) {
-      Swal.fire("Perhatian", "Silakan pilih file Excel wilayah terlebih dahulu sebelum klik Upload!", "warning");
+      Swal.fire("Perhatian", "Silakan pilih berkas Excel (.xlsx / .xls) terlebih dahulu!", "warning");
       return;
     }
 
-    // Tampilkan loading dialog agar terlihat reaksi tombol
+    // Tampilkan dialog loading
     Swal.fire({
-      title: 'Memproses File...',
-      text: 'Membaca dan memvalidasi data wilayah...',
+      title: 'Membaca Berkas...',
+      text: 'Sedang mengekstrak lembar kerja Excel...',
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
 
     const reader = new FileReader();
-    reader.onerror = function() {
-      Swal.fire("Error", "Gagal membaca berkas Excel.", "error");
+
+    reader.onerror = function(err) {
+      console.error("FileReader Error:", err);
+      Swal.fire("Gagal", "Berkas Excel tidak dapat dibaca. Pastikan berkas tidak sedang terbuka di aplikasi lain atau gunakan format .xlsx murni.", "error");
     };
 
     reader.onload = async function(e) {
       try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const buffer = e.target.result;
+        // Baca workbook dengan opsi type binary / array
+        const workbook = XLSX.read(buffer, { type: 'array', cellDates: false });
+        
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+          throw new Error("Berkas Excel tidak memiliki sheet yang dapat dibaca.");
+        }
+
         const firstSheetName = workbook.SheetNames[0];
-        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { header: 1, defval: "" });
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
         if (!rows || rows.length <= 1) {
-          Swal.fire("File Kosong", "File Excel tidak memiliki baris data!", "warning");
+          Swal.fire("Berkas Kosong", "Sheet Excel tidak memiliki data baris wilayah!", "warning");
           return;
         }
 
-        // Susun payload dengan pembersihan digit otomatis
+        Swal.update({ text: `Menyiapkan ${rows.length - 1} baris wilayah...` });
+
         const payloadList = [];
         const seenKeys = new Set();
 
@@ -6321,7 +6334,7 @@ function onUserKabChange() {
           const dusunNama = String(r[8] || "").trim().toUpperCase();
           const rawDsn = String(r[9] || "").trim();
 
-          // Lewati baris kosong
+          // Lewati baris jika nama dusun dan kode dusun kosong
           if (!dusunNama && !rawDsn) continue;
 
           const kdProv = String(r[1] || userKodeProv || "52").trim().padStart(2, '0');
@@ -6330,7 +6343,6 @@ function onUserKabChange() {
           const kdDesa = String(r[7] || "").trim().padStart(4, '0');
           const kdDsn  = rawDsn.padStart(4, '0');
 
-          // Kunci unik baris untuk mencegah duplikat di dalam file yang sama
           const uniqueKey = `${kdKab}_${kdKec}_${kdDesa}_${kdDsn}`;
           if (seenKeys.has(uniqueKey)) continue;
           seenKeys.add(uniqueKey);
@@ -6351,13 +6363,13 @@ function onUserKabChange() {
         }
 
         if (payloadList.length === 0) {
-          Swal.fire("Data Tidak Valid", "Tidak ditemukan data dusun/desa yang lengkap di dalam file.", "warning");
+          Swal.fire("Data Tidak Lengkap", "Pastikan kolom nama dusun dan kode dusun terisi dengan benar.", "warning");
           return;
         }
 
-        Swal.update({ text: `Menyimpan ${payloadList.length} data wilayah ke database...` });
+        Swal.update({ text: `Menyimpan ${payloadList.length} wilayah ke database Supabase...` });
 
-        // Batch upsert per 100 baris
+        // Batch upload per 100 baris
         const CHUNK_SIZE = 100;
         for (let i = 0; i < payloadList.length; i += CHUNK_SIZE) {
           const chunk = payloadList.slice(i, i + CHUNK_SIZE);
@@ -6370,25 +6382,25 @@ function onUserKabChange() {
         Swal.fire({
           icon: 'success',
           title: 'Berhasil!',
-          text: `Sebanyak ${payloadList.length} data wilayah berhasil disinkronkan ke database.`
+          text: `Sebanyak ${payloadList.length} data wilayah berhasil diunggah.`
         });
 
-        // Reset input berkas
-        const fileInput = document.getElementById('excelWilayahInput');
-        if (fileInput) fileInput.value = "";
+        // Reset input file
+        fileInput.value = "";
 
-        // Segarkan data wilayah
+        // Segarkan data
         await loadMasterWilayahFromDB();
         if (typeof loadRegisteredWilayahList === "function") {
           loadRegisteredWilayahList();
         }
 
       } catch (err) {
-        console.error("Upload Wilayah Error:", err);
-        Swal.fire("Gagal Upload", "Terjadi kesalahan: " + (err.message || err.details || "Database menolak format data."), "error");
+        console.error("Parse/Upload Error:", err);
+        Swal.fire("Gagal Memproses", err.message || "Format data tidak sesuai template.", "error");
       }
     };
 
+    // Jalankan pembacaan
     reader.readAsArrayBuffer(file);
   }
 
