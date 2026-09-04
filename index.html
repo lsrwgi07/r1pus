@@ -1672,7 +1672,7 @@
 
     // 1. User Desa
     if (isDesaRole()) {
-      populateDesaByKec(userKodeKec, "dlExpDesa");
+      populateDesaByKec(userKodeKec, "dlExpDesa", userKodeKab);
       setSelectValueCaseInsensitive("dlExpDesa", userKodeDesa);
       selDes.disabled = true;
 
@@ -1690,11 +1690,12 @@
 
       if (t === "Desa" || t === "Dusun") {
         cDes.style.display = "block";
-        populateDesaByKec(userKodeKec, "dlExpDesa");
+        populateDesaByKec(userKodeKec, "dlExpDesa", userKodeKab);
         selDes.disabled = false;
       }
       if (t === "Dusun") {
         cDsn.style.display = "block";
+        onDlExpDesaChange();
       }
 
     // 3. Admin Kabupaten
@@ -1716,7 +1717,6 @@
       if (t === "Dusun") {
         cDsn.style.display = "block";
       }
-
     // 4. Admin Provinsi
     } else {
       populateKabupatenDropdown("dlExpKabupaten");
@@ -1742,6 +1742,7 @@
   function onDlExpKabupatenChange() {
     const kab = isProvRole() ? document.getElementById("dlExpKabupaten").value : userKodeKab;
     populateKecamatanByKab(kab, "dlExpKecamatan");
+    
     const selDes = document.getElementById("dlExpDesa");
     const selDsn = document.getElementById("dlExpDusun");
     if (selDes) selDes.innerHTML = '<option value="">-- SEMUA DESA --</option>';
@@ -1749,28 +1750,33 @@
   }
 
   function onDlExpKecamatanChange() {
+    const kab = (isProvRole() ? document.getElementById("dlExpKabupaten").value : userKodeKab) || userKodeKab;
     const kec = document.getElementById("dlExpKecamatan").value;
-    populateDesaByKec(kec, "dlExpDesa");
+    
+    // Kirim kab agar composite key dataDesa (kdKab_kdKec) ditemukan
+    populateDesaByKec(kec, "dlExpDesa", kab);
+
     const dsn = document.getElementById("dlExpDusun");
     if (dsn) dsn.innerHTML = '<option value="">-- SEMUA DUSUN --</option>';
   }
 
   function onDlExpDesaChange() {
-    const kec = isKabRole() ? document.getElementById("dlExpKecamatan").value : userKodeKec;
+    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("dlExpKecamatan").value;
     const desa = isDesaRole() ? userKodeDesa : document.getElementById("dlExpDesa").value;
     const sel = document.getElementById("dlExpDusun");
+    if (!sel) return;
+
     sel.innerHTML = '<option value="">-- SEMUA DUSUN --</option>';
 
     if (kec && desa) {
       const dsn = getDusunList(kec, desa);
       if (dsn) {
         for (let kd in dsn) {
-          sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+          sel.add(new Option(dsn[kd].nama.toUpperCase(), String(kd).padStart(4, '0')));
         }
       }
     }
   }
-
   function populateKabupatenDropdown(targetSelectId, selectedProv = "") {
     const sel = document.getElementById(targetSelectId);
     if (!sel) return;
