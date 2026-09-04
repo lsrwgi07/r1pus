@@ -4979,6 +4979,15 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   function closeManageUsersModal() {
     document.getElementById("modalManageUsers").style.display = "none";
     resetUserForm();
+    
+    // Reset file input dan input filter pencarian
+    const fileIn = document.getElementById("excelUserInput");
+    if (fileIn) fileIn.value = "";
+    const filterIn = document.getElementById("filterUsersInput");
+    if (filterIn) filterIn.value = "";
+
+    // Kembalikan tab ke tab default (Form Input)
+    switchUserTab('form');
   }
 
   function switchUserTab(tab) {
