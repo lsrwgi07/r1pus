@@ -6283,49 +6283,112 @@ function onUserKabChange() {
 
   async function handleUploadWilayahExcel(file) {
     if (!file) {
-      Swal.fire("Perhatian", "Silakan pilih file Excel wilayah terlebih dahulu!", "warning");
+      Swal.fire("Perhatian", "Silakan pilih file Excel wilayah terlebih dahulu sebelum klik Upload!", "warning");
       return;
     }
 
+    // Tampilkan loading dialog agar terlihat reaksi tombol
+    Swal.fire({
+      title: 'Memproses File...',
+      text: 'Membaca dan memvalidasi data wilayah...',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
     const reader = new FileReader();
+    reader.onerror = function() {
+      Swal.fire("Error", "Gagal membaca berkas Excel.", "error");
+    };
+
     reader.onload = async function(e) {
       try {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
+        const firstSheetName = workbook.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { header: 1, defval: "" });
 
-        if (rows.length <= 1) {
-          Swal.fire("Kosong", "File Excel tidak memiliki data baris!", "warning");
+        if (!rows || rows.length <= 1) {
+          Swal.fire("File Kosong", "File Excel tidak memiliki baris data!", "warning");
           return;
         }
 
-        const payloadList = rows.slice(1).map(r => ({
-          provinsi: String(r[0] || "").trim().toUpperCase(),
-          kode_prov: String(r[1] || userKodeProv || "52").trim().padStart(2, '0'),
-          kabupaten: String(r[2] || "").trim().toUpperCase(),
-          kode_kab: String(r[3] || "").trim().padStart(2, '0'),
-          kecamatan: String(r[4] || "").trim().toUpperCase(),
-          kode_kec: String(r[5] || "").trim().padStart(2, '0'),
-          desa: String(r[6] || "").trim().toUpperCase(),
-          kode_desa: String(r[7] || "").trim().padStart(4, '0'),
-          dusun: String(r[8] || "").trim().toUpperCase(),
-          kode_dusun: String(r[9] || "").trim().padStart(4, '0'),
-          jumlah_rt: parseInt(r[10] || 1, 10)
-        })).filter(item => item.dusun !== "" && item.kode_dusun !== "");
+        // Susun payload dengan pembersihan digit otomatis
+        const payloadList = [];
+        const seenKeys = new Set();
 
-        // KOREKSI ON CONFLICT: Sesuaikan persis dengan Unique Constraint database
-        const { error } = await db.from('master_wilayah')
-          .upsert(payloadList, { onConflict: 'kode_kab,kode_kec,kode_desa,kode_dusun' });
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          const dusunNama = String(r[8] || "").trim().toUpperCase();
+          const rawDsn = String(r[9] || "").trim();
 
-        if (error) throw error;
+          // Lewati baris kosong
+          if (!dusunNama && !rawDsn) continue;
 
-        Swal.fire("Berhasil", `Sebanyak ${payloadList.length} wilayah berhasil diimpor!`, "success");
-        loadRegisteredWilayahList();
-        loadMasterWilayahFromDB();
+          const kdProv = String(r[1] || userKodeProv || "52").trim().padStart(2, '0');
+          const kdKab  = String(r[3] || userKodeKab || "").trim().padStart(2, '0');
+          const kdKec  = String(r[5] || "").trim().padStart(2, '0');
+          const kdDesa = String(r[7] || "").trim().padStart(4, '0');
+          const kdDsn  = rawDsn.padStart(4, '0');
+
+          // Kunci unik baris untuk mencegah duplikat di dalam file yang sama
+          const uniqueKey = `${kdKab}_${kdKec}_${kdDesa}_${kdDsn}`;
+          if (seenKeys.has(uniqueKey)) continue;
+          seenKeys.add(uniqueKey);
+
+          payloadList.push({
+            provinsi: String(r[0] || "NUSA TENGGARA BARAT").trim().toUpperCase(),
+            kode_prov: kdProv,
+            kabupaten: String(r[2] || "").trim().toUpperCase(),
+            kode_kab: kdKab,
+            kecamatan: String(r[4] || "").trim().toUpperCase(),
+            kode_kec: kdKec,
+            desa: String(r[6] || "").trim().toUpperCase(),
+            kode_desa: kdDesa,
+            dusun: dusunNama,
+            kode_dusun: kdDsn,
+            jumlah_rt: parseInt(r[10] || 1, 10) || 1
+          });
+        }
+
+        if (payloadList.length === 0) {
+          Swal.fire("Data Tidak Valid", "Tidak ditemukan data dusun/desa yang lengkap di dalam file.", "warning");
+          return;
+        }
+
+        Swal.update({ text: `Menyimpan ${payloadList.length} data wilayah ke database...` });
+
+        // Batch upsert per 100 baris
+        const CHUNK_SIZE = 100;
+        for (let i = 0; i < payloadList.length; i += CHUNK_SIZE) {
+          const chunk = payloadList.slice(i, i + CHUNK_SIZE);
+          const { error } = await db.from('master_wilayah')
+            .upsert(chunk, { onConflict: 'kode_kab,kode_kec,kode_desa,kode_dusun' });
+
+          if (error) throw error;
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: `Sebanyak ${payloadList.length} data wilayah berhasil disinkronkan ke database.`
+        });
+
+        // Reset input berkas
+        const fileInput = document.getElementById('excelWilayahInput');
+        if (fileInput) fileInput.value = "";
+
+        // Segarkan data wilayah
+        await loadMasterWilayahFromDB();
+        if (typeof loadRegisteredWilayahList === "function") {
+          loadRegisteredWilayahList();
+        }
+
       } catch (err) {
-        Swal.fire("Error", "Gagal memproses file wilayah: " + err.message, "error");
+        console.error("Upload Wilayah Error:", err);
+        Swal.fire("Gagal Upload", "Terjadi kesalahan: " + (err.message || err.details || "Database menolak format data."), "error");
       }
     };
+
     reader.readAsArrayBuffer(file);
   }
 
