@@ -987,34 +987,40 @@
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <!-- Dropdown Tingkat Wilayah -->
           <select id="dlExpTingkat" onchange="onDlExpTingkatChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc;">
-            <!-- Diisi dinamis oleh openImportExcelModal -->
+            <!-- Diisi dinamis oleh initDlExportDropdowns -->
           </select>
 
-          <!-- Dropdown Kecamatan -->
-          <div id="dlExpKecContainer" style="display: none;">
-            <select id="dlExpKecamatan" onchange="onDlExpKecamatanChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
-              <option value="">-- SEMUA KECAMATAN --</option>
-            </select>
-          </div>
-
-          <!-- Dropdown Desa -->
-          <div id="dlExpDesaContainer" style="display: none;">
-            <select id="dlExpDesa" onchange="onDlExpDesaChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
-              <option value="">-- SEMUA DESA --</option>
-            </select>
-          </div>
-
-          <!-- Dropdown Dusun -->
-          <div id="dlExpDusunContainer" style="display: none;">
-            <select id="dlExpDusun" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
-              <option value="">-- SEMUA DUSUN --</option>
-            </select>
-          </div>
-
-          <button type="button" class="btn-nav btn-action" style="padding: 8px 12px; font-size: 12px; justify-content: center; background-color: #0284c7; margin-top: 4px;" onclick="downloadPopulatedExcelData()">
-            📥 Unduh Data Terisi (.xlsx)
-          </button>
+        <!-- Dropdown Kabupaten (BARU) -->
+        <div id="dlExpKabContainer" style="display: none;">
+          <select id="dlExpKabupaten" onchange="onDlExpKabupatenChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+            <option value="">-- PILIH KABUPATEN / KOTA --</option>
+          </select>
         </div>
+
+        <!-- Dropdown Kecamatan -->
+        <div id="dlExpKecContainer" style="display: none;">
+          <select id="dlExpKecamatan" onchange="onDlExpKecamatanChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+            <option value="">-- SEMUA KECAMATAN --</option>
+          </select>
+        </div>
+
+        <!-- Dropdown Desa -->
+        <div id="dlExpDesaContainer" style="display: none;">
+          <select id="dlExpDesa" onchange="onDlExpDesaChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+            <option value="">-- SEMUA DESA --</option>
+          </select>
+        </div>
+
+        <!-- Dropdown Dusun -->
+        <div id="dlExpDusunContainer" style="display: none;">
+          <select id="dlExpDusun" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+            <option value="">-- SEMUA DUSUN --</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-nav btn-action" style="padding: 8px 12px; font-size: 12px; justify-content: center; background-color: #0284c7; margin-top: 4px;" onclick="downloadPopulatedExcelData()">
+          📥 Unduh Data Terisi (.xlsx)
+        </button>
       </div>
     </div>
 
@@ -1608,10 +1614,18 @@
         <option value="Desa">PILIH DESA</option>
         <option value="Dusun">PILIH DUSUN</option>
       `;
-    } else {
-      // Admin Kabupaten
+    } else if (isKabRole()) {
       selTingkat.innerHTML = `
-        <option value="Kabupaten" selected>SEMUA KECAMATAN (SATU KABUPATEN)</option>
+        <option value="Kabupaten" selected>KABUPATEN</option>
+        <option value="Kecamatan">PILIH KECAMATAN</option>
+        <option value="Desa">PILIH DESA</option>
+        <option value="Dusun">PILIH DUSUN</option>
+      `;
+    } else {
+      // Admin Prov: Tingkatan lengkap dari Provinsi sampai Dusun
+      selTingkat.innerHTML = `
+        <option value="Provinsi" selected>PROVINSI</option>
+        <option value="Kabupaten">PILIH KABUPATEN</option>
         <option value="Kecamatan">PILIH KECAMATAN</option>
         <option value="Desa">PILIH DESA</option>
         <option value="Dusun">PILIH DUSUN</option>
@@ -1623,16 +1637,21 @@
 
   function onDlExpTingkatChange() {
     const t = document.getElementById("dlExpTingkat").value;
+    const cKab = document.getElementById("dlExpKabContainer");
     const cKec = document.getElementById("dlExpKecContainer");
     const cDes = document.getElementById("dlExpDesaContainer");
     const cDsn = document.getElementById("dlExpDusunContainer");
+
+    const selKab = document.getElementById("dlExpKabupaten");
     const selKec = document.getElementById("dlExpKecamatan");
     const selDes = document.getElementById("dlExpDesa");
 
+    cKab.style.display = "none";
     cKec.style.display = "none";
     cDes.style.display = "none";
     cDsn.style.display = "none";
 
+    // 1. User Desa
     if (isDesaRole()) {
       populateDesaByKec(userKodeKec, "dlExpDesa");
       setSelectValueCaseInsensitive("dlExpDesa", userKodeDesa);
@@ -1643,8 +1662,10 @@
         cDsn.style.display = "block";
         onDlExpDesaChange();
       }
+
+    // 2. Admin Kecamatan
     } else if (isKecRole()) {
-      populateAllKecamatanDropdowns();
+      populateKecamatanByKab(userKodeKab, "dlExpKecamatan");
       setSelectValueCaseInsensitive("dlExpKecamatan", userKodeKec);
       selKec.disabled = true;
 
@@ -1656,32 +1677,60 @@
       if (t === "Dusun") {
         cDsn.style.display = "block";
       }
-    } else {
-      // Admin Kabupaten
+
+    // 3. Admin Kabupaten
+    } else if (isKabRole()) {
+      populateKabupatenDropdown("dlExpKabupaten");
+      setSelectValueCaseInsensitive("dlExpKabupaten", userKodeKab);
+      selKab.disabled = true;
+
       selKec.disabled = false;
       selDes.disabled = false;
 
-      // Isi daftar kecamatan di dropdown modal
-      selKec.innerHTML = '<option value="">-- PILIH KECAMATAN --</option>';
-      const addedKec = {};
-      for (let kdKab in dataKecamatan) {
-        for (let kd in dataKecamatan[kdKab]) {
-          let clean = String(kd).trim();
-          if (!addedKec[clean]) {
-            addedKec[clean] = true;
-            selKec.add(new Option(dataKecamatan[kdKab][kd].toUpperCase(), clean));
-          }
-        }
+      if (t === "Kecamatan" || t === "Desa" || t === "Dusun") {
+        cKec.style.display = "block";
+        populateKecamatanByKab(userKodeKab, "dlExpKecamatan");
+      }
+      if (t === "Desa" || t === "Dusun") {
+        cDes.style.display = "block";
+      }
+      if (t === "Dusun") {
+        cDsn.style.display = "block";
       }
 
-      cKec.style.display = (t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
-      cDes.style.display = (t === "Desa" || t === "Dusun") ? "block" : "none";
-      cDsn.style.display = (t === "Dusun") ? "block" : "none";
+    // 4. Admin Provinsi
+    } else {
+      populateKabupatenDropdown("dlExpKabupaten");
+      selKab.disabled = false;
+      selKec.disabled = false;
+      selDes.disabled = false;
+
+      if (t === "Kabupaten" || t === "Kecamatan" || t === "Desa" || t === "Dusun") {
+        cKab.style.display = "block";
+      }
+      if (t === "Kecamatan" || t === "Desa" || t === "Dusun") {
+        cKec.style.display = "block";
+      }
+      if (t === "Desa" || t === "Dusun") {
+        cDes.style.display = "block";
+      }
+      if (t === "Dusun") {
+        cDsn.style.display = "block";
+      }
     }
   }
 
+  function onDlExpKabupatenChange() {
+    const kab = isProvRole() ? document.getElementById("dlExpKabupaten").value : userKodeKab;
+    populateKecamatanByKab(kab, "dlExpKecamatan");
+    const selDes = document.getElementById("dlExpDesa");
+    const selDsn = document.getElementById("dlExpDusun");
+    if (selDes) selDes.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+    if (selDsn) selDsn.innerHTML = '<option value="">-- SEMUA DUSUN --</option>';
+  }
+
   function onDlExpKecamatanChange() {
-    const kec = isKabRole() ? document.getElementById("dlExpKecamatan").value : userKodeKec;
+    const kec = document.getElementById("dlExpKecamatan").value;
     populateDesaByKec(kec, "dlExpDesa");
     const dsn = document.getElementById("dlExpDusun");
     if (dsn) dsn.innerHTML = '<option value="">-- SEMUA DUSUN --</option>';
@@ -5605,37 +5654,37 @@ function onUserKabChange() {
     const targetTahun = parseInt(document.getElementById("import_tahun_select").value, 10);
     const tingkat = document.getElementById("dlExpTingkat").value;
 
-    // 1. Tentukan batasan wilayah berdasarkan peran dan input filter
-    let targetKab = userKodeKab;
+    // 1. Tentukan batasan wilayah berdasarkan peran dan dropdown
+    let targetProv = userKodeProv || "52";
+    let targetKab = "";
     let targetKec = "";
     let targetDesa = "";
     let targetDusun = "";
 
     if (isDesaRole()) {
+      targetKab = userKodeKab;
       targetKec = userKodeKec;
       targetDesa = userKodeDesa;
-      if (tingkat === "Dusun") {
-        targetDusun = document.getElementById("dlExpDusun").value;
-      }
+      if (tingkat === "Dusun") targetDusun = document.getElementById("dlExpDusun").value;
+
     } else if (isKecRole()) {
+      targetKab = userKodeKab;
       targetKec = userKodeKec;
-      if (tingkat === "Desa" || tingkat === "Dusun") {
-        targetDesa = document.getElementById("dlExpDesa").value;
-      }
-      if (tingkat === "Dusun") {
-        targetDusun = document.getElementById("dlExpDusun").value;
-      }
+      if (tingkat === "Desa" || tingkat === "Dusun") targetDesa = document.getElementById("dlExpDesa").value;
+      if (tingkat === "Dusun") targetDusun = document.getElementById("dlExpDusun").value;
+
+    } else if (isKabRole()) {
+      targetKab = userKodeKab;
+      if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") targetKec = document.getElementById("dlExpKecamatan").value;
+      if (tingkat === "Desa" || tingkat === "Dusun") targetDesa = document.getElementById("dlExpDesa").value;
+      if (tingkat === "Dusun") targetDusun = document.getElementById("dlExpDusun").value;
+
     } else {
-      // Admin Kabupaten
-      if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") {
-        targetKec = document.getElementById("dlExpKecamatan").value;
-      }
-      if (tingkat === "Desa" || tingkat === "Dusun") {
-        targetDesa = document.getElementById("dlExpDesa").value;
-      }
-      if (tingkat === "Dusun") {
-        targetDusun = document.getElementById("dlExpDusun").value;
-      }
+      // Admin Prov
+      if (tingkat !== "Provinsi") targetKab = document.getElementById("dlExpKabupaten").value;
+      if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") targetKec = document.getElementById("dlExpKecamatan").value;
+      if (tingkat === "Desa" || tingkat === "Dusun") targetDesa = document.getElementById("dlExpDesa").value;
+      if (tingkat === "Dusun") targetDusun = document.getElementById("dlExpDusun").value;
     }
 
     Swal.fire({
@@ -5646,7 +5695,6 @@ function onUserKabChange() {
     });
 
     try {
-      // 2. Tarik data bertahap (chunking 1000 baris) agar tidak terpotong PostgREST
       let allData = [];
       let from = 0;
       const step = 1000;
@@ -5655,7 +5703,8 @@ function onUserKabChange() {
       while (hasMore) {
         let query = db.from('data_pus').select('*').eq('tahun', targetTahun);
 
-        if (isKabRole() && targetKab) query = query.eq('kode_kab', targetKab);
+        if (targetProv) query = query.eq('kode_prov', targetProv);
+        if (targetKab) query = query.eq('kode_kab', targetKab);
         if (targetKec) query = query.eq('kode_kec', targetKec);
         if (targetDesa) query = query.eq('kode_desa', targetDesa);
         if (targetDusun) query = query.eq('kode_dusun', targetDusun);
@@ -5682,7 +5731,6 @@ function onUserKabChange() {
         return;
       }
 
-      // 3. Susun kolom baku (36 kolom persis template)
       const headers = [
         "ID_PUS", "Tahun", "Timestamp", "Provinsi", "Kode Provinsi", "Kabupaten", "Kode Kabupaten",
         "Kecamatan", "Kode Kecamatan", "Desa", "Kode Desa", "Dusun", "Kode Dusun",
@@ -5734,7 +5782,6 @@ function onUserKabChange() {
       const sheetData = [headers, ...rows];
       const ws1 = XLSX.utils.aoa_to_sheet(sheetData);
 
-      // Kunci kolom ID, Kode Wilayah, dan NIK sebagai String agar nol di depan tidak terpotong
       const range = XLSX.utils.decode_range(ws1['!ref']);
       for (let R = range.s.r; R <= range.e.r; ++R) {
         for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -5746,7 +5793,6 @@ function onUserKabChange() {
       }
       ws1['!cols'] = headers.map(() => ({ wch: 18 }));
 
-      // Petunjuk Pengisian baku
       const guideData = [
         ["PANDUAN FORMAT PENGISIAN REGISTER PUS"],
         [""],
@@ -5780,8 +5826,7 @@ function onUserKabChange() {
       XLSX.utils.book_append_sheet(wb, ws1, "TEMPLATE_PUS");
       XLSX.utils.book_append_sheet(wb, ws2, "PETUNJUK_PENGISIAN");
 
-      // Label file dinamis
-      let suffix = targetDusun ? `DSN_${targetDusun}` : (targetDesa ? `DESA_${targetDesa}` : (targetKec ? `KEC_${targetKec}` : `KAB_${targetKab}`));
+      let suffix = targetDusun ? `DSN_${targetDusun}` : (targetDesa ? `DESA_${targetDesa}` : (targetKec ? `KEC_${targetKec}` : (targetKab ? `KAB_${targetKab}` : `PROV_${targetProv}`)));
       const fileName = `DATA_PUS_${targetTahun}_${suffix}.xlsx`;
       XLSX.writeFile(wb, fileName);
 
