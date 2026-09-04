@@ -1522,8 +1522,9 @@
       dataKabupaten[kdProv][kdKab] = r.kabupaten;
       if (!dataKecamatan[kdKab]) dataKecamatan[kdKab] = {};
       dataKecamatan[kdKab][kdKec] = r.kecamatan;
-      if (!dataDesa[kdKec]) dataDesa[kdKec] = {};
-      dataDesa[kdKec][kdDesa] = r.desa;
+      let desaKey = kdKab + "_" + kdKec;
+  	  if (!dataDesa[desaKey]) dataDesa[desaKey] = {};
+  	  dataDesa[desaKey][kdDesa] = r.desa;
       
       let dsnKey = kdKec + "_" + kdDesa;
       if (!dataDusun[dsnKey]) dataDusun[dsnKey] = {};
