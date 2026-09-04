@@ -4853,24 +4853,39 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     resetUserForm();
     populateUserKecDropdown();
 
-    const optKab = document.getElementById("optRoleKab");
     const roleSelect = document.getElementById("user_role_select");
+    const optProv = document.getElementById("optRoleProv");
+    const optKab = document.getElementById("optRoleKab");
 
-    // Sembunyikan opsi Admin Kab jika bukan level Kabupaten
-    if (optKab) {
-      optKab.style.display = isKabRole() ? "block" : "none";
-    }
-
-    // Jika yang login adalah User Desa, hanya boleh mengelola akun User Desa
+    // HIERARKI VISIBILITAS PILIHAN ROLE BERDASARKAN USER LOGIN
     if (isDesaRole()) {
+      // 1. User Desa: Hanya boleh mengelola akun User Desa
       roleSelect.innerHTML = `
         <option value="User Desa" selected>User Desa</option>
       `;
     } else if (isKecRole()) {
+      // 2. Admin Kec: Hanya boleh mengelola User Desa dan Admin Kec
       roleSelect.innerHTML = `
         <option value="">-- PILIH ROLE PENGGUNA --</option>
         <option value="User Desa">User Desa</option>
         <option value="Admin Kec">Admin Kec</option>
+      `;
+    } else if (isKabRole()) {
+      // 3. Admin Kab: Boleh mengelola Admin Kab, Admin Kec, dan User Desa (sembunyikan Admin Prov)
+      roleSelect.innerHTML = `
+        <option value="">-- PILIH ROLE PENGGUNA --</option>
+        <option value="Admin Kab">Admin Kab</option>
+        <option value="Admin Kec">Admin Kec</option>
+        <option value="User Desa">User Desa</option>
+      `;
+    } else {
+      // 4. Admin Prov: Memiliki akses penuh ke semua role
+      roleSelect.innerHTML = `
+        <option value="">-- PILIH ROLE PENGGUNA --</option>
+        <option value="Admin Prov">Admin Prov</option>
+        <option value="Admin Kab">Admin Kab</option>
+        <option value="Admin Kec">Admin Kec</option>
+        <option value="User Desa">User Desa</option>
       `;
     }
 
