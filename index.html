@@ -357,8 +357,11 @@
       <form id="pusForm" onsubmit="handleFormSubmit(event)">
         <input type="hidden" id="id_pus" name="id_pus">
         <input type="hidden" id="id_mutasi_tiket" name="id_mutasi_tiket">
-        <input type="hidden" id="is_pindah_dalam_kab" value="false">
+        <input type="hidden" id="is_pindah_dalam_prov" value="false">
+        <input type="hidden" id="pindah_kab_tujuan" value="">
+        <input type="hidden" id="pindah_kab_nama" value="">
         <input type="hidden" id="pindah_kec_tujuan" value="">
+        <input type="hidden" id="pindah_kec_nama" value="">
         <input type="hidden" id="pindah_desa_tujuan" value="">
         <input type="hidden" id="pindah_desa_nama" value="">
 
@@ -508,7 +511,7 @@
             <select id="recapTingkat" onchange="onRecapTingkatChange()">
               <option value="">-- PILIH TINGKAT WILAYAH --</option>
               <option value="Provinsi">PROVINSI</option>
-              <option value="Kabupaten">KABUPATEN</option>
+              <option value="Kabupaten">KABUPATEN/KOTA</option>
               <option value="Kecamatan">KECAMATAN</option>
               <option value="Desa">DESA</option>
               <option value="Dusun">DUSUN</option>
@@ -517,7 +520,7 @@
           
           <div id="recapFilterKabContainer" style="display: none;">
             <select id="recapKabupaten" onchange="onRecapKabupatenChange()">
-              <option value="">-- PILIH KABUPATEN / KOTA --</option>
+              <option value="">-- PILIH KABUPATEN/KOTA --</option>
             </select>
           </div>
 
@@ -620,7 +623,7 @@
             <select id="bnbaTingkat" onchange="onBnbaTingkatChange()">
               <option value="">-- PILIH TINGKAT WILAYAH --</option>
               <option value="Provinsi">PROVINSI</option>
-              <option value="Kabupaten">KABUPATEN</option>
+              <option value="Kabupaten">KABUPATEN/KOTA</option>
               <option value="Kecamatan">KECAMATAN</option>
               <option value="Desa">DESA</option>
               <option value="Dusun">DUSUN</option>
@@ -630,7 +633,7 @@
           
           <div id="bnbaFilterKabContainer" style="display: none;">
             <select id="bnbaKabupaten" onchange="onBnbaKabupatenChange()">
-              <option value="">-- PILIH KABUPATEN / KOTA --</option>
+              <option value="">-- PILIH KABUPATEN/KOTA --</option>
             </select>
           </div>
 
@@ -737,7 +740,7 @@
             <select id="chartTingkat" onchange="onChartTingkatChange()">
               <option value="">-- PILIH TINGKAT WILAYAH --</option>
               <option value="Provinsi">PROVINSI</option>
-              <option value="Kabupaten">KABUPATEN</option>
+              <option value="Kabupaten">KABUPATEN/KOTA</option>
               <option value="Kecamatan">KECAMATAN</option>
               <option value="Desa">DESA</option>
               <option value="Dusun">DUSUN</option>
@@ -943,7 +946,7 @@
     
     <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 12px;">
       <div class="search-filter-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
-        <div><select id="searchKabupaten" onchange="onSearchKabupatenChange()"><option value="">-- PILIH KABUPATEN --</option></select></div>
+        <div><select id="searchKabupaten" onchange="onSearchKabupatenChange()"><option value="">-- PILIH KABUPATEN/KOTA --</option></select></div>
         <div><select id="searchKecamatan" onchange="onSearchKecamatanChange()"><option value="">-- PILIH KECAMATAN --</option></select></div>
         <div><select id="searchDesa" onchange="onSearchDesaChange()"><option value="">-- PILIH DESA --</option></select></div>
         <div><select id="searchDusun" onchange="onSearchDusunChange()"><option value="">-- PILIH DUSUN --</option></select></div>
@@ -993,7 +996,7 @@
         <!-- Dropdown Kabupaten (BARU) -->
         <div id="dlExpKabContainer" style="display: none;">
           <select id="dlExpKabupaten" onchange="onDlExpKabupatenChange()" style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
-            <option value="">-- PILIH KABUPATEN / KOTA --</option>
+            <option value="">-- PILIH KABUPATEN/KOTA --</option>
           </select>
         </div>
 
@@ -1175,7 +1178,7 @@
           <thead>
             <tr>
               <th style="background:#1f4e78; color:white;">NO</th>
-              <th style="background:#1f4e78; color:white;">KABUPATEN</th>
+              <th style="background:#1f4e78; color:white;">KABUPATEN / KOTA</th>
               <th style="background:#1f4e78; color:white;">KECAMATAN</th>
               <th style="background:#1f4e78; color:white;">DESA</th>
               <th style="background:#1f4e78; color:white;">KD DESA</th>
@@ -1238,7 +1241,7 @@
         <div id="userKabRow" class="form-group" style="display: none; margin-bottom: 12px;">
           <label>Kabupaten / Kota:</label>
           <select id="user_kab_select" onchange="onUserKabChange()">
-            <option value="">-- PILIH KABUPATEN / KOTA --</option>
+            <option value="">-- PILIH KABUPATEN/KOTA --</option>
           </select>
         </div>
 
@@ -1288,7 +1291,7 @@
               <th style="background: #1f4e78; color: white;">USERNAME</th>
               <th style="background: #1f4e78; color: white;">PASSWORD</th>
               <th style="background: #1f4e78; color: white;">ROLE</th>
-              <th style="background: #1f4e78; color: white;">KABUPATEN</th>
+              <th style="background: #1f4e78; color: white;">KABUPATEN / KOTA</th>
               <th style="background: #1f4e78; color: white;">KECAMATAN</th>
               <th style="background: #1f4e78; color: white;">DESA</th>
               <th style="background: #1f4e78; color: white;">AKSI</th>
@@ -1371,21 +1374,27 @@
     return "Selamat malam";
   }
 
-  function setUserGreeting(role, wilayahNama, username) {
+  function setUserGreeting(role, wilayahNama, username, kodeKab, provNama) {
     const timeGreeting = getTimeGreeting();
     let identity = "";
     const roleUpper = String(role || "").toUpperCase();
 
-    if (roleUpper.indexOf("KAB") !== -1) {
-      identity = "Admin Kabupaten " + (wilayahNama || "Lombok Barat"); // Fallback aman jika data kosong
-    } else if (roleUpper.indexOf("KEC") !== -1) {
+    if (roleUpper.includes("PROV")) {
+      // Admin Provinsi: langsung sebut nama provinsi
+      identity = "Admin Provinsi " + (provNama || "Nusa Tenggara Barat");
+    } else if (roleUpper.includes("KAB")) {
+      // Cek digit awal kode kabupaten (0 = Kabupaten, 7 = Kota)
+      const cleanKdKab = String(kodeKab || "").trim();
+      const prefix = cleanKdKab.startsWith("7") ? "Admin Kota " : "Admin Kabupaten ";
+      identity = prefix + (wilayahNama || "Lombok Barat");
+    } else if (roleUpper.includes("KEC")) {
       identity = "Admin Kecamatan " + (wilayahNama || "");
     } else {
       identity = "User Desa " + (wilayahNama || "");
     }
 
     identity = identity.trim();
-    if (!wilayahNama) {
+    if (!wilayahNama && !roleUpper.includes("PROV")) {
       identity = role + " (" + username + ")";
     }
 
@@ -1606,7 +1615,7 @@
 
     if (isDesaRole()) {
       selTingkat.innerHTML = `
-        <option value="Desa" selected>DESA SAYA</option>
+        <option value="Desa" selected>DESA</option>
         <option value="Dusun">PILIH DUSUN</option>
       `;
     } else if (isKecRole()) {
@@ -1617,16 +1626,16 @@
       `;
     } else if (isKabRole()) {
       selTingkat.innerHTML = `
-        <option value="Kabupaten" selected>KABUPATEN</option>
+        <option value="Kabupaten" selected>KABUPATEN/KOTA</option>
         <option value="Kecamatan">PILIH KECAMATAN</option>
         <option value="Desa">PILIH DESA</option>
         <option value="Dusun">PILIH DUSUN</option>
       `;
     } else {
-      // Admin Prov: Tingkatan lengkap dari Provinsi sampai Dusun
+      // Admin Prov
       selTingkat.innerHTML = `
         <option value="Provinsi" selected>PROVINSI</option>
-        <option value="Kabupaten">PILIH KABUPATEN</option>
+        <option value="Kabupaten">PILIH KABUPATEN/KOTA</option>
         <option value="Kecamatan">PILIH KECAMATAN</option>
         <option value="Desa">PILIH DESA</option>
         <option value="Dusun">PILIH DUSUN</option>
@@ -1756,7 +1765,7 @@
   function populateKabupatenDropdown(targetSelectId, selectedProv = "") {
     const sel = document.getElementById(targetSelectId);
     if (!sel) return;
-    sel.innerHTML = '<option value="">-- PILIH KABUPATEN / KOTA --</option>';
+    sel.innerHTML = '<option value="">-- PILIH KABUPATEN/KOTA --</option>';
 
     const prov = selectedProv || userKodeProv || "52";
     if (dataKabupaten[prov]) {
@@ -1938,28 +1947,33 @@
       showCancelButton: true,
       confirmButtonColor: '#0284c7',
       cancelButtonColor: '#64748b',
-      confirmButtonText: '🏙️ Di Dalam Kabupaten',
-      cancelButtonText: '✈️ Ke Luar Kabupaten',
+      confirmButtonText: '🏙️ Di Dalam Provinsi',
+      cancelButtonText: '✈️ Ke Luar Provinsi',
       allowOutsideClick: false
     }).then((result) => {
       if (result.isConfirmed) {
-        let kecOptions = `<option value="">-- PILIH KECAMATAN TUJUAN --</option>`;
-        for (let kdKab in dataKecamatan) {
-          for (let kdKec in dataKecamatan[kdKab]) {
-            let cleanKd = String(kdKec).padStart(2, '0');
-            kecOptions += `<option value="${cleanKd}">${dataKecamatan[kdKab][kdKec].toUpperCase()}</option>`;
+        // Ambil opsi seluruh Kabupaten di Provinsi (default NTB kode '52')
+        const provKey = userKodeProv || "52";
+        let kabOptions = `<option value="">-- PILIH KABUPATEN/KOTA TUJUAN --</option>`;
+        if (dataKabupaten[provKey]) {
+          for (let kd in dataKabupaten[provKey]) {
+            kabOptions += `<option value="${String(kd).padStart(2, '0')}">${dataKabupaten[provKey][kd].toUpperCase()}</option>`;
           }
         }
 
         Swal.fire({
           title: 'Pilih Wilayah Tujuan',
-          showCloseButton: true, // Menampilkan tombol X (close) di kanan atas
+          showCloseButton: true,
           html: `
-            <div style="text-align:left; font-size:13px; color:#444; margin-bottom:8px;">Kecamatan Tujuan:</div>
-            <select id="swalMutasiKec" class="swal2-input" style="width: 100%; font-size: 13px; padding: 8px; margin: 0 0 10px 0;" onchange="onSwalMutasiKecChange()">
-              ${kecOptions}
+            <div style="text-align:left; font-size:13px; color:#444; margin-bottom:5px;">Kabupaten / Kota Tujuan:</div>
+            <select id="swalMutasiKab" class="swal2-input" style="width: 100%; font-size: 13px; padding: 8px; margin: 0 0 10px 0;" onchange="onSwalMutasiKabChange()">
+              ${kabOptions}
             </select>
-            <div style="text-align:left; font-size:13px; color:#444; margin-bottom:8px;">Desa Tujuan:</div>
+            <div style="text-align:left; font-size:13px; color:#444; margin-bottom:5px;">Kecamatan Tujuan:</div>
+            <select id="swalMutasiKec" class="swal2-input" style="width: 100%; font-size: 13px; padding: 8px; margin: 0 0 10px 0;" onchange="onSwalMutasiKecChange()">
+              <option value="">-- PILIH KECAMATAN TUJUAN --</option>
+            </select>
+            <div style="text-align:left; font-size:13px; color:#444; margin-bottom:5px;">Desa Tujuan:</div>
             <select id="swalMutasiDesa" class="swal2-input" style="width: 100%; font-size: 13px; padding: 8px; margin: 0;">
               <option value="">-- PILIH DESA TUJUAN --</option>
             </select>
@@ -1970,10 +1984,28 @@
           confirmButtonText: '✅ Tetapkan Wilayah Tujuan',
           allowOutsideClick: false,
           didOpen: () => {
+            // Event saat memilih Kabupaten
+            window.onSwalMutasiKabChange = function() {
+              const selKab = document.getElementById('swalMutasiKab').value;
+              const selKec = document.getElementById('swalMutasiKec');
+              const selDesa = document.getElementById('swalMutasiDesa');
+
+              selKec.innerHTML = '<option value="">-- PILIH KECAMATAN TUJUAN --</option>';
+              selDesa.innerHTML = '<option value="">-- PILIH DESA TUJUAN --</option>';
+
+              if (selKab && dataKecamatan[selKab]) {
+                for (let kd in dataKecamatan[selKab]) {
+                  selKec.add(new Option(dataKecamatan[selKab][kd].toUpperCase(), String(kd).padStart(2, '0')));
+                }
+              }
+            };
+
+            // Event saat memilih Kecamatan
             window.onSwalMutasiKecChange = function() {
               const selKec = document.getElementById('swalMutasiKec').value;
               const selDesa = document.getElementById('swalMutasiDesa');
               selDesa.innerHTML = '<option value="">-- PILIH DESA TUJUAN --</option>';
+
               if (selKec && dataDesa[selKec]) {
                 for (let kd in dataDesa[selKec]) {
                   selDesa.add(new Option(dataDesa[selKec][kd].toUpperCase(), String(kd).padStart(4, '0')));
@@ -1982,32 +2014,47 @@
             };
           },
           preConfirm: () => {
-            const kecTujuan = document.getElementById('swalMutasiKec').value;
+            const kabSelect = document.getElementById('swalMutasiKab');
+            const kecSelect = document.getElementById('swalMutasiKec');
             const desaSelect = document.getElementById('swalMutasiDesa');
+
+            const kabTujuan = kabSelect.value;
+            const kabNama = kabSelect.selectedIndex >= 0 ? kabSelect.options[kabSelect.selectedIndex].text : "";
+            const kecTujuan = kecSelect.value;
+            const kecNama = kecSelect.selectedIndex >= 0 ? kecSelect.options[kecSelect.selectedIndex].text : "";
             const desaTujuan = desaSelect.value;
             const desaNama = desaSelect.selectedIndex >= 0 ? desaSelect.options[desaSelect.selectedIndex].text : "";
 
-            if (!kecTujuan || !desaTujuan) {
-              Swal.showValidationMessage('Kecamatan dan Desa tujuan wajib dipilih!');
+            if (!kabTujuan || !kecTujuan || !desaTujuan) {
+              Swal.showValidationMessage('Kabupaten, Kecamatan, dan Desa tujuan wajib dipilih!');
               return false;
             }
-            return { kec: kecTujuan, desa: desaTujuan, desaNama: desaNama };
+            return {
+              kab: kabTujuan,
+              kabNama: kabNama,
+              kec: kecTujuan,
+              kecNama: kecNama,
+              desa: desaTujuan,
+              desaNama: desaNama
+            };
           }
         }).then((mutRes) => {
           if (mutRes.isConfirmed) {
-            document.getElementById("is_pindah_dalam_kab").value = "true";
+            document.getElementById("is_pindah_dalam_prov").value = "true";
+            document.getElementById("pindah_kab_tujuan").value = mutRes.value.kab;
+            document.getElementById("pindah_kab_nama").value = mutRes.value.kabNama;
             document.getElementById("pindah_kec_tujuan").value = mutRes.value.kec;
+            document.getElementById("pindah_kec_nama").value = mutRes.value.kecNama;
             document.getElementById("pindah_desa_tujuan").value = mutRes.value.desa;
             document.getElementById("pindah_desa_nama").value = mutRes.value.desaNama;
 
-            Swal.fire('Tercatat', `Tujuan pindah: Desa ${mutRes.value.desaNama}. Tiket mutasi akan dibuat saat disimpan.`, 'success');
+            Swal.fire('Tercatat', `Tujuan pindah: Kab. ${mutRes.value.kabNama}, Kec. ${mutRes.value.kecNama}, Desa ${mutRes.value.desaNama}. Tiket mutasi akan dibuat saat disimpan.`, 'success');
           } else {
-            // JIKA TOMBOL CLOSE (X) ATAU DI-CANCEL PADA PEMILIHAN WILAYAH
             BATalkanPilihanPindah(monthIndex);
           }
         });
       } else {
-        // JIKA DI-CANCEL PADA DIALOG AWAL
+        // Ke Luar Provinsi
         BATalkanPilihanPindah(monthIndex);
       }
     });
@@ -2015,10 +2062,13 @@
 
   function BATalkanPilihanPindah(monthIndex) {
     const sel = document.getElementById("kb_" + monthIndex);
-    if (sel) sel.value = ""; // Kosongkan dropdown status KB bulan tersebut
+    if (sel) sel.value = "";
     
-    document.getElementById("is_pindah_dalam_kab").value = "false";
+    document.getElementById("is_pindah_dalam_prov").value = "false";
+    document.getElementById("pindah_kab_tujuan").value = "";
+    document.getElementById("pindah_kab_nama").value = "";
     document.getElementById("pindah_kec_tujuan").value = "";
+    document.getElementById("pindah_kec_nama").value = "";
     document.getElementById("pindah_desa_tujuan").value = "";
     document.getElementById("pindah_desa_nama").value = "";
     
@@ -2039,7 +2089,7 @@
   const selDes = document.getElementById("recapDesa");
 
   // Penyesuaian Header Tabel Wilayah
-  if (t === "Provinsi") thHeader.innerText = "KABUPATEN / KOTA";
+  if (t === "Provinsi") thHeader.innerText = "KABUPATEN/KOTA";
   else if (t === "Kabupaten") thHeader.innerText = "KECAMATAN";
   else if (t === "Kecamatan") thHeader.innerText = "DESA";
   else if (t === "Desa") thHeader.innerText = "DUSUN";
@@ -2573,11 +2623,15 @@ function onRecapKabupatenChange() {
     userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
     userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
 
+    let namaProvDinamis = dataProvinsi[userKodeProv || "52"] || "Nusa Tenggara Barat";
+
     let namaWilayahDinamis = "";
-    if (userRole.includes("KAB")) {
-      if (dataKabupaten[userKodeKab]) {
-        let kabObj = dataKabupaten[userKodeKab];
-        namaWilayahDinamis = typeof kabObj === 'object' ? Object.values(kabObj)[0] : kabObj;
+    if (userRole.includes("PROV")) {
+      namaWilayahDinamis = namaProvDinamis;
+    } else if (userRole.includes("KAB")) {
+      const provKey = userKodeProv || "52";
+      if (dataKabupaten[provKey] && dataKabupaten[provKey][userKodeKab]) {
+        namaWilayahDinamis = dataKabupaten[provKey][userKodeKab];
       }
     } else if (userRole.includes("KEC") || userRole === "ADMIN") {
       if (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
@@ -2588,8 +2642,8 @@ function onRecapKabupatenChange() {
         namaWilayahDinamis = dataDesa[userKodeKec][userKodeDesa];
       }
     }
-
-    setUserGreeting(data.role, namaWilayahDinamis, data.username);
+    
+    setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis);
 
     document.getElementById("loginContainer").style.display = "none";
     document.getElementById("appContainer").style.display = "block";
@@ -2644,12 +2698,16 @@ function onRecapKabupatenChange() {
     let query = db.from('mutasi_pus').select('*').eq('status', 'PENDING');
 
     if (isDesaRole()) {
-      const cleanKec = String(userKodeKec || "").padStart(2, '0');
-      const cleanDesa = String(userKodeDesa || "").padStart(4, '0');
-      query = query.eq('kode_kec_tujuan', cleanKec).eq('kode_desa_tujuan', cleanDesa);
+      query = query.eq('kode_kab_tujuan', userKodeKab)
+                   .eq('kode_kec_tujuan', userKodeKec)
+                   .eq('kode_desa_tujuan', userKodeDesa);
     } else if (isKecRole()) {
-      const cleanKec = String(userKodeKec || "").padStart(2, '0');
-      query = query.eq('kode_kec_tujuan', cleanKec);
+      query = query.eq('kode_kab_tujuan', userKodeKab)
+                   .eq('kode_kec_tujuan', userKodeKec);
+    } else if (isKabRole()) {
+      query = query.eq('kode_kab_tujuan', userKodeKab);
+    } else if (isProvRole()) {
+      query = query.eq('kode_prov_tujuan', userKodeProv || '52');
     }
 
     const { data, error } = await query;
@@ -3113,7 +3171,7 @@ function onRecapKabupatenChange() {
     if (error) throw error;
 
     // Mutasi Pindah
-    const isPindahDalamKab = document.getElementById("is_pindah_dalam_kab").value === "true";
+    const isPindahDalamProv = document.getElementById("is_pindah_dalam_prov").value === "true";
     let detectedBulanPindah = 0;
     
     for (let m = 1; m <= 12; m++) {
@@ -3124,7 +3182,8 @@ function onRecapKabupatenChange() {
       }
     }
 
-    if (isPindahDalamKab && detectedBulanPindah > 0) {
+    if (isPindahDalamProv && detectedBulanPindah > 0) {
+      const kdKabTujuan = document.getElementById("pindah_kab_tujuan").value.padStart(2, '0');
       const kdKecTujuan = document.getElementById("pindah_kec_tujuan").value.padStart(2, '0');
       const kdDesaTujuan = document.getElementById("pindah_desa_tujuan").value.padStart(4, '0');
 
@@ -3132,10 +3191,17 @@ function onRecapKabupatenChange() {
         tahun: thn,
         bulan_pindah: detectedBulanPindah,
         id_pus_asal: idPus,
+        kode_prov_asal: kdProv,
+        kode_kab_asal: kdKab,
+        kabupaten_asal: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex]?.text || "",
         kode_kec_asal: kdKec,
         kode_desa_asal: kdDesa,
         desa_asal: document.getElementById("desa").options[document.getElementById("desa").selectedIndex]?.text || "",
+        kode_prov_tujuan: kdProv,
+        kode_kab_tujuan: kdKabTujuan,
+        kabupaten_tujuan: document.getElementById("pindah_kab_nama").value,
         kode_kec_tujuan: kdKecTujuan,
+        kecamatan_tujuan: document.getElementById("pindah_kec_nama").value,
         kode_desa_tujuan: kdDesaTujuan,
         desa_tujuan: document.getElementById("pindah_desa_nama").value,
         nama_suami: document.getElementById("nama_suami").value.trim().toUpperCase(),
@@ -3152,7 +3218,7 @@ function onRecapKabupatenChange() {
         console.error("Gagal simpan tiket mutasi:", errMutasi);
         Swal.fire('Peringatan', 'Data PUS tersimpan, namun tiket mutasi gagal terkirim: ' + errMutasi.message, 'warning');
       } else {
-        document.getElementById("is_pindah_dalam_kab").value = "false";
+        document.getElementById("is_pindah_dalam_prov").value = "false";
       }
     }
 
@@ -3347,7 +3413,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     let filterDusun = document.getElementById("recapDusun") ? document.getElementById("recapDusun").value : "";
 
     if ((tingkat === "Kabupaten" || tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") && isProvRole() && !filterKab) {
-      Swal.fire("Perhatian", "Silakan pilih Kabupaten terlebih dahulu!", "warning");
+      Swal.fire("Perhatian", "Silakan pilih Kabupaten/Kota terlebih dahulu!", "warning");
       return;
     }
 
@@ -5314,7 +5380,7 @@ function onUserKabChange() {
       // 3. Admin Kab: Terkunci di kabupatennya, bisa rekap Kabupaten ke bawah
       selTingkat.innerHTML = `
         <option value="">-- PILIH TINGKAT WILAYAH --</option>
-        <option value="Kabupaten">KABUPATEN</option>
+        <option value="Kabupaten">KABUPATEN/KOTA</option>
         <option value="Kecamatan">KECAMATAN</option>
         <option value="Desa">DESA</option>
         <option value="Dusun">DUSUN</option>
@@ -5324,7 +5390,7 @@ function onUserKabChange() {
       selTingkat.innerHTML = `
         <option value="">-- PILIH TINGKAT WILAYAH --</option>
         <option value="Provinsi">PROVINSI</option>
-        <option value="Kabupaten">KABUPATEN</option>
+        <option value="Kabupaten">KABUPATEN/KOTA</option>
         <option value="Kecamatan">KECAMATAN</option>
         <option value="Desa">DESA</option>
         <option value="Dusun">DUSUN</option>
@@ -5362,7 +5428,7 @@ function onUserKabChange() {
     } else if (isKabRole()) {
       selTingkat.innerHTML = `
         <option value="">-- PILIH TINGKAT WILAYAH --</option>
-        <option value="Kabupaten">KABUPATEN</option>
+        <option value="Kabupaten">KABUPATEN/KOTA</option>
         <option value="Kecamatan">KECAMATAN</option>
         <option value="Desa">DESA</option>
         <option value="Dusun">DUSUN</option>
@@ -5373,7 +5439,7 @@ function onUserKabChange() {
       selTingkat.innerHTML = `
         <option value="">-- PILIH TINGKAT WILAYAH --</option>
         <option value="Provinsi">PROVINSI</option>
-        <option value="Kabupaten">KABUPATEN</option>
+        <option value="Kabupaten">KABUPATEN/KOTA</option>
         <option value="Kecamatan">KECAMATAN</option>
         <option value="Desa">DESA</option>
         <option value="Dusun">DUSUN</option>
@@ -5408,7 +5474,7 @@ function onUserKabChange() {
     } else if (isKabRole()) {
       selTingkat.innerHTML = `
         <option value="">-- PILIH TINGKAT WILAYAH --</option>
-        <option value="Kabupaten">KABUPATEN</option>
+        <option value="Kabupaten">KABUPATEN/KOTA</option>
         <option value="Kecamatan">KECAMATAN</option>
         <option value="Desa">DESA</option>
         <option value="Dusun">DUSUN</option>
@@ -5418,7 +5484,7 @@ function onUserKabChange() {
       selTingkat.innerHTML = `
         <option value="">-- PILIH TINGKAT WILAYAH --</option>
         <option value="Provinsi">PROVINSI</option>
-        <option value="Kabupaten">KABUPATEN</option>
+        <option value="Kabupaten">KABUPATEN/KOTA</option>
         <option value="Kecamatan">KECAMATAN</option>
         <option value="Desa">DESA</option>
         <option value="Dusun">DUSUN</option>
