@@ -4902,18 +4902,25 @@ function onUserKabChange() {
     const roleVal = document.getElementById("user_role_select").value;
     const userId = document.getElementById("user_id").value;
 
-    // Pastikan kode wilayah dipaksa sesuai login jika bukan Admin Kab
+    let targetKab = "";
     let targetKec = "";
     let targetDesa = "";
 
-    if (roleVal === "Admin Kab") {
-      targetKec = "";
-      targetDesa = "";
+    if (roleVal === "Admin Prov") {
+      targetKab = null;
+      targetKec = null;
+      targetDesa = null;
+    } else if (roleVal === "Admin Kab") {
+      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+      targetKec = null;
+      targetDesa = null;
     } else if (roleVal === "Admin Kec") {
-      targetKec = isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
-      targetDesa = "";
-    } else {
-      targetKec = isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
+      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+      targetKec = isDesaRole() ? userKodeKec : (isKecRole() ? userKodeKec : document.getElementById("user_kec_select").value);
+      targetDesa = null;
+    } else { // "User Desa"
+      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+      targetKec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("user_kec_select").value;
       targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
     }
 
@@ -4921,9 +4928,10 @@ function onUserKabChange() {
       username: document.getElementById("user_name_input").value.trim(),
       password_hash: document.getElementById("user_pass_input").value.trim(),
       role: roleVal,
-      kode_kab: userKodeKab || "01",
-      kode_kec: targetKec,
-      kode_desa: targetDesa
+      kode_prov: userKodeProv || "52",
+      kode_kab: targetKab ? targetKab.padStart(2, '0') : null,
+      kode_kec: targetKec ? targetKec.padStart(2, '0') : null,
+      kode_desa: targetDesa ? targetDesa.padStart(4, '0') : null
     };
 
     try {
@@ -4989,22 +4997,36 @@ function onUserKabChange() {
     const tbody = document.getElementById("usersTbody");
     tbody.innerHTML = "";
 
-    function getNamaKec(kd) {
-      if (!kd) return "-";
-      for (let kab in dataKecamatan) {
-        if (dataKecamatan[kab][kd]) return dataKecamatan[kab][kd];
+    // Helper pencarian nama kecamatan yang presisi dengan Kabupaten
+    function getNamaKec(kdKab, kdKec) {
+      if (!kdKec) return "-";
+      const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
+      const cleanKec = String(kdKec).padStart(2, '0');
+      
+      if (dataKecamatan[cleanKab] && dataKecamatan[cleanKab][cleanKec]) {
+        return dataKecamatan[cleanKab][cleanKec];
       }
-      return kd;
+      // Fallback: cari di semua kabupaten jika kode kab kosong
+      for (let kab in dataKecamatan) {
+        if (dataKecamatan[kab][cleanKec]) return dataKecamatan[kab][cleanKec];
+      }
+      return kdKec;
     }
 
+    // Helper pencarian nama desa yang presisi dengan Kecamatan
     function getNamaDesa(kdKec, kdDesa) {
       if (!kdDesa) return "-";
-      if (dataDesa[kdKec] && dataDesa[kdKec][kdDesa]) return dataDesa[kdKec][kdDesa];
+      const cleanKec = String(kdKec || "").padStart(2, '0');
+      const cleanDesa = String(kdDesa).padStart(4, '0');
+      
+      if (dataDesa[cleanKec] && dataDesa[cleanKec][cleanDesa]) {
+        return dataDesa[cleanKec][cleanDesa];
+      }
       return kdDesa;
     }
 
     const filtered = allUsersData.filter(item => {
-      const nmKec = getNamaKec(item.kode_kec).toLowerCase();
+      const nmKec = getNamaKec(item.kode_kab, item.kode_kec).toLowerCase();
       const nmDesa = getNamaDesa(item.kode_kec, item.kode_desa).toLowerCase();
       return (item.username || '').toLowerCase().includes(filter) ||
              (item.role || '').toLowerCase().includes(filter) ||
@@ -5019,7 +5041,7 @@ function onUserKabChange() {
 
     filtered.forEach((item, idx) => {
       const tr = document.createElement("tr");
-      const nmKec = getNamaKec(item.kode_kec);
+      const nmKec = getNamaKec(item.kode_kab, item.kode_kec);
       const nmDesa = getNamaDesa(item.kode_kec, item.kode_desa);
 
       tr.innerHTML = `
@@ -5027,7 +5049,11 @@ function onUserKabChange() {
         <td><b>${item.username}</b></td>
         <td style="font-family: monospace; background:#f8fafc;">${item.password_hash || ''}</td>
         <td style="text-align:center;">
-          <span style="padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; background: ${item.role === 'Admin Kab' ? '#fee2e2; color:#991b1b' : (item.role === 'Admin Kec' ? '#fef3c7; color:#92400e' : '#e0f2fe; color:#075985')}">
+          <span style="padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; background: ${
+            item.role === 'Admin Prov' ? '#f3e8ff; color:#6b21a8' :
+            item.role === 'Admin Kab' ? '#fee2e2; color:#991b1b' : 
+            item.role === 'Admin Kec' ? '#fef3c7; color:#92400e' : '#e0f2fe; color:#075985'
+          }">
             ${item.role}
           </span>
         </td>
@@ -5051,15 +5077,38 @@ function onUserKabChange() {
     document.getElementById("user_pass_input").value = item.password_hash;
     document.getElementById("user_role_select").value = item.role;
 
+    // 1. Tampilkan baris form sesuai role akun
     onUserRoleChange();
-    populateUserKecDropdown();
 
-    if (item.kode_kec) {
-      document.getElementById("user_kec_select").value = item.kode_kec.padStart(2, '0');
-      onUserKecChange();
+    // 2. Set Kabupaten
+    if (item.kode_kab) {
+      const kabVal = String(item.kode_kab).padStart(2, '0');
+      const selKab = document.getElementById("user_kab_select");
+      if (selKab) {
+        selKab.value = kabVal;
+        // Isi dropdown kecamatan berdasarkan kabupaten terpilih
+        populateKecamatanByKab(kabVal, "user_kec_select");
+      }
     }
+
+    // 3. Set Kecamatan
+    if (item.kode_kec) {
+      const kecVal = String(item.kode_kec).padStart(2, '0');
+      const selKec = document.getElementById("user_kec_select");
+      if (selKec) {
+        selKec.value = kecVal;
+        // Isi dropdown desa berdasarkan kecamatan terpilih
+        populateDesaByKec(kecVal, "user_desa_select");
+      }
+    }
+
+    // 4. Set Desa
     if (item.kode_desa) {
-      document.getElementById("user_desa_select").value = item.kode_desa.padStart(4, '0');
+      const desaVal = String(item.kode_desa).padStart(4, '0');
+      const selDesa = document.getElementById("user_desa_select");
+      if (selDesa) {
+        selDesa.value = desaVal;
+      }
     }
 
     document.getElementById("btnSaveUserAcc").innerText = "💾 PERBARUI AKUN";
