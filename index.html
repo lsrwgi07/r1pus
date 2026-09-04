@@ -1954,6 +1954,56 @@
   function promptPindahDomisili(monthIndex) {
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const currentMonthName = monthNames[monthIndex - 1];
+	
+    const missingFields = [];
+
+    // Validasi Wilayah Asal
+    if (!document.getElementById("provinsi").value) missingFields.push("Provinsi");
+    if (!document.getElementById("kabupaten").value) missingFields.push("Kabupaten / Kota");
+    if (!document.getElementById("kecamatan").value) missingFields.push("Kecamatan");
+    if (!document.getElementById("desa").value) missingFields.push("Desa");
+    if (!document.getElementById("dusun").value) missingFields.push("Dusun");
+    if (!document.getElementById("rt").value) missingFields.push("RT");
+
+    // Validasi Identitas PUS
+    const namaSuami = document.getElementById("nama_suami").value.trim();
+    const nikSuami  = document.getElementById("nik_suami").value.trim();
+    const namaIstri = document.getElementById("nama_istri").value.trim();
+    const nikIstri  = document.getElementById("nik_istri").value.trim();
+    const tglLahir  = document.getElementById("tgl_lahir_istri").value;
+    const jkn       = document.getElementById("peserta_jkn").value;
+
+    if (!namaSuami) missingFields.push("Nama Suami");
+    if (!nikSuami || nikSuami.length !== 16) missingFields.push("NIK Suami (16 digit)");
+    if (!namaIstri) missingFields.push("Nama Istri");
+    if (!nikIstri || nikIstri.length !== 16) missingFields.push("NIK Istri (16 digit)");
+    if (!tglLahir)  missingFields.push("Tanggal Lahir Istri");
+    if (!jkn)       missingFields.push("Kepesertaan JKN");
+
+    // Jika data belum lengkap, batalkan status PINDAH dan tampilkan peringatan
+    if (missingFields.length > 0) {
+      BATalkanPilihanPindah(monthIndex);
+
+      const listHtml = missingFields.map(item => `<li style="margin-bottom: 3px;">${item}</li>`).join("");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Lengkapi Data Terlebih Dahulu!',
+        html: `
+          <div style="text-align: left; font-size: 13px; color: #333;">
+            <p style="margin-bottom: 8px;">Sebelum mencatat mutasi <b>PINDAH</b>, mohon lengkapi data wilayah asal dan identitas PUS berikut:</p>
+            <ul style="margin: 0; padding-left: 20px; color: #dc2626; font-weight: 600;">
+              ${listHtml}
+            </ul>
+          </div>
+        `,
+        confirmButtonColor: '#0284c7'
+      });
+      return; // Hentikan fungsi, popup tujuan TIDAK AKAN MUNCUL
+    }
+
+    // 2. JIKA LENGKAP: Jalankan dialog pemilihan tujuan pindah domisili seperti biasa
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const currentMonthName = monthNames[monthIndex - 1];
 
     Swal.fire({
       title: 'Tujuan Pindah Domisili',
