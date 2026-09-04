@@ -2552,9 +2552,7 @@ function onRecapKabupatenChange() {
   }
 }
 
-  function showDashboardView() {
-    // Reset otomatis filter modul-modul laporan saat ditutup / kembali ke dashboard
-    if (typeof resetRecapFilters === "function") resetRecapFilters();
+  if (typeof resetRecapFilters === "function") resetRecapFilters();
     if (typeof resetBnbaFilters === "function") resetBnbaFilters();
     if (typeof resetChartFilters === "function") resetChartFilters();
     resetInputForm();
@@ -2565,17 +2563,19 @@ function onRecapKabupatenChange() {
     document.getElementById("bnbaSection").style.display = "none";
     document.getElementById("chartSection").style.display = "none";
 
-    // Visibilitas tombol admin dashboard
+    // Visibilitas bilah tombol admin dashboard
     const adminBox = document.getElementById("adminSyncContainer");
     const btnTambahTahun = document.getElementById("btnAdminTambahTahun");
 
+    // 1. Bilah admin muncul untuk Admin Prov, Admin Kab, dan Admin Kec
     if (adminBox) {
-      adminBox.style.display = (isKabRole() || isKecRole()) ? "block" : "none";
-    }
-    if (btnTambahTahun) {
-      btnTambahTahun.style.display = isKabRole() ? "inline-block" : "none";
+      adminBox.style.display = (isProvRole() || isKabRole() || isKecRole()) ? "block" : "none";
     }
 
+    // 2. Tombol TAMBAH TAHUN HANYA muncul untuk Admin Prov (hilang dari Admin Kab)
+    if (btnTambahTahun) {
+      btnTambahTahun.style.display = isProvRole() ? "inline-block" : "none";
+    
     checkPendingMutasiNotifications();
   }  
 
@@ -4566,7 +4566,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
     }
   }
-  
+
   async function handleSaveMasterWilayah(event) {
     event.preventDefault();
     const btn = document.getElementById("btnSaveMw");
