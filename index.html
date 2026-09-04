@@ -4628,16 +4628,27 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
     let query = db.from('master_wilayah').select('*').order('kecamatan', { ascending: true });
 
-    // PEMBATASAN WILAYAH BERDASARKAN TINGKAT LOGIN
+    // HIERARKI HAK AKSES WILAYAH SESUAI ROLE LOGIN
     if (isDesaRole()) {
-      query = query.eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
+      // User Desa: Hanya melihat dusun di desa miliknya
+      query = query.eq('kode_kab', userKodeKab)
+                   .eq('kode_kec', userKodeKec)
+                   .eq('kode_desa', userKodeDesa);
     } else if (isKecRole()) {
-      query = query.eq('kode_kec', userKodeKec);
+      // Admin Kecamatan: Hanya melihat dusun/desa di kecamatannya
+      query = query.eq('kode_kab', userKodeKab)
+                   .eq('kode_kec', userKodeKec);
+    } else if (isKabRole()) {
+      // Admin Kabupaten: Melihat seluruh wilayah dalam 1 kabupaten miliknya
+      query = query.eq('kode_kab', userKodeKab);
+    } else if (isProvRole()) {
+      // Admin Provinsi: Melihat seluruh wilayah dalam 1 provinsi
+      query = query.eq('kode_prov', userKodeProv || '52');
     }
-    // Admin Kabupaten tetap dibiarkan tanpa filter untuk melihat seluruh wilayah
 
     const { data, error } = await query;
     if (error || !data) {
+      console.error("Gagal memuat master wilayah:", error);
       tbody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:15px;">Gagal memuat: ${error ? error.message : 'Koneksi error'}</td></tr>`;
       return;
     }
@@ -4950,18 +4961,21 @@ function onUserKabChange() {
 
     let query = db.from('users').select('*').order('username', { ascending: true });
 
+    // HIERARKI HAK AKSES LIHAT DAFTAR PENGGUNA
     if (isDesaRole()) {
       query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
     } else if (isKecRole()) {
       query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec);
     } else if (isKabRole()) {
-      query = query.eq('kode_kab', userKodeKab); // MENGUNCI Admin Kab hanya melihat user di kabupatennya!
-    } else {
-
+      query = query.eq('kode_kab', userKodeKab);
+    } else if (isProvRole()) {
+      // Admin Prov: Ambil seluruh user di provinsi tersebut
+      query = query.eq('kode_prov', userKodeProv || '52');
     }
 
     const { data, error } = await query;
     if (error || !data) {
+      console.error("Gagal memuat daftar users:", error);
       tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align: center; padding: 15px;">Gagal memuat: ${error ? error.message : 'Error koneksi'}</td></tr>`;
       return;
     }
