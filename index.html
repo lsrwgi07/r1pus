@@ -2901,14 +2901,25 @@ function onRecapKabupatenChange() {
   }
 
   function updateDesa(selectedVal = "") {
+    const kodeKab = document.getElementById("kode_kab").value;
     const kodeKec = document.getElementById("kecamatan").value;
     document.getElementById("kode_kec").value = kodeKec;
-    resetDropdown("desa", "kode_desa"); resetDropdown("dusun", "kode_dusun"); resetDropdown("rt", "kode_rt");
-    if (kodeKec && dataDesa[kodeKec]) {
+    resetDropdown("desa", "kode_desa"); 
+    resetDropdown("dusun", "kode_dusun"); 
+    resetDropdown("rt", "kode_rt");
+
+    let desaKey = String(kodeKab).padStart(2, '0') + "_" + String(kodeKec).padStart(2, '0');
+    
+    if (kodeKec && dataDesa[desaKey]) {
       const desaSelect = document.getElementById("desa");
       desaSelect.disabled = false;
-      for (let kode in dataDesa[kodeKec]) desaSelect.add(new Option(dataDesa[kodeKec][kode].toUpperCase(), kode));
-      if (selectedVal) { setSelectValueCaseInsensitive("desa", selectedVal); updateDusun(); }
+      for (let kode in dataDesa[desaKey]) {
+        desaSelect.add(new Option(dataDesa[desaKey][kode].toUpperCase(), kode));
+      }
+      if (selectedVal) { 
+        setSelectValueCaseInsensitive("desa", selectedVal); 
+        updateDusun(); 
+      }
     }
   }
 
