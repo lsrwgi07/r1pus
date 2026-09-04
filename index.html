@@ -6049,10 +6049,29 @@ function onUserKabChange() {
   // MODUL DOWNLOAD & UPLOAD EXCEL KELOLA LOGIN
   // ==========================================
   function downloadUserTemplate() {
-    const headers = ["Username", "Password", "Role", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa"];
-    const sampleRow = ["desamareje", "rahasia123", "User Desa", "01", "05", "0001"];
+    // Menyesuaikan susunan kolom dengan struktur tabel users:
+    // Username, Password, Role, Kode Provinsi, Kode Kabupaten, Kode Kecamatan, Kode Desa
+    const headers = [
+      "Username", "Password", "Role", 
+      "Kode Provinsi", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa"
+    ];
+
+    const sampleRow = [
+      "desamareje", "rahasia123", "User Desa", 
+      "52", "01", "05", "0001"
+    ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+    
+    // Pastikan seluruh sel dibaca sebagai Text agar digit 0 di depan (misal: 01, 05, 0001) tidak hilang
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell_ref]) ws[cell_ref].t = 's';
+      }
+    }
+    
     ws['!cols'] = headers.map(() => ({ wch: 18 }));
 
     const wb = XLSX.utils.book_new();
@@ -6074,23 +6093,42 @@ function onUserKabChange() {
         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
 
         if (rows.length <= 1) {
-          Swal.fire("Kosong", "File Excel tidak memiliki data baris!", "warning");
+          Swal.fire("Kosong", "File Excel tidak memiliki baris data pengguna!", "warning");
           return;
         }
 
-        const payloadList = rows.slice(1).map(r => ({
-          username: String(r[0] || "").trim(),
-          password_hash: String(r[1] || "").trim(),
-          role: String(r[2] || "User Desa").trim(),
-          kode_kab: String(r[3] || "01").trim().padStart(2, '0'),
-          kode_kec: String(r[4] || "").trim().padStart(2, '0'),
-          kode_desa: String(r[5] || "").trim().padStart(4, '0')
-        })).filter(item => item.username !== "");
+        // Parsing baris Excel (mulai baris ke-2 / index 1)
+        const payloadList = rows.slice(1).map(r => {
+          const username = String(r[0] || "").trim();
+          const pass = String(r[1] || "").trim();
+          const role = String(r[2] || "User Desa").trim();
+          
+          // Kolom 3: Kode Prov, Kolom 4: Kode Kab, Kolom 5: Kode Kec, Kolom 6: Kode Desa
+          const kdProv = String(r[3] || userKodeProv || "52").trim().padStart(2, '0');
+          const rawKab = String(r[4] || "").trim();
+          const rawKec = String(r[5] || "").trim();
+          const rawDesa = String(r[6] || "").trim();
+
+          return {
+            username: username,
+            password_hash: pass,
+            role: role,
+            kode_prov: kdProv,
+            kode_kab: rawKab ? rawKab.padStart(2, '0') : null,
+            kode_kec: rawKec ? rawKec.padStart(2, '0') : null,
+            kode_desa: rawDesa ? rawDesa.padStart(4, '0') : null
+          };
+        }).filter(item => item.username !== "" && item.password_hash !== "");
+
+        if (payloadList.length === 0) {
+          Swal.fire("Data Tidak Valid", "Tidak ada baris pengguna dengan username dan password yang valid.", "warning");
+          return;
+        }
 
         const { error } = await db.from('users').upsert(payloadList, { onConflict: 'username' });
         if (error) throw error;
 
-        Swal.fire("Berhasil", `Sebanyak ${payloadList.length} akun pengguna berhasil disinkronkan!`, "success");
+        Swal.fire("Berhasil", `Sebanyak ${payloadList.length} akun pengguna berhasil disinkronkan ke database!`, "success");
         loadUsersList();
       } catch (err) {
         Swal.fire("Error", "Gagal memproses file pengguna: " + err.message, "error");
