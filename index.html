@@ -4631,6 +4631,15 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   function closeMasterWilayahModal() {
     document.getElementById("modalMasterWilayah").style.display = "none";
     resetMwForm();
+    
+    // Reset file input dan input filter pencarian
+    const fileIn = document.getElementById("excelWilayahInput");
+    if (fileIn) fileIn.value = "";
+    const filterIn = document.getElementById("filterMwInput");
+    if (filterIn) filterIn.value = "";
+
+    // Kembalikan tab ke tab default (Form Input)
+    switchMwTab('form');
   }
 
   function switchMwTab(tab) {
