@@ -1983,7 +1983,7 @@
     // Jika data belum lengkap, batalkan status PINDAH dan tampilkan peringatan
     if (missingFields.length > 0) {
       BATalkanPilihanPindah(monthIndex);
-
+		
       const listHtml = missingFields.map(item => `<li style="margin-bottom: 3px;">${item}</li>`).join("");
       Swal.fire({
         icon: 'warning',
@@ -1998,13 +1998,10 @@
         `,
         confirmButtonColor: '#0284c7'
       });
-      return; // Hentikan fungsi, popup tujuan TIDAK AKAN MUNCUL
+      return;
     }
 
-    // 2. JIKA LENGKAP: Jalankan dialog pemilihan tujuan pindah domisili seperti biasa
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    const currentMonthName = monthNames[monthIndex - 1];
-
+    // 2. JIKA LENGKAP: Jalankan dialog pemilihan tujuan pindah domisili
     Swal.fire({
       title: 'Tujuan Pindah Domisili',
       text: `Akseptor berstatus PINDAH pada bulan ${currentMonthName}. Ke mana tujuan pindah domisili?`,
@@ -2064,6 +2061,7 @@
                 }
               }
             };
+
             // Event saat memilih Kecamatan
             window.onSwalMutasiKecChange = function() {
               const selKab = document.getElementById('swalMutasiKab').value;
@@ -2084,7 +2082,7 @@
                 }
               }
             };
-		  },
+          },
           preConfirm: () => {
             const kabSelect = document.getElementById('swalMutasiKab');
             const kecSelect = document.getElementById('swalMutasiKec');
