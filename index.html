@@ -1823,18 +1823,24 @@
     });
   }
 
-  function populateDesaByKec(kdKec, targetSelectId) {
+  function populateDesaByKec(kdKec, targetSelectId, kdKab = "") {
     const sel = document.getElementById(targetSelectId);
     if (!sel) return;
     sel.innerHTML = '<option value="">-- PILIH DESA --</option>';
+    
     let cleanKec = String(kdKec).padStart(2, '0');
-    if (dataDesa[cleanKec]) {
-      for (let kd in dataDesa[cleanKec]) {
-        sel.add(new Option(dataDesa[cleanKec][kd].toUpperCase(), kd));
-      }
+    // Ambil kode kab aktif (dari parameter, atau state login, atau dropdown form)
+    let kabActive = String(kdKab || userKodeKab || document.getElementById("kode_kab")?.value || "").padStart(2, '0');
+    
+    // Cari dengan kunci gabungan: kodeKab_kodeKec
+    let lookupKey = kabActive + "_" + cleanKec;
+    let daftarDesa = dataDesa[lookupKey] || dataDesa[cleanKec] || {}; // Fallback aman
+    
+    for (let kd in daftarDesa) {
+      sel.add(new Option(daftarDesa[kd].toUpperCase(), kd));
     }
   }
-
+	
   function getDusunList(kdKec, kdDesa) {
     let cleanKec = String(kdKec).padStart(2, '0');
     let cleanDesa = String(kdDesa).padStart(4, '0');
