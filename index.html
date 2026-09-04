@@ -6100,34 +6100,42 @@ function onUserKabChange() {
           return;
         }
 
-        // Parsing baris Excel (mulai baris ke-2 / index 1)
-        const payloadList = rows.slice(1).map(r => {
+        // 1. Gunakan Map untuk mengeliminasi duplikasi username di dalam file Excel
+        const userMap = new Map();
+
+        rows.slice(1).forEach(r => {
           const username = String(r[0] || "").trim();
           const pass = String(r[1] || "").trim();
           const role = String(r[2] || "User Desa").trim();
           
-          // Kolom 3: Kode Prov, Kolom 4: Kode Kab, Kolom 5: Kode Kec, Kolom 6: Kode Desa
           const kdProv = String(r[3] || userKodeProv || "52").trim().padStart(2, '0');
           const rawKab = String(r[4] || "").trim();
           const rawKec = String(r[5] || "").trim();
           const rawDesa = String(r[6] || "").trim();
 
-          return {
-            username: username,
-            password_hash: pass,
-            role: role,
-            kode_prov: kdProv,
-            kode_kab: rawKab ? rawKab.padStart(2, '0') : null,
-            kode_kec: rawKec ? rawKec.padStart(2, '0') : null,
-            kode_desa: rawDesa ? rawDesa.padStart(4, '0') : null
-          };
-        }).filter(item => item.username !== "" && item.password_hash !== "");
+          // Hanya proses baris yang memiliki username dan password
+          if (username !== "" && pass !== "") {
+            userMap.set(username.toLowerCase(), {
+              username: username,
+              password_hash: pass,
+              role: role,
+              kode_prov: kdProv,
+              kode_kab: rawKab ? rawKab.padStart(2, '0') : null,
+              kode_kec: rawKec ? rawKec.padStart(2, '0') : null,
+              kode_desa: rawDesa ? rawDesa.padStart(4, '0') : null
+            });
+          }
+        });
+
+        // 2. Konversi hasil deduplikasi menjadi array payload
+        const payloadList = Array.from(userMap.values());
 
         if (payloadList.length === 0) {
           Swal.fire("Data Tidak Valid", "Tidak ada baris pengguna dengan username dan password yang valid.", "warning");
           return;
         }
 
+        // 3. Eksekusi Upsert aman bebas duplikat batch
         const { error } = await db.from('users').upsert(payloadList, { onConflict: 'username' });
         if (error) throw error;
 
