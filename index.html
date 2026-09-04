@@ -4376,37 +4376,91 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     document.getElementById("searchKeyword").value = "";
     document.getElementById("searchResults").innerHTML = "";
 
+    const sKab = document.getElementById("searchKabupaten");
     const sKec = document.getElementById("searchKecamatan");
     const sDes = document.getElementById("searchDesa");
+    const sDsn = document.getElementById("searchDusun");
+    const sRt  = document.getElementById("searchRt");
 
-    populateAllKecamatanDropdowns();
-
+    // 1. KASUS: USER DESA
     if (isDesaRole()) {
+      populateKabupatenDropdown("searchKabupaten");
+      setSelectValueCaseInsensitive("searchKabupaten", userKodeKab);
+      sKab.disabled = true;
+
+      populateKecamatanByKab(userKodeKab, "searchKecamatan");
       setSelectValueCaseInsensitive("searchKecamatan", userKodeKec);
       sKec.disabled = true;
+
       populateDesaByKec(userKodeKec, "searchDesa");
       setSelectValueCaseInsensitive("searchDesa", userKodeDesa);
       sDes.disabled = true;
+
       onSearchDesaChange();
+
+    // 2. KASUS: ADMIN KECAMATAN
     } else if (isKecRole()) {
+      populateKabupatenDropdown("searchKabupaten");
+      setSelectValueCaseInsensitive("searchKabupaten", userKodeKab);
+      sKab.disabled = true;
+
+      populateKecamatanByKab(userKodeKab, "searchKecamatan");
       setSelectValueCaseInsensitive("searchKecamatan", userKodeKec);
       sKec.disabled = true;
+
       populateDesaByKec(userKodeKec, "searchDesa");
       sDes.disabled = false;
-    } else {
+      sDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+      sRt.innerHTML = '<option value="">-- PILIH RT --</option>';
+
+    // 3. KASUS: ADMIN KABUPATEN
+    } else if (isKabRole()) {
+      populateKabupatenDropdown("searchKabupaten");
+      setSelectValueCaseInsensitive("searchKabupaten", userKodeKab);
+      sKab.disabled = true;
+
+      populateKecamatanByKab(userKodeKab, "searchKecamatan");
       sKec.disabled = false;
       sDes.disabled = false;
+      sDes.innerHTML = '<option value="">-- PILIH DESA --</option>';
+      sDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+      sRt.innerHTML = '<option value="">-- PILIH RT --</option>';
+
+    // 4. KASUS: ADMIN PROVINSI
+    } else {
+      populateKabupatenDropdown("searchKabupaten");
+      sKab.disabled = false;
+      sKec.disabled = false;
+      sDes.disabled = false;
+      sKec.innerHTML = '<option value="">-- PILIH KECAMATAN --</option>';
+      sDes.innerHTML = '<option value="">-- PILIH DESA --</option>';
+      sDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+      sRt.innerHTML = '<option value="">-- PILIH RT --</option>';
     }
 
     document.getElementById("searchModal").style.display = "block";
   }
+
+  function onSearchKabupatenChange() {
+    const kab = document.getElementById("searchKabupaten").value;
+    populateKecamatanByKab(kab, "searchKecamatan");
+    document.getElementById("searchDesa").innerHTML = '<option value="">-- PILIH DESA --</option>';
+    document.getElementById("searchDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    document.getElementById("searchRt").innerHTML = '<option value="">-- PILIH RT --</option>';
+  }
+
   function closeSearchModal() {
     document.getElementById("searchModal").style.display = "none";
     document.getElementById("searchKeyword").value = "";
     document.getElementById("searchResults").innerHTML = "";
-    if (!isKecRole() && !isDesaRole()) {
+
+    if (isProvRole()) {
+      document.getElementById("searchKabupaten").value = "";
+      document.getElementById("searchKecamatan").innerHTML = '<option value="">-- PILIH KECAMATAN --</option>';
+    } else if (isKabRole()) {
       document.getElementById("searchKecamatan").value = "";
     }
+    
     document.getElementById("searchDesa").innerHTML = '<option value="">-- PILIH DESA --</option>';
     document.getElementById("searchDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
     document.getElementById("searchRt").innerHTML = '<option value="">-- PILIH RT --</option>';
