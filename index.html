@@ -1280,13 +1280,14 @@
               <th style="background: #1f4e78; color: white;">USERNAME</th>
               <th style="background: #1f4e78; color: white;">PASSWORD</th>
               <th style="background: #1f4e78; color: white;">ROLE</th>
+              <th style="background: #1f4e78; color: white;">KABUPATEN</th>
               <th style="background: #1f4e78; color: white;">KECAMATAN</th>
               <th style="background: #1f4e78; color: white;">DESA</th>
               <th style="background: #1f4e78; color: white;">AKSI</th>
             </tr>
           </thead>
           <tbody id="usersTbody">
-            <tr><td colspan="7" style="text-align: center; padding: 15px;">Memuat data...</td></tr>
+            <tr><td colspan="8" style="text-align: center; padding: 15px;">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -5051,6 +5052,20 @@ function onUserKabChange() {
     const tbody = document.getElementById("usersTbody");
     tbody.innerHTML = "";
 
+    // Helper pencarian nama kabupaten
+    function getNamaKab(kdKab) {
+      if (!kdKab) return "-";
+      const cleanKab = String(kdKab).padStart(2, '0');
+      const provKey = userKodeProv || "52";
+      if (dataKabupaten[provKey] && dataKabupaten[provKey][cleanKab]) {
+        return dataKabupaten[provKey][cleanKab];
+      }
+      for (let p in dataKabupaten) {
+        if (dataKabupaten[p][cleanKab]) return dataKabupaten[p][cleanKab];
+      }
+      return kdKab;
+    }
+
     // Helper pencarian nama kecamatan yang presisi dengan Kabupaten
     function getNamaKec(kdKab, kdKec) {
       if (!kdKec) return "-";
@@ -5060,7 +5075,6 @@ function onUserKabChange() {
       if (dataKecamatan[cleanKab] && dataKecamatan[cleanKab][cleanKec]) {
         return dataKecamatan[cleanKab][cleanKec];
       }
-      // Fallback: cari di semua kabupaten jika kode kab kosong
       for (let kab in dataKecamatan) {
         if (dataKecamatan[kab][cleanKec]) return dataKecamatan[kab][cleanKec];
       }
@@ -5080,21 +5094,24 @@ function onUserKabChange() {
     }
 
     const filtered = allUsersData.filter(item => {
+      const nmKab = getNamaKab(item.kode_kab).toLowerCase();
       const nmKec = getNamaKec(item.kode_kab, item.kode_kec).toLowerCase();
       const nmDesa = getNamaDesa(item.kode_kec, item.kode_desa).toLowerCase();
       return (item.username || '').toLowerCase().includes(filter) ||
              (item.role || '').toLowerCase().includes(filter) ||
+             nmKab.includes(filter) ||
              nmKec.includes(filter) ||
              nmDesa.includes(filter);
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
       return;
     }
 
     filtered.forEach((item, idx) => {
       const tr = document.createElement("tr");
+      const nmKab = getNamaKab(item.kode_kab);
       const nmKec = getNamaKec(item.kode_kab, item.kode_kec);
       const nmDesa = getNamaDesa(item.kode_kec, item.kode_desa);
 
@@ -5111,6 +5128,7 @@ function onUserKabChange() {
             ${item.role}
           </span>
         </td>
+        <td>${nmKab}</td>
         <td>${nmKec}</td>
         <td>${nmDesa}</td>
         <td style="text-align:center; white-space:nowrap;">
@@ -6319,7 +6337,7 @@ function onUserKabChange() {
       if (result.isConfirmed) {
         window.close();
         setTimeout(() => {
-          window.location.href = "https://bpkblbr.github.io/r1puslbr/?status=out";
+          window.location.href = "https://lsrwgi07.github.io/r1pus/?status=out";
         }, 300);
       }
     });
