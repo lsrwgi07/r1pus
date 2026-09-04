@@ -1383,10 +1383,18 @@
       // Admin Provinsi: langsung sebut nama provinsi
       identity = "Admin Provinsi " + (provNama || "Nusa Tenggara Barat");
     } else if (roleUpper.includes("KAB")) {
-      // Cek digit awal kode kabupaten (0 = Kabupaten, 7 = Kota)
       const cleanKdKab = String(kodeKab || "").trim();
-      const prefix = cleanKdKab.startsWith("7") ? "Admin Kota " : "Admin Kabupaten ";
-      identity = prefix + (wilayahNama || "Lombok Barat");
+      const nama = wilayahNama || "Lombok Barat";
+
+      if (cleanKdKab.startsWith("7")) {
+        // Jika berawalan 7: "Admin " + nama kab/kotanya langsung (misal: "Admin KOTA BIMA")
+        identity = "Admin " + nama;
+      } else {
+        // Jika berawalan 0 atau lainnya: "Admin Kabupaten " + nama
+        // Menghindari duplikasi jika nama wilayah di database sudah diawali kata "KABUPATEN"
+        const cleanNama = nama.replace(/^KABUPATEN\s+/i, "");
+        identity = "Admin Kabupaten " + cleanNama;
+      }
     } else if (roleUpper.includes("KEC")) {
       identity = "Admin Kecamatan " + (wilayahNama || "");
     } else {
