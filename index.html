@@ -4237,30 +4237,35 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     }
 
     if (isDesaRole()) {
-      query = query.eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
-      let dsn = document.getElementById("searchDusun").value;
-      let rt = document.getElementById("searchRt").value;
-      if (dsn) query = query.eq('kode_dusun', dsn);
-      if (rt) query = query.eq('kode_rt', rt);
+      query = query.eq('kode_kab', userKodeKab)
+                  .eq('kode_kec', userKodeKec)
+                  .eq('kode_desa', userKodeDesa);
     } else if (isKecRole()) {
-      query = query.eq('kode_kec', userKodeKec);
+      query = query.eq('kode_kab', userKodeKab)
+                  .eq('kode_kec', userKodeKec);
       let des = document.getElementById("searchDesa").value;
-      let dsn = document.getElementById("searchDusun").value;
-      let rt = document.getElementById("searchRt").value;
       if (des) query = query.eq('kode_desa', des);
-      if (dsn) query = query.eq('kode_dusun', dsn);
-      if (rt) query = query.eq('kode_rt', rt);
-    } else {
-      if (isKabRole() && userKodeKab) query = query.eq('kode_kab', userKodeKab);
+    } else if (isKabRole()) {
+      query = query.eq('kode_kab', userKodeKab);
       let kec = document.getElementById("searchKecamatan").value;
       let des = document.getElementById("searchDesa").value;
-      let dsn = document.getElementById("searchDusun").value;
-      let rt = document.getElementById("searchRt").value;
       if (kec) query = query.eq('kode_kec', kec);
       if (des) query = query.eq('kode_desa', des);
-      if (dsn) query = query.eq('kode_dusun', dsn);
-      if (rt) query = query.eq('kode_rt', rt);
+    } else {
+      // Admin Prov: Boleh memfilter kabupaten mana saja di provinsi terkait
+      query = query.eq('kode_prov', userKodeProv || '52');
+      let kab = document.getElementById("searchKabupaten").value;
+      let kec = document.getElementById("searchKecamatan").value;
+      let des = document.getElementById("searchDesa").value;
+      if (kab) query = query.eq('kode_kab', kab);
+      if (kec) query = query.eq('kode_kec', kec);
+      if (des) query = query.eq('kode_desa', des);
     }
+
+    let dsn = document.getElementById("searchDusun").value;
+    let rt = document.getElementById("searchRt").value;
+    if (dsn) query = query.eq('kode_dusun', dsn);
+    if (rt) query = query.eq('kode_rt', rt);
 
     const { data, error } = await query.order('id_pus', { ascending: true }).limit(25);
     container.innerHTML = "";
@@ -4480,17 +4485,16 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
     const inProvNama = document.getElementById("mw_provinsi_nama");
     const inProvKode = document.getElementById("mw_kode_prov");
-    const inKabNama = document.getElementById("mw_kabupaten_nama");
-    const inKabKode = document.getElementById("mw_kode_kab");    
+    const inKabNama  = document.getElementById("mw_kabupaten_nama");
+    const inKabKode  = document.getElementById("mw_kode_kab");
 
     // Ambil nama kabupaten dari cache jika ada
     let namaKab = "";
-    if (userKodeKab && dataKabupaten[userKodeKab]) {
-      let kabObj = dataKabupaten[userKodeKab];
-      namaKab = typeof kabObj === 'object' ? Object.values(kabObj)[0] : kabObj;
+    if (userKodeKab && dataKabupaten[userKodeProv || "52"]) {
+      namaKab = dataKabupaten[userKodeProv || "52"][userKodeKab] || "";
     }
 
-    // Cek apakah data kecamatan untuk kode login ini sudah terdaftar di database/cache
+    // Cek apakah data kecamatan untuk kode login ini sudah terdaftar
     let namaKec = "";
     let isKecRegisteredInDB = false;
     if (userKodeKab && dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
@@ -4498,13 +4502,18 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       isKecRegisteredInDB = true;
     }
 
+    // =========================================================================
+    // HIERARKI PENGUNCIAN MASTER WILAYAH
+    // =========================================================================
     if (isKecRole() && isKecRegisteredInDB) {
-      // 1. Jika Admin Kecamatan DAN data kecamatannya SUDAH MASUK di DB -> Lock Provinsi s.d Kecamatan
+      // 1. ADMIN KECAMATAN: Kunci Provinsi, Kabupaten, dan Kecamatan
+      inProvNama.value = "NUSA TENGGARA BARAT";
+      inProvKode.value = userKodeProv || "52";
       inProvNama.readOnly = true; inProvKode.readOnly = true;
       inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
 
-      inKabNama.value = namaKab || "LOMBOK BARAT";
-      inKabKode.value = userKodeKab || "01";
+      inKabNama.value = namaKab;
+      inKabKode.value = userKodeKab;
       inKabNama.readOnly = true; inKabKode.readOnly = true;
       inKabNama.style.backgroundColor = "#e9ecef"; inKabKode.style.backgroundColor = "#e9ecef";
 
@@ -4513,39 +4522,51 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       inKecNama.readOnly = true; inKecKode.readOnly = true;
       inKecNama.style.backgroundColor = "#e9ecef"; inKecKode.style.backgroundColor = "#e9ecef";
 
-      inDesaNama.value = "";
-      inDesaKode.value = "";
-      inDesaNama.readOnly = false;
-      inDesaKode.readOnly = false;
-      inDesaNama.style.backgroundColor = "#ffffff";
-      inDesaKode.style.backgroundColor = "#ffffff";
-
-    } else {
-      // 2. Jika Admin Kabupaten ATAU Admin Kecamatan TAPI data belum masuk di DB -> Biarkan KOSONG dan TERBUKA
-      inProvNama.readOnly = false; inProvKode.readOnly = false;
-      inProvNama.style.backgroundColor = "#ffffff"; inProvKode.style.backgroundColor = "#ffffff";
-
-      inKabNama.readOnly = false; inKabKode.readOnly = false;
-      inKabNama.style.backgroundColor = "#ffffff"; inKabKode.style.backgroundColor = "#ffffff";
-
-      inKecNama.readOnly = false; inKecKode.readOnly = false;
-      inKecNama.style.backgroundColor = "#ffffff"; inKecKode.style.backgroundColor = "#ffffff";
-
       inDesaNama.readOnly = false; inDesaKode.readOnly = false;
       inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
 
+    // >>> POTONGAN KODE ANDA DILETAKKAN DI SINI <<<
+    } else if (isKabRole()) {
+      // 2. ADMIN KABUPATEN: Kunci Provinsi dan Kabupaten saja. Kecamatan & Desa terbuka
       inProvNama.value = "NUSA TENGGARA BARAT";
-      inProvKode.value = "52";
-      inKabNama.value = namaKab || "LOMBOK BARAT";
-      inKabKode.value = userKodeKab || "01";
-      
-      // Kosongkan nama dan kode kecamatan agar operator bisa mengisinya sendiri untuk pertama kali
-      inKecNama.value = "";
-      inKecKode.value = "";
-      inDesaNama.value = "";
-      inDesaKode.value = "";
+      inProvKode.value = userKodeProv || "52";
+      inProvNama.readOnly = true; inProvKode.readOnly = true;
+      inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
+
+      inKabNama.value = namaKab;
+      inKabKode.value = userKodeKab;
+      inKabNama.readOnly = true; inKabKode.readOnly = true;
+      inKabNama.style.backgroundColor = "#e9ecef"; inKabKode.style.backgroundColor = "#e9ecef";
+
+      inKecNama.value = ""; inKecKode.value = "";
+      inKecNama.readOnly = false; inKecKode.readOnly = false;
+      inKecNama.style.backgroundColor = "#ffffff"; inKecKode.style.backgroundColor = "#ffffff";
+
+      inDesaNama.value = ""; inDesaKode.value = "";
+      inDesaNama.readOnly = false; inDesaKode.readOnly = false;
+      inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
+
+    } else {
+      // 3. ADMIN PROVINSI: Kunci Provinsi saja, Kabupaten ke bawah bebas diinput
+      inProvNama.value = "NUSA TENGGARA BARAT";
+      inProvKode.value = userKodeProv || "52";
+      inProvNama.readOnly = true; inProvKode.readOnly = true;
+      inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
+
+      inKabNama.value = ""; inKabKode.value = "";
+      inKabNama.readOnly = false; inKabKode.readOnly = false;
+      inKabNama.style.backgroundColor = "#ffffff"; inKabKode.style.backgroundColor = "#ffffff";
+
+      inKecNama.value = ""; inKecKode.value = "";
+      inKecNama.readOnly = false; inKecKode.readOnly = false;
+      inKecNama.style.backgroundColor = "#ffffff"; inKecKode.style.backgroundColor = "#ffffff";
+
+      inDesaNama.value = ""; inDesaKode.value = "";
+      inDesaNama.readOnly = false; inDesaKode.readOnly = false;
+      inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
     }
   }
+  
   async function handleSaveMasterWilayah(event) {
     event.preventDefault();
     const btn = document.getElementById("btnSaveMw");
@@ -4926,13 +4947,15 @@ function onUserKabChange() {
 
     let query = db.from('users').select('*').order('username', { ascending: true });
 
-    // Pembatasan hak lihat daftar pengguna
     if (isDesaRole()) {
-      query = query.eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
+      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
     } else if (isKecRole()) {
-      query = query.eq('kode_kec', userKodeKec);
+      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec);
+    } else if (isKabRole()) {
+      query = query.eq('kode_kab', userKodeKab); // MENGUNCI Admin Kab hanya melihat user di kabupatennya!
+    } else {
+
     }
-    // Admin Kabupaten tetap dapat melihat semua akun
 
     const { data, error } = await query;
     if (error || !data) {
@@ -5204,88 +5227,110 @@ function onUserKabChange() {
     document.getElementById("pusForm").reset();
     document.getElementById("id_pus").value = "";
 
+    // Sembunyikan bilah navigasi RT jika sebelumnya aktif
+    const navRT = document.getElementById("navRTContainer");
+    if (navRT) navRT.style.display = "none";
+
     const thnInput = document.getElementById("tahun_input");
     if (thnInput) thnInput.value = String(new Date().getFullYear());
 
-    const provSel = document.getElementById("provinsi");
-    const kabSel = document.getElementById("kabupaten");
-    const kecSel = document.getElementById("kecamatan");
-    const desaSel = document.getElementById("desa");
+    const provSel  = document.getElementById("provinsi");
+    const kabSel   = document.getElementById("kabupaten");
+    const kecSel   = document.getElementById("kecamatan");
+    const desaSel  = document.getElementById("desa");
     const dusunSel = document.getElementById("dusun");
-    const rtSel = document.getElementById("rt");
+    const rtSel    = document.getElementById("rt");
 
-    let defaultProv = "52";
-    if (userKodeKab) {
-      for (let p in dataKabupaten) {
-        if (dataKabupaten[p][userKodeKab]) { defaultProv = p; break; }
-      }
-    }
+    // Tetapkan kode provinsi aktif (dari sesi login atau default NTB '52')
+    const activeProv = userKodeProv || "52";
 
+    // 1. Kunci Provinsi untuk SEMUA role (lingkup aplikasi berada di 1 provinsi)
+    setSelectValueCaseInsensitive("provinsi", activeProv);
+    document.getElementById("kode_prov").value = activeProv;
+    provSel.style.pointerEvents = "none";
+    provSel.style.backgroundColor = "#e9ecef";
+
+    // 2. LOGIKA KUNCI WILAYAH SESUAI ROLE LOGIN
     if (isDesaRole()) {
-      setSelectValueCaseInsensitive("provinsi", defaultProv);
-      document.getElementById("kode_prov").value = defaultProv;
-      provSel.style.pointerEvents = "none";
-      provSel.style.backgroundColor = "#e9ecef";
-
+      // User Desa: Kunci Kab, Kec, dan Desa
       updateKabupaten(userKodeKab);
-      document.getElementById("kode_kab").value = userKodeKab;
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
 
       updateKecamatan(userKodeKec);
-      document.getElementById("kode_kec").value = userKodeKec;
       kecSel.style.pointerEvents = "none";
       kecSel.style.backgroundColor = "#e9ecef";
 
       updateDesa(userKodeDesa);
-      document.getElementById("kode_desa").value = userKodeDesa;
       desaSel.style.pointerEvents = "none";
       desaSel.style.backgroundColor = "#e9ecef";
 
       dusunSel.style.pointerEvents = "auto";
       dusunSel.style.backgroundColor = "#ffffff";
       dusunSel.disabled = false;
-      rtSel.style.pointerEvents = "auto";
-      rtSel.disabled = true;
-    } else if (isKecRole()) {
-      setSelectValueCaseInsensitive("provinsi", defaultProv);
-      document.getElementById("kode_prov").value = defaultProv;
-      provSel.style.pointerEvents = "none";
-      provSel.style.backgroundColor = "#e9ecef";
 
+      rtSel.style.pointerEvents = "auto";
+      rtSel.style.backgroundColor = "#ffffff";
+      rtSel.disabled = true;
+
+    } else if (isKecRole()) {
+      // Admin Kec: Kunci Kab dan Kec. Buka Desa, Dusun, dan RT
       updateKabupaten(userKodeKab);
-      document.getElementById("kode_kab").value = userKodeKab;
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
 
       updateKecamatan(userKodeKec);
-      document.getElementById("kode_kec").value = userKodeKec;
       kecSel.style.pointerEvents = "none";
       kecSel.style.backgroundColor = "#e9ecef";
 
       desaSel.style.pointerEvents = "auto";
       desaSel.style.backgroundColor = "#ffffff";
       desaSel.disabled = false;
+
       dusunSel.style.pointerEvents = "auto";
       dusunSel.style.backgroundColor = "#ffffff";
+      dusunSel.disabled = true;
+
       rtSel.style.pointerEvents = "auto";
       rtSel.style.backgroundColor = "#ffffff";
-    } else {
-      provSel.style.pointerEvents = "auto";
-      provSel.style.backgroundColor = "#ffffff";
-      kabSel.style.pointerEvents = "auto";
+      rtSel.disabled = true;
+
+    } else if (isKabRole()) {
+      // Admin Kab: Kunci Kab saja. Buka Kecamatan s.d RT
+      updateKabupaten(userKodeKab);
+      kabSel.style.pointerEvents = "none";
+      kabSel.style.backgroundColor = "#e9ecef";
+
       kecSel.style.pointerEvents = "auto";
+      kecSel.style.backgroundColor = "#ffffff";
+      kecSel.disabled = false;
+
       desaSel.style.pointerEvents = "auto";
+      desaSel.style.backgroundColor = "#ffffff";
+      desaSel.disabled = true;
+
       dusunSel.style.pointerEvents = "auto";
+      dusunSel.style.backgroundColor = "#ffffff";
+      dusunSel.disabled = true;
+
       rtSel.style.pointerEvents = "auto";
-      provSel.disabled = false;
-      provSel.value = "";
-      resetDropdown("kabupaten", "kode_kab");
+      rtSel.style.backgroundColor = "#ffffff";
+      rtSel.disabled = true;
+
+    } else {
+      // Admin Prov: Buka Kabupaten, Kecamatan, Desa, Dusun, dan RT
+      kabSel.style.pointerEvents = "auto";
+      kabSel.style.backgroundColor = "#ffffff";
+      kabSel.disabled = false;
+
+      updateKabupaten(); // Menampilkan seluruh kabupaten di provinsi tersebut
+
       resetDropdown("kecamatan", "kode_kec");
       resetDropdown("desa", "kode_desa");
       resetDropdown("dusun", "kode_dusun");
       resetDropdown("rt", "kode_rt");
     }
+
     applyMutationAndAgeLocks();
   }
 
