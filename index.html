@@ -1168,6 +1168,7 @@
           <thead>
             <tr>
               <th style="background:#1f4e78; color:white;">NO</th>
+              <th style="background:#1f4e78; color:white;">KABUPATEN</th>
               <th style="background:#1f4e78; color:white;">KECAMATAN</th>
               <th style="background:#1f4e78; color:white;">DESA</th>
               <th style="background:#1f4e78; color:white;">KD DESA</th>
@@ -1178,7 +1179,7 @@
             </tr>
           </thead>
           <tbody id="mwRegisteredTbody">
-            <tr><td colspan="8" style="text-align:center; padding: 15px;">Memuat data wilayah...</td></tr>
+            <tr><td colspan="9" style="text-align:center; padding: 15px;">Memuat data wilayah...</td></tr>
           </tbody>
         </table>
       </div>
@@ -4718,6 +4719,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     tbody.innerHTML = "";
 
     const filtered = allRegisteredWilayahData.filter(item => 
+      (item.kabupaten || '').toUpperCase().includes(filter) ||
       (item.desa || '').toUpperCase().includes(filter) ||
       (item.dusun || '').toUpperCase().includes(filter) ||
       (item.kecamatan || '').toUpperCase().includes(filter) ||
@@ -4726,7 +4728,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     );
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:15px; color:#777;">Data wilayah tidak ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:15px; color:#777;">Data wilayah tidak ditemukan.</td></tr>`;
       return;
     }
 
@@ -4734,6 +4736,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td style="text-align:center;">${idx + 1}</td>
+        <td><b>${item.kabupaten || '-'}</b> (${item.kode_kab || '-'})</td>
         <td>${item.kecamatan} (${item.kode_kec})</td>
         <td><b>${item.desa}</b></td>
         <td style="text-align:center;">${item.kode_desa}</td>
