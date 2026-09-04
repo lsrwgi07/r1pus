@@ -4917,7 +4917,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       text: `Hapus dusun [${namaDusun}] dari database?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc3545',
+      confirmButtonColor: '#dc2626',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Ya, Hapus!'
     }).then(async (result) => {
@@ -4927,8 +4927,17 @@ function hitungStatusIndikator(r, bulan, mKeys) {
           Swal.fire('Gagal', error.message, 'error');
         } else {
           Swal.fire('Terhapus!', 'Data wilayah telah dihapus.', 'success');
+          
+          // 1. Muat ulang cache data wilayah dari Supabase
+          await loadMasterWilayahFromDB();
+          
+          // 2. Segarkan tabel daftar wilayah
           loadRegisteredWilayahList();
-          loadMasterWilayahFromDB();
+
+          // 3. Paksa reset pilihan dropdown form input PUS agar desa yang hilang langsung lenyap
+          if (typeof resetInputForm === "function") {
+            resetInputForm();
+          }
         }
       }
     });
