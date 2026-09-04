@@ -2014,20 +2014,26 @@
                 }
               }
             };
-
             // Event saat memilih Kecamatan
             window.onSwalMutasiKecChange = function() {
+              const selKab = document.getElementById('swalMutasiKab').value;
               const selKec = document.getElementById('swalMutasiKec').value;
               const selDesa = document.getElementById('swalMutasiDesa');
               selDesa.innerHTML = '<option value="">-- PILIH DESA TUJUAN --</option>';
 
-              if (selKec && dataDesa[selKec]) {
-                for (let kd in dataDesa[selKec]) {
-                  selDesa.add(new Option(dataDesa[selKec][kd].toUpperCase(), String(kd).padStart(4, '0')));
+              if (selKec) {
+                const cleanKab = String(selKab || userKodeKab || "").padStart(2, '0');
+                const cleanKec = String(selKec).padStart(2, '0');
+                
+                // Cari dengan composite key (kdKab_kdKec), fallback ke key lama jika ada
+                const lookupKey = cleanKab + "_" + cleanKec;
+                const daftarDesa = dataDesa[lookupKey] || dataDesa[cleanKec] || {};
+
+                for (let kd in daftarDesa) {
+                  selDesa.add(new Option(daftarDesa[kd].toUpperCase(), String(kd).padStart(4, '0')));
                 }
               }
             };
-          },
           preConfirm: () => {
             const kabSelect = document.getElementById('swalMutasiKab');
             const kecSelect = document.getElementById('swalMutasiKec');
