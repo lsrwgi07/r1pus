@@ -3797,18 +3797,11 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         if (rtVal) filterRt = rtVal.trim().padStart(3, '0');
       }
     }
-    
-    // 1. Tentukan Kolom Bulan (Satu Bulan Saja atau Seluruh 12 Bulan)
-    let dynamicMonthTh = "";
-    if (targetBulanIdx > 0) {
-      dynamicMonthTh = `<th style="background:#0284c7; color:white;">STATUS (${monthHeaders[targetBulanIdx - 1]})</th>`;
-    } else {
-      dynamicMonthTh = monthHeaders.map(m => `<th style="background:#28a745; color:white;">${m}</th>`).join("");
-    }
 
-    // Cek apakah user saat ini adalah User Desa
+    // Cek peran User Desa untuk menyembunyikan NIK
     const hideNik = isDesaRole();
 
+    // Inisialisasi header bulan terlebih dahulu
     const monthHeaders = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
     const targetBulanIdx = bulanVal ? parseInt(bulanVal, 10) : 0;
 
@@ -3820,7 +3813,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       dynamicMonthTh = monthHeaders.map(m => `<th style="background:#28a745; color:white;">${m}</th>`).join("");
     }
 
-    // 2. Header Tabel: Sembunyikan header NIK jika User Desa
+    // 2. Header Tabel
     thead.innerHTML = `<tr>
       <th style="background:#1f4e78; color:white; width:35px;">NO.</th>
       <th style="background:#1f4e78; color:white;">ID PUS</th>
@@ -3842,7 +3835,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       ${dynamicMonthTh}
     </tr>`;
 
-    // Hitung colspan loading/empty state secara akurat
+    // 3. Hitung colspan secara tepat
     const baseColCount = hideNik ? 15 : 17;
     const totalColSpan = targetBulanIdx > 0 ? (baseColCount + 1) : (baseColCount + 12);
     tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; padding: 20px;'>Memuat data BNBA...</td></tr>`;
