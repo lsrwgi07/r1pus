@@ -1502,6 +1502,23 @@
         </td>`;
       tbody.appendChild(tr);
     });
+
+    const inputsToCheck = [
+      "provinsi", "kabupaten", "kecamatan", "desa", "dusun", "rt",
+      "nama_suami", "nik_suami", "nama_istri", "nik_istri", 
+      "tgl_lahir_istri", "jumlah_anak", "umur_anak_terkecil", "peserta_jkn"
+    ];
+
+    inputsToCheck.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input", applyMutationAndAgeLocks);
+        el.addEventListener("change", applyMutationAndAgeLocks);
+      }
+    });
+
+    // Jalankan penguncian awal saat form pertama kali dimuat
+    applyMutationAndAgeLocks();
   };
 
   async function loadMasterWilayahFromDB() {
@@ -1538,84 +1555,131 @@
     }
     populateAllKecamatanDropdowns();
   }
+
+  // Helper: Mengecek apakah Data Wilayah dan Identitas PUS sudah lengkap
+  function isPusDataComplete() {
+    // 1. Cek Data Wilayah (Bagian I)
+    const prov = document.getElementById("provinsi")?.value;
+    const kab  = document.getElementById("kabupaten")?.value;
+    const kec  = document.getElementById("kecamatan")?.value;
+    const desa = document.getElementById("desa")?.value;
+    const dusun= document.getElementById("dusun")?.value;
+    const rt   = document.getElementById("rt")?.value;
+
+    if (!prov || !kab || !kec || !desa || !dusun || !rt) return false;
+
+    // 2. Cek Data Identitas PUS (Bagian II)
+    const namaSuami = document.getElementById("nama_suami")?.value.trim();
+    const nikSuami  = document.getElementById("nik_suami")?.value.trim();
+    const namaIstri = document.getElementById("nama_istri")?.value.trim();
+    const nikIstri  = document.getElementById("nik_istri")?.value.trim();
+    const tglLahir  = document.getElementById("tgl_lahir_istri")?.value;
+    const jkn       = document.getElementById("peserta_jkn")?.value;
+    const jmlAnak   = parseInt(document.getElementById("jumlah_anak")?.value || 0, 10);
+    const umurAnak  = document.getElementById("umur_anak_terkecil")?.value;
+
+    if (!namaSuami) return false;
+    if (!nikSuami || nikSuami.length !== 16) return false;
+    if (!namaIstri) return false;
+    if (!nikIstri || nikIstri.length !== 16) return false;
+    if (!tglLahir) return false;
+    if (!jkn) return false;
+    if (jmlAnak > 0 && (!umurAnak || parseInt(umurAnak, 10) < 0)) return false;
+
+    return true;
+  }
   
   function applyMutationAndAgeLocks() {
-  const tglLahir = document.getElementById("tgl_lahir_istri").value;
-  const tahunInput = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
-  
-  let mutationTriggeredIndex = -1;
-  let age50StartIndex = 13;
+    const isComplete = isPusDataComplete();
+    const tglLahir = document.getElementById("tgl_lahir_istri").value;
+    const tahunInput = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
+    
+    // JIKA FORM BELUM LENGKAP: Kunci semua pilihan bulan KB
+    if (!isComplete) {
+      for (let i = 1; i <= 12; i++) {
+        const sel = document.getElementById("kb_" + i);
+        if (!sel) continue;
+        sel.style.backgroundColor = "#e9ecef";
+        sel.style.pointerEvents = "none";
+        sel.tabIndex = -1;
+        sel.title = "Lengkapi Data Wilayah dan Identitas PUS terlebih dahulu!";
+      }
+      return; // Hentikan evaluasi, jangan buka lock
+    }
 
-  // 1. Hitung titik bulan saat istri genap berusia 50 tahun di tahun pelaporan
-  if (tglLahir) {
-    const dob = new Date(tglLahir);
-    if (!isNaN(dob.getTime())) {
-      const birthYear = dob.getFullYear();
-      const birthMonth = dob.getMonth() + 1; // 1 - 12
-      const yearTurning50 = birthYear + 50;
+    // JIKA FORM SUDAH LENGKAP: Jalankan evaluasi usia 50+ dan mutasi seperti biasa
+    let mutationTriggeredIndex = -1;
+    let age50StartIndex = 13;
 
-      if (tahunInput > yearTurning50) {
-        age50StartIndex = 1; // Sudah lewat 50 tahun sejak awal tahun
-      } else if (tahunInput === yearTurning50) {
-        age50StartIndex = birthMonth; // Masuk 50 tahun di bulan kelahirannya
+    // 1. Hitung titik bulan usia 50 tahun
+    if (tglLahir) {
+      const dob = new Date(tglLahir);
+      if (!isNaN(dob.getTime())) {
+        const birthYear = dob.getFullYear();
+        const birthMonth = dob.getMonth() + 1;
+        const yearTurning50 = birthYear + 50;
+
+        if (tahunInput > yearTurning50) {
+          age50StartIndex = 1;
+        } else if (tahunInput === yearTurning50) {
+          age50StartIndex = birthMonth;
+        }
       }
     }
-  }
 
-  // 2. Cek apakah ada status mutasi di salah satu bulan
-  for (let i = 1; i <= 12; i++) {
-    const sel = document.getElementById("kb_" + i);
-    if (!sel) continue;
-    const val = String(sel.value || "").toUpperCase();
-    
-    if (val === "BERCERAI" || val === "SUAMI/ISTRI MENINGGAL" || val === "PINDAH") {
-      mutationTriggeredIndex = i;
-      break;
+    // 2. Cek apakah ada status mutasi
+    for (let i = 1; i <= 12; i++) {
+      const sel = document.getElementById("kb_" + i);
+      if (!sel) continue;
+      const val = String(sel.value || "").toUpperCase();
+      if (val === "BERCERAI" || val === "SUAMI/ISTRI MENINGGAL" || val === "PINDAH") {
+        mutationTriggeredIndex = i;
+        break;
+      }
     }
-  }
 
-  // 3. Tentukan batas awal lock
-  let lockStartingIndex = 13;
-  let lockReason = "";
+    // 3. Tentukan batas awal lock
+    let lockStartingIndex = 13;
+    let lockReason = "";
 
-  if (mutationTriggeredIndex !== -1 && age50StartIndex !== 13) {
-    if (mutationTriggeredIndex + 1 <= age50StartIndex) {
+    if (mutationTriggeredIndex !== -1 && age50StartIndex !== 13) {
+      if (mutationTriggeredIndex + 1 <= age50StartIndex) {
+        lockStartingIndex = mutationTriggeredIndex + 1;
+        lockReason = "TERKUNCI (SETELAH MUTASI)";
+      } else {
+        lockStartingIndex = age50StartIndex;
+        lockReason = "TERKUNCI (USIA 50+)";
+      }
+    } else if (mutationTriggeredIndex !== -1) {
       lockStartingIndex = mutationTriggeredIndex + 1;
       lockReason = "TERKUNCI (SETELAH MUTASI)";
-    } else {
+    } else if (age50StartIndex !== 13) {
       lockStartingIndex = age50StartIndex;
       lockReason = "TERKUNCI (USIA 50+)";
     }
-  } else if (mutationTriggeredIndex !== -1) {
-    lockStartingIndex = mutationTriggeredIndex + 1;
-    lockReason = "TERKUNCI (SETELAH MUTASI)";
-  } else if (age50StartIndex !== 13) {
-    lockStartingIndex = age50StartIndex;
-    lockReason = "TERKUNCI (USIA 50+)";
-  }
 
-  // 4. Pasang proteksi tanpa merusak form submit (read-only locking)
-  for (let i = 1; i <= 12; i++) {
-    const sel = document.getElementById("kb_" + i);
-    if (!sel) continue;
+    // 4. Pasang proteksi bulan
+    for (let i = 1; i <= 12; i++) {
+      const sel = document.getElementById("kb_" + i);
+      if (!sel) continue;
 
-    const shouldLock = (lockStartingIndex !== 13 && i >= lockStartingIndex);
+      const shouldLock = (lockStartingIndex !== 13 && i >= lockStartingIndex);
 
-    if (shouldLock) {
-      sel.style.backgroundColor = "#e9ecef";
-      sel.style.pointerEvents = "none"; // Mencegah klik/pilihan baru
-      sel.tabIndex = -1;                // Dilewati saat navigasi keyboard
-      sel.title = lockReason;
-      sel.removeAttribute("disabled");  // Pastikan value tetap terbaca saat submit
-    } else {
-      sel.style.backgroundColor = "#ffffff";
-      sel.style.pointerEvents = "auto";
-      sel.tabIndex = 0;
-      sel.title = "";
-      sel.removeAttribute("disabled");
+      if (shouldLock) {
+        sel.style.backgroundColor = "#e9ecef";
+        sel.style.pointerEvents = "none";
+        sel.tabIndex = -1;
+        sel.title = lockReason;
+        sel.removeAttribute("disabled");
+      } else {
+        sel.style.backgroundColor = "#ffffff";
+        sel.style.pointerEvents = "auto";
+        sel.tabIndex = 0;
+        sel.title = "";
+        sel.removeAttribute("disabled");
+      }
     }
   }
-}
 
 // --- KONTROL DROPDOWN BERTINGKAT UNTUK DOWNLOAD DATA TERISI ---
   function initDlExportDropdowns() {
