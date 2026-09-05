@@ -2024,54 +2024,7 @@
   function promptPindahDomisili(monthIndex) {
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const currentMonthName = monthNames[monthIndex - 1];
-	
-    const missingFields = [];
 
-    // Validasi Wilayah Asal
-    if (!document.getElementById("provinsi").value) missingFields.push("Provinsi");
-    if (!document.getElementById("kabupaten").value) missingFields.push("Kabupaten / Kota");
-    if (!document.getElementById("kecamatan").value) missingFields.push("Kecamatan");
-    if (!document.getElementById("desa").value) missingFields.push("Desa");
-    if (!document.getElementById("dusun").value) missingFields.push("Dusun");
-    if (!document.getElementById("rt").value) missingFields.push("RT");
-
-    // Validasi Identitas PUS
-    const namaSuami = document.getElementById("nama_suami").value.trim();
-    const nikSuami  = document.getElementById("nik_suami").value.trim();
-    const namaIstri = document.getElementById("nama_istri").value.trim();
-    const nikIstri  = document.getElementById("nik_istri").value.trim();
-    const tglLahir  = document.getElementById("tgl_lahir_istri").value;
-    const jkn       = document.getElementById("peserta_jkn").value;
-
-    if (!namaSuami) missingFields.push("Nama Suami");
-    if (!nikSuami || nikSuami.length !== 16) missingFields.push("NIK Suami (16 digit)");
-    if (!namaIstri) missingFields.push("Nama Istri");
-    if (!nikIstri || nikIstri.length !== 16) missingFields.push("NIK Istri (16 digit)");
-    if (!tglLahir)  missingFields.push("Tanggal Lahir Istri");
-    if (!jkn)       missingFields.push("Kepesertaan JKN");
-
-    // Jika data belum lengkap, batalkan status PINDAH dan tampilkan peringatan
-    if (missingFields.length > 0) {
-      BATalkanPilihanPindah(monthIndex);
-		
-      const listHtml = missingFields.map(item => `<li style="margin-bottom: 3px;">${item}</li>`).join("");
-      Swal.fire({
-        icon: 'warning',
-        title: 'Lengkapi Data Terlebih Dahulu!',
-        html: `
-          <div style="text-align: left; font-size: 13px; color: #333;">
-            <p style="margin-bottom: 8px;">Sebelum mencatat mutasi <b>PINDAH</b>, mohon lengkapi data wilayah asal dan identitas PUS berikut:</p>
-            <ul style="margin: 0; padding-left: 20px; color: #dc2626; font-weight: 600;">
-              ${listHtml}
-            </ul>
-          </div>
-        `,
-        confirmButtonColor: '#0284c7'
-      });
-      return;
-    }
-
-    // 2. JIKA LENGKAP: Jalankan dialog pemilihan tujuan pindah domisili
     Swal.fire({
       title: 'Tujuan Pindah Domisili',
       text: `Akseptor berstatus PINDAH pada bulan ${currentMonthName}. Ke mana tujuan pindah domisili?`,
@@ -2084,9 +2037,8 @@
       allowOutsideClick: false
     }).then((result) => {
       if (result.isConfirmed) {
-        // Ambil opsi seluruh Kabupaten di Provinsi (default NTB kode '52')
         const provKey = userKodeProv || "52";
-        let kabOptions = `<option value="">-- PILIH KABUPATEN/KOTA TUJUAN --</option>`;
+        let kabOptions = `<option value="">-- PILIH KABUPATEN / KOTA TUJUAN --</option>`;
         if (dataKabupaten[provKey]) {
           for (let kd in dataKabupaten[provKey]) {
             kabOptions += `<option value="${String(kd).padStart(2, '0')}">${dataKabupaten[provKey][kd].toUpperCase()}</option>`;
@@ -2116,7 +2068,6 @@
           confirmButtonText: '✅ Tetapkan Wilayah Tujuan',
           allowOutsideClick: false,
           didOpen: () => {
-            // Event saat memilih Kabupaten
             window.onSwalMutasiKabChange = function() {
               const selKab = document.getElementById('swalMutasiKab').value;
               const selKec = document.getElementById('swalMutasiKec');
@@ -2132,7 +2083,6 @@
               }
             };
 
-            // Event saat memilih Kecamatan
             window.onSwalMutasiKecChange = function() {
               const selKab = document.getElementById('swalMutasiKab').value;
               const selKec = document.getElementById('swalMutasiKec').value;
@@ -2142,8 +2092,6 @@
               if (selKec) {
                 const cleanKab = String(selKab || userKodeKab || "").padStart(2, '0');
                 const cleanKec = String(selKec).padStart(2, '0');
-                
-                // Cari dengan composite key (kdKab_kdKec), fallback ke key lama jika ada
                 const lookupKey = cleanKab + "_" + cleanKec;
                 const daftarDesa = dataDesa[lookupKey] || dataDesa[cleanKec] || {};
 
@@ -2166,7 +2114,7 @@
             const desaNama = desaSelect.selectedIndex >= 0 ? desaSelect.options[desaSelect.selectedIndex].text : "";
 
             if (!kabTujuan || !kecTujuan || !desaTujuan) {
-              Swal.showValidationMessage('Kabupaten, Kecamatan, dan Desa tujuan wajib dipilih!');
+              Swal.showValidationMessage('Kabupaten / Kota, Kecamatan, dan Desa tujuan wajib dipilih!');
               return false;
             }
             return {
@@ -2188,7 +2136,7 @@
             document.getElementById("pindah_desa_tujuan").value = mutRes.value.desa;
             document.getElementById("pindah_desa_nama").value = mutRes.value.desaNama;
 
-            Swal.fire('Tercatat', `Tujuan pindah: Kab. ${mutRes.value.kabNama}, Kec. ${mutRes.value.kecNama}, Desa ${mutRes.value.desaNama}. Tiket mutasi akan dibuat saat disimpan.`, 'success');
+            Swal.fire('Tercatat', `Tujuan pindah: ${mutRes.value.kabNama}, Kec. ${mutRes.value.kecNama}, Desa ${mutRes.value.desaNama}. Tiket mutasi akan dibuat saat disimpan.`, 'success');
           } else {
             BATalkanPilihanPindah(monthIndex);
           }
