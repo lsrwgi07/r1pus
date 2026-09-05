@@ -674,6 +674,7 @@
               <option value="JKN">JKN</option>
               <option value="KESERTAAN_KB">KESERTAAN KB</option>
               <option value="METODE_KONTRASEPSI">METODE KONTRASEPSI</option>
+              <option value="AKSEPTOR_KB_BARU">AKSEPTOR KB BARU</option>
               <option value="ALASAN_TIDAK_KB">ALASAN TIDAK BER KB</option>
               <option value="HAMIL">HAMIL</option>
               <option value="HAMIL_BARU">HAMIL BARU</option>
@@ -2391,7 +2392,6 @@ function onRecapKabupatenChange() {
     const subSelect = document.getElementById("bnbaFilterAdvValue");
     const bulanSelect = document.getElementById("bnbaBulan");
 
-    // Highlight border merah jika kategori lanjutan dipilih
     if (cat) {
       bulanSelect.style.border = "2px solid #ef4444";
       bulanSelect.setAttribute("title", "Wajib memilih bulan untuk pencarian lanjutan");
@@ -2431,6 +2431,19 @@ function onRecapKabupatenChange() {
         <option value="MOP">MOP</option>
       `;
       subSelect.style.display = "block";
+    } else if (cat === "AKSEPTOR_KB_BARU") {
+      // Dropdown metode untuk Akseptor KB Baru (opsional: jika kosong = semua metode baru)
+      subSelect.innerHTML = `
+        <option value="">-- SEMUA ALAT KONTRASEPSI BARU --</option>
+        <option value="PIL">PIL</option>
+        <option value="SUNTIK">SUNTIK</option>
+        <option value="KONDOM">KONDOM</option>
+        <option value="IMPLAN">IMPLAN</option>
+        <option value="IUD">IUD</option>
+        <option value="MOW">MOW</option>
+        <option value="MOP">MOP</option>
+      `;
+      subSelect.style.display = "block";
     } else if (cat === "ALASAN_TIDAK_KB") {
       subSelect.innerHTML = `
         <option value="">-- PILIH ALASAN --</option>
@@ -2449,7 +2462,7 @@ function onRecapKabupatenChange() {
         <option value="PINDAH">PINDAH</option>
       `;
       subSelect.style.display = "block";
-    }
+    }    
   }
 
   function resetBnbaFilters() {
@@ -3785,39 +3798,57 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       }
     }
 
+    const monthHeaders = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
+    const targetBulanIdx = bulanVal ? parseInt(bulanVal, 10) : 0;
+
+    // 1. Tentukan Kolom Bulan (Satu Bulan Saja atau Seluruh 12 Bulan)
+    let dynamicMonthTh = "";
+    if (targetBulanIdx > 0) {
+      dynamicMonthTh = `<th style="background:#0284c7; color:white;">STATUS (${monthHeaders[targetBulanIdx - 1]})</th>`;
+    } else {
+      dynamicMonthTh = monthHeaders.map(m => `<th style="background:#28a745; color:white;">${m}</th>`).join("");
+    }
+
+    // Cek apakah user saat ini adalah User Desa
+    const hideNik = isDesaRole();
+
+    const monthHeaders = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
+    const targetBulanIdx = bulanVal ? parseInt(bulanVal, 10) : 0;
+
+    // 1. Tentukan Kolom Bulan Dinamis
+    let dynamicMonthTh = "";
+    if (targetBulanIdx > 0) {
+      dynamicMonthTh = `<th style="background:#0284c7; color:white;">STATUS (${monthHeaders[targetBulanIdx - 1]})</th>`;
+    } else {
+      dynamicMonthTh = monthHeaders.map(m => `<th style="background:#28a745; color:white;">${m}</th>`).join("");
+    }
+
+    // 2. Header Tabel: Sembunyikan header NIK jika User Desa
     thead.innerHTML = `<tr>
       <th style="background:#1f4e78; color:white; width:35px;">NO.</th>
       <th style="background:#1f4e78; color:white;">ID PUS</th>
       <th style="background:#1f4e78; color:white;">PROVINSI</th>
-      <th style="background:#1f4e78; color:white;">KABUPATEN</th>
+      <th style="background:#1f4e78; color:white;">KABUPATEN / KOTA</th>
       <th style="background:#1f4e78; color:white;">KECAMATAN</th>
       <th style="background:#1f4e78; color:white;">DESA</th>
       <th style="background:#1f4e78; color:white;">DUSUN</th>
       <th style="background:#1f4e78; color:white;">RT</th>
       <th style="background:#1f4e78; color:white;">NAMA SUAMI</th>
-      <th style="background:#1f4e78; color:white;">NIK SUAMI</th>
+      ${hideNik ? "" : `<th style="background:#1f4e78; color:white;">NIK SUAMI</th>`}
       <th style="background:#1f4e78; color:white;">NAMA ISTRI</th>
-      <th style="background:#1f4e78; color:white;">NIK ISTRI</th>
+      ${hideNik ? "" : `<th style="background:#1f4e78; color:white;">NIK ISTRI</th>`}
       <th style="background:#1f4e78; color:white;">TGL LAHIR ISTRI</th>
       <th style="background:#1f4e78; color:white;">UMUR ISTRI</th>
       <th style="background:#1f4e78; color:white;">JML ANAK</th>
       <th style="background:#1f4e78; color:white;">UMUR ANAK TERKECIL</th>
       <th style="background:#1f4e78; color:white;">PESERTA JKN</th>
-      <th style="background:#28a745; color:white;">JAN</th>
-      <th style="background:#28a745; color:white;">FEB</th>
-      <th style="background:#28a745; color:white;">MAR</th>
-      <th style="background:#28a745; color:white;">APR</th>
-      <th style="background:#28a745; color:white;">MEI</th>
-      <th style="background:#28a745; color:white;">JUN</th>
-      <th style="background:#28a745; color:white;">JUL</th>
-      <th style="background:#28a745; color:white;">AGU</th>
-      <th style="background:#28a745; color:white;">SEP</th>
-      <th style="background:#28a745; color:white;">OKT</th>
-      <th style="background:#28a745; color:white;">NOV</th>
-      <th style="background:#28a745; color:white;">DES</th>
+      ${dynamicMonthTh}
     </tr>`;
 
-    tbody.innerHTML = "<tr><td colspan='29' style='text-align:center; padding: 20px;'>Memuat seluruh data BNBA...</td></tr>";
+    // Hitung colspan loading/empty state secara akurat
+    const baseColCount = hideNik ? 15 : 17;
+    const totalColSpan = targetBulanIdx > 0 ? (baseColCount + 1) : (baseColCount + 12);
+    tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; padding: 20px;'>Memuat data BNBA...</td></tr>`;
 
     let allData = [];
     let from = 0;
@@ -3845,13 +3876,12 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         }
       }
 
-      // Filter Pencarian Lanjutan (jika dipilih)
+      // 2. Filter Pencarian Lanjutan (Termasuk Akseptor KB Baru)
       if (advCat) {
         const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
-        const targetBulan = bulanVal ? parseInt(bulanVal, 10) : 1;
+        const targetBulan = targetBulanIdx > 0 ? targetBulanIdx : 1;
 
         allData = allData.filter(r => {
-          // 1. JKN
           if (advCat === "JKN") {
             const jknVal = String(r.peserta_jkn || "").toUpperCase();
             if (!advVal) return true;
@@ -3862,47 +3892,46 @@ function hitungStatusIndikator(r, bulan, mKeys) {
             return jknVal === advVal;
           }
 
-          // Untuk filter berbasis KB bulanan
           const res = hitungStatusIndikator(r, targetBulan, mKeys);
           const cur = res.cur;
 
-          // 2. KESERTAAN KB
           if (advCat === "KESERTAAN_KB") {
             if (advVal === "BER_KB") return cur.type === "PESERTA_KB" && !res.isMutasiOr50;
             if (advVal === "TIDAK_BER_KB") return cur.type === "BUKAN_PESERTA" && !res.isMutasiOr50;
             return res.isPusAktif;
           }
 
-          // 3. METODE KONTRASEPSI
           if (advCat === "METODE_KONTRASEPSI") {
             if (cur.type !== "PESERTA_KB" || res.isMutasiOr50) return false;
             if (!advVal) return true;
             return cur.method === advVal;
           }
 
-          // 4. ALASAN TIDAK BER KB
+          // FITUR BARU: AKSEPTOR KB BARU
+          if (advCat === "AKSEPTOR_KB_BARU") {
+            if (!res.isKbBaru || res.isMutasiOr50) return false;
+            if (!advVal) return true; // Jika dropdown tidak dipilih, tampilkan semua jenis akseptor baru
+            return cur.method === advVal; // Jika dipilih, cocokkan dengan metode spesifiknya
+          }
+
           if (advCat === "ALASAN_TIDAK_KB") {
             if (cur.type !== "BUKAN_PESERTA" || res.isMutasiOr50) return false;
             if (!advVal) return true;
             return cur.reason === advVal;
           }
 
-          // 5. HAMIL
           if (advCat === "HAMIL") {
             return cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL" && !res.isMutasiOr50;
           }
 
-          // 6. HAMIL BARU
           if (advCat === "HAMIL_BARU") {
             return res.isHamilBaru;
           }
 
-          // 7. PUS BARU
           if (advCat === "PUS_BARU") {
             return res.isPusBaru;
           }
 
-          // 8. MUTASI
           if (advCat === "MUTASI") {
             if (cur.type !== "BUKAN_PUS") return false;
             if (!advVal) return true;
@@ -3917,12 +3946,24 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       }
 
       if (allData.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='29' style='text-align:center; color:#dc2626; font-weight:bold; padding: 30px;'>Tidak ada data BNBA yang sesuai kriteria pencarian dan filter lanjutan.</td></tr>";
+        tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; color:#dc2626; font-weight:bold; padding: 30px;'>Tidak ada data BNBA yang sesuai kriteria filter.</td></tr>`;
         return;
       }
 
+      // 3. Render Baris Data
+      const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
       let htmlRows = "";
+
       allData.forEach((r, idx) => {
+        let dynamicMonthTd = "";
+
+        if (targetBulanIdx > 0) {
+          const mKey = mKeys[targetBulanIdx - 1];
+          dynamicMonthTd = `<td style="text-align:center; font-weight:bold; color:#0284c7;">${r[mKey] || '-'}</td>`;
+        } else {
+          dynamicMonthTd = mKeys.map(k => `<td style="text-align:center;">${r[k] || '-'}</td>`).join("");
+        }
+
         htmlRows += `<tr>
           <td style="text-align:center; font-weight:bold;">${idx + 1}</td>
           <td style="font-weight:bold;">${r.id_pus || '-'}</td>
@@ -3933,32 +3974,22 @@ function hitungStatusIndikator(r, bulan, mKeys) {
           <td>${r.dusun_nama || '-'}</td>
           <td style="text-align:center;">${r.kode_rt || r.rt_nama || '-'}</td>
           <td style="text-align:left;">${r.nama_suami || '-'}</td>
-          <td style="font-family: monospace;">${r.nik_suami || '-'}</td>
+          ${hideNik ? "" : `<td style="font-family: monospace;">${r.nik_suami || '-'}</td>`}
           <td style="text-align:left; font-weight:bold;">${r.nama_istri || '-'}</td>
-          <td style="font-family: monospace;">${r.nik_istri || '-'}</td>
+          ${hideNik ? "" : `<td style="font-family: monospace;">${r.nik_istri || '-'}</td>`}
           <td style="text-align:center;">${r.tgl_lahir_istri || '-'}</td>
           <td style="text-align:center;">${r.umur_istri || '0'}</td>
           <td style="text-align:center;">${r.jumlah_anak || '0'}</td>
           <td style="text-align:center;">${r.umur_anak_terkecil || '0'}</td>
           <td style="text-align:center;">${r.peserta_jkn || '-'}</td>
-          <td style="text-align:center;">${r.kb_jan || '-'}</td>
-          <td style="text-align:center;">${r.kb_feb || '-'}</td>
-          <td style="text-align:center;">${r.kb_mar || '-'}</td>
-          <td style="text-align:center;">${r.kb_apr || '-'}</td>
-          <td style="text-align:center;">${r.kb_mei || '-'}</td>
-          <td style="text-align:center;">${r.kb_jun || '-'}</td>
-          <td style="text-align:center;">${r.kb_jul || '-'}</td>
-          <td style="text-align:center;">${r.kb_agu || '-'}</td>
-          <td style="text-align:center;">${r.kb_sep || '-'}</td>
-          <td style="text-align:center;">${r.kb_okt || '-'}</td>
-          <td style="text-align:center;">${r.kb_nov || '-'}</td>
-          <td style="text-align:center;">${r.kb_des || '-'}</td>
+          ${dynamicMonthTd}
         </tr>`;
       });
+
       tbody.innerHTML = htmlRows;
     } catch (err) {
       console.error("BNBA Fetch Error:", err);
-      tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; color:red; padding: 20px;'>Gagal memuat data: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; color:red; padding: 20px;'>Gagal memuat data: ${err.message}</td></tr>`;
       Swal.fire("Error", "Gagal memuat BNBA: " + err.message, "error");
     }
   }
@@ -6657,6 +6688,7 @@ function onUserKabChange() {
       if (data) selectDataForEdit(data);
     }
   }
+
   function exitApp() {
     Swal.fire({
       title: 'Konfirmasi Tutup Aplikasi',
