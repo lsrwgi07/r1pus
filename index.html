@@ -3797,10 +3797,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         if (rtVal) filterRt = rtVal.trim().padStart(3, '0');
       }
     }
-
-    const monthHeaders = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
-    const targetBulanIdx = bulanVal ? parseInt(bulanVal, 10) : 0;
-
+    
     // 1. Tentukan Kolom Bulan (Satu Bulan Saja atau Seluruh 12 Bulan)
     let dynamicMonthTh = "";
     if (targetBulanIdx > 0) {
