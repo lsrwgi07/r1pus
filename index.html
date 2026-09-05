@@ -670,7 +670,7 @@
           <!-- 2. PENCARIAN LANJUTAN & SUB DROPDOWN -->
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()" style="flex: 1; min-width: 200px;">
-              <option value="">-- PENCARIAN LANJUTAN (OPSIONAL) --</option>
+              <option value="">-- PENCARIAN LANJUTAN --</option>
               <option value="JKN">JKN</option>
               <option value="KESERTAAN_KB">KESERTAAN KB</option>
               <option value="METODE_KONTRASEPSI">METODE KONTRASEPSI</option>
@@ -2421,7 +2421,7 @@ function onRecapKabupatenChange() {
       subSelect.style.display = "block";
     } else if (cat === "METODE_KONTRASEPSI") {
       subSelect.innerHTML = `
-        <option value="">-- PILIH METODE --</option>
+        <option value="">-- PILIH METODE KONTRASEPSI --</option>
         <option value="PIL">PIL</option>
         <option value="SUNTIK">SUNTIK</option>
         <option value="KONDOM">KONDOM</option>
@@ -2434,7 +2434,7 @@ function onRecapKabupatenChange() {
     } else if (cat === "AKSEPTOR_KB_BARU") {
       // Dropdown metode untuk Akseptor KB Baru (opsional: jika kosong = semua metode baru)
       subSelect.innerHTML = `
-        <option value="">-- SEMUA ALAT KONTRASEPSI BARU --</option>
+        <option value="">-- PILIH METODE KONTRASEPSI --</option>
         <option value="PIL">PIL</option>
         <option value="SUNTIK">SUNTIK</option>
         <option value="KONDOM">KONDOM</option>
