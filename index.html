@@ -356,6 +356,7 @@
 
       <form id="pusForm" onsubmit="handleFormSubmit(event)">
         <input type="hidden" id="id_pus" name="id_pus">
+        <input type="hidden" id="old_id_pus" name="old_id_pus">
         <input type="hidden" id="id_mutasi_tiket" name="id_mutasi_tiket">
         <input type="hidden" id="is_pindah_dalam_prov" value="false">
         <input type="hidden" id="pindah_kab_tujuan" value="">
@@ -3224,20 +3225,32 @@ function onRecapKabupatenChange() {
     const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
     const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
 
-    // Penomoran ID PUS Aman: Menghitung nomor urut maksimal (MAX)
+    // Prefix ID PUS baru berdasarkan lokasi Dusun dan RT yang dipilih saat ini
+    const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+    
+    const oldIdPus = document.getElementById("old_id_pus").value.trim();
+    let isRelocatedInSameVillage = false;
+
+    // JIKA INI MODE EDIT, TAPI DUSUN ATAU RT DIUBAH:
+    if (oldIdPus && !oldIdPus.startsWith(expectedPrefix)) {
+      isRelocatedInSameVillage = true;
+      // Kosongkan idPus agar sistem men-generate ID PUS baru sesuai RT/Dusun tujuan
+      idPus = ""; 
+    }
+
+    // Penomoran ID PUS Baru (jika data baru ATAU pindah RT/Dusun)
     if (!idPus) {
-      const prefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
       const { data: matchedRows } = await db
         .from('data_pus')
         .select('id_pus')
-        .ilike('id_pus', `${prefix}%`)
+        .ilike('id_pus', `${expectedPrefix}%`)
         .eq('tahun', thn);
 
       let maxSeq = 0;
       if (matchedRows && matchedRows.length > 0) {
         matchedRows.forEach(row => {
           const cleanId = String(row.id_pus || "").trim();
-          const matches = cleanId.match(/\d+$/); // Ambil angka paling belakang secara akurat
+          const matches = cleanId.match(/\d+$/);
           if (matches) {
             const seqPart = parseInt(matches[0], 10);
             if (!isNaN(seqPart) && seqPart > maxSeq) {
@@ -3248,7 +3261,7 @@ function onRecapKabupatenChange() {
       }
 
       const nextNum = maxSeq + 1;
-      idPus = `${prefix}${String(nextNum).padStart(3, '0')}`;
+      idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
       document.getElementById("id_pus").value = idPus;
     }
 
@@ -3291,8 +3304,24 @@ function onRecapKabupatenChange() {
       kb_des: document.getElementById("kb_12").value
     };
 
+    / Simpan data ke ID PUS baru
     const { error } = await db.from('data_pus').upsert([payload], { onConflict: 'id_pus,tahun' });
     if (error) throw error;
+
+    // JIKA TERJADI PINDAH DALAM 1 DESA: HAPUS ID PUS LAMA DARI DATABASE
+    if (isRelocatedInSameVillage && oldIdPus) {
+      const { error: delErr } = await db
+        .from('data_pus')
+        .delete()
+        .eq('id_pus', oldIdPus)
+        .eq('tahun', thn);
+
+      if (delErr) {
+        console.error("Gagal menghapus ID lama:", delErr);
+      } else {
+        console.log(`Data lama ${oldIdPus} berhasil digantikan oleh ${idPus}`);
+      }
+    }
 
     // Mutasi Pindah
     const isPindahDalamProv = document.getElementById("is_pindah_dalam_prov").value === "true";
@@ -4610,7 +4639,9 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   function selectDataForEdit(d) {
     closeSearchModal();
     showFormView();
-    document.getElementById("id_pus").value = d.id_pus;
+    document.getElementById("id_pus").value = d.id_pus;    
+    document.getElementById("old_id_pus").value = d.id_pus;
+    
     document.getElementById("tahun_input").value = d.tahun;
     setSelectValueCaseInsensitive("provinsi", d.kode_prov); updateKabupaten(d.kode_kab);
     setSelectValueCaseInsensitive("kabupaten", d.kode_kab); updateKecamatan(d.kode_kec);
@@ -5861,6 +5892,7 @@ function onUserKecChange() {
   function resetInputForm() {
     document.getElementById("pusForm").reset();
     document.getElementById("id_pus").value = "";
+    document.getElementById("old_id_pus").value = "";
 
     // Sembunyikan bilah navigasi RT jika sebelumnya aktif
     const navRT = document.getElementById("navRTContainer");
