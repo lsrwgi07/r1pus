@@ -2846,31 +2846,6 @@ function onRecapKabupatenChange() {
   }
 
   async function loadInboxMutasiTable() {
-
-  const { data, error } = await query;
-  cachedPendingMutasiList = data || [];
-
-  const badge = document.getElementById("badgeInboxMutasi");
-  if (badge) {
-    if (cachedPendingMutasiList.length > 0) {
-      badge.innerText = cachedPendingMutasiList.length;
-      badge.style.display = "inline-block";
-    } else {
-      badge.style.display = "none";
-    }
-  }
-}
-
-  function openInboxMutasiModal() {
-    document.getElementById("modalInboxMutasi").style.display = "block";
-    loadInboxMutasiTable();
-  }
-
-  function closeInboxMutasiModal() {
-    document.getElementById("modalInboxMutasi").style.display = "none";
-  }
-
-  async function loadInboxMutasiTable() {
     const tbody = document.getElementById("inboxMutasiTbody");
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px;">Memeriksa data mutasi...</td></tr>`;
 
