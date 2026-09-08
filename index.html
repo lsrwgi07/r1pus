@@ -5178,83 +5178,138 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   const selKec = document.getElementById("user_kec_select");
   const selDesa = document.getElementById("user_desa_select");
 
+  // Reset visibilitas baris form
   kabRow.style.display = "none";
   kecRow.style.display = "none";
   desaRow.style.display = "none";
 
-  if (roleVal === "Admin Prov" || roleVal === "") {
+  if (!roleVal || roleVal === "Admin Prov") {
+    // Admin Prov tidak membutuhkan binding wilayah spesifik
     return;
-  } else if (roleVal === "Admin Kab") {
-    kabRow.style.display = "flex";
-    if (isProvRole()) {
-      populateKabupatenDropdown("user_kab_select");
-      selKab.disabled = false;
+  }
+
+  // ==========================================
+  // 1. PENGATURAN KABUPATEN
+  // ==========================================
+  kabRow.style.display = "flex";
+  if (isProvRole()) {
+    // Admin Provinsi: Bebas memilih kabupaten mana saja
+    populateKabupatenDropdown("user_kab_select");
+    selKab.disabled = false;
+  } else {
+    // Admin Kab / Admin Kec / User Desa: Terkunci ke kabupaten login
+    populateKabupatenDropdown("user_kab_select");
+    selKab.value = userKodeKab;
+    selKab.disabled = true;
+  }
+
+  // ==========================================
+  // 2. JIKA MEMBUAT AKUN: ADMIN KAB
+  // ==========================================
+  if (roleVal === "Admin Kab") {
+    return; // Cukup baris Kabupaten
+  }
+
+  // ==========================================
+  // 3. PENGATURAN KECAMATAN
+  // ==========================================
+  kecRow.style.display = "flex";
+  if (isProvRole()) {
+    selKec.disabled = false;
+    if (selKab.value) {
+      populateKecamatanByKab(selKab.value, "user_kec_select");
     } else {
-      selKab.value = userKodeKab;
-      selKab.disabled = true;
+      selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
     }
-  } else if (roleVal === "Admin Kec") {
-    kabRow.style.display = "flex";
-    kecRow.style.display = "flex";
-    if (isProvRole()) {
-      populateKabupatenDropdown("user_kab_select");
-      selKab.disabled = false;
-      selKec.disabled = false; // Buka lock kecamatan untuk Admin Prov
-      // Reset kecamatan sampai kabupaten dipilih
-      if (!selKab.value) {
-        selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
-      } else {
-        populateKecamatanByKab(selKab.value, "user_kec_select");
-      }
+  } else if (isKabRole()) {
+    // Admin Kab: Bebas memilih seluruh kecamatan di kabupatennya
+    selKec.disabled = false;
+    populateKecamatanByKab(userKodeKab, "user_kec_select");
+  } else {
+    // Admin Kec & User Desa: Terkunci ke kecamatan login
+    populateKecamatanByKab(userKodeKab, "user_kec_select");
+    selKec.value = userKodeKec;
+    selKec.disabled = true;
+  }
+
+  // ==========================================
+  // 4. JIKA MEMBUAT AKUN: ADMIN KEC
+  // ==========================================
+  if (roleVal === "Admin Kec") {
+    return; // Cukup sampai baris Kecamatan
+  }
+
+  // ==========================================
+  // 5. JIKA MEMBUAT AKUN: USER DESA
+  // ==========================================
+  desaRow.style.display = "flex";
+  if (isProvRole()) {
+    selDesa.disabled = false;
+    if (selKec.value) {
+      populateDesaByKec(selKec.value, "user_desa_select", selKab.value);
     } else {
-      selKab.value = userKodeKab;
-      selKab.disabled = true;
-      selKec.disabled = false;
-      populateKecamatanByKab(userKodeKab, "user_kec_select");
+      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
     }
-  } else { // "User Desa"
-    kabRow.style.display = "flex";
-    kecRow.style.display = "flex";
-    desaRow.style.display = "flex";
-    if (isProvRole()) {
-      populateKabupatenDropdown("user_kab_select");
-      selKab.disabled = false;
-      selKec.disabled = false;  // Buka lock kecamatan
-      selDesa.disabled = false; // Buka lock desa
-      if (!selKab.value) {
-        selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
-        selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
-      } else {
-        populateKecamatanByKab(selKab.value, "user_kec_select");
-      }
-    } else if (isKabRole()) {
-      selKab.value = userKodeKab;
-      selKab.disabled = true;
-      selKec.disabled = false;
-      selDesa.disabled = false;
-      populateKecamatanByKab(userKodeKab, "user_kec_select");
-    } else if (isKecRole()) {
-      selKab.value = userKodeKab;
-      selKab.disabled = true;
-      selKec.value = userKodeKec;
-      selKec.disabled = true;
-      selDesa.disabled = false;
-      populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
+  } else if (isKabRole()) {
+    selDesa.disabled = false;
+    if (selKec.value) {
+      populateDesaByKec(selKec.value, "user_desa_select", userKodeKab);
+    } else {
+      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
     }
+  } else if (isKecRole()) {
+    // Admin Kec: Bebas memilih seluruh desa di kecamatannya
+    selDesa.disabled = false;
+    populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
+  } else {
+    // User Desa: Terkunci ke desanya sendiri
+    populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
+    selDesa.value = userKodeDesa;
+    selDesa.disabled = true;
   }
 }
 
 function onUserKabChange() {
-  const kdKab = document.getElementById("user_kab_select").value;
+  const selKab = document.getElementById("user_kab_select");
   const selKec = document.getElementById("user_kec_select");
   const selDesa = document.getElementById("user_desa_select");
+  const roleVal = document.getElementById("user_role_select").value;
 
-  if (selKec) {
+  const kdKab = selKab ? selKab.value : "";
+  if (!kdKab) {
+    if (selKec) selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
+    if (selDesa) selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+    return;
+  }
+
+  // Refresh daftar kecamatan sesuai kabupaten terpilih
+  if (selKec && (roleVal === "Admin Kec" || roleVal === "User Desa")) {
     selKec.disabled = false;
     populateKecamatanByKab(kdKab, "user_kec_select");
   }
   if (selDesa) {
     selDesa.innerHTML = '<option value="">-- PILIH DESA --</option>';
+  }
+}
+
+function onUserKecChange() {
+  const selKab = document.getElementById("user_kab_select");
+  const selKec = document.getElementById("user_kec_select");
+  const selDesa = document.getElementById("user_desa_select");
+  const roleVal = document.getElementById("user_role_select").value;
+
+  if (roleVal !== "User Desa") return;
+
+  const kdKab = isProvRole() ? (selKab ? selKab.value : "") : userKodeKab;
+  const kdKec = selKec ? selKec.value : "";
+
+  if (selDesa) {
+    if (!kdKec) {
+      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+    } else {
+      selDesa.disabled = false;
+      populateDesaByKec(kdKec, "user_desa_select", kdKab);
+    }
   }
 }
 
@@ -5280,22 +5335,22 @@ function onUserKabChange() {
     let targetDesa = "";
 
     if (roleVal === "Admin Prov") {
-      targetKab = null;
-      targetKec = null;
-      targetDesa = null;
-    } else if (roleVal === "Admin Kab") {
-      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-      targetKec = null;
-      targetDesa = null;
-    } else if (roleVal === "Admin Kec") {
-      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-      targetKec = isDesaRole() ? userKodeKec : (isKecRole() ? userKodeKec : document.getElementById("user_kec_select").value);
-      targetDesa = null;
-    } else { // "User Desa"
-      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-      targetKec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("user_kec_select").value;
-      targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
-    }
+	targetKab = null;
+	targetKec = null;
+	targetDesa = null;
+  } else if (roleVal === "Admin Kab") {
+	targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+	targetKec = null;
+	targetDesa = null;
+  } else if (roleVal === "Admin Kec") {
+	targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+	targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
+	targetDesa = null;
+  } else { // "User Desa"
+	targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+	targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
+	targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
+  }
 
     const payload = {
       username: document.getElementById("user_name_input").value.trim(),
