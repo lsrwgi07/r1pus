@@ -3557,7 +3557,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       allData.forEach(r => {
         let key = "";
         if (tingkat === "Provinsi") {
-          key = String(r.kabupaten_nama || "").trim().toUpperCase(); // GROUPING TINGKAT PROVINSI
+          key = String(r.kabupaten_nama || "").trim().toUpperCase();
         } else if (tingkat === "Kabupaten") {
           key = String(r.kecamatan_nama || "").trim().toUpperCase();
         } else if (tingkat === "Kecamatan") {
@@ -3572,30 +3572,26 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         if (!key) return;
         if (!grouped[key]) grouped[key] = emptyRecapItem(key);
         
-        // Panggil helper evaluasi indikator
+        // Panggil helper evaluasi indikator (HANYA SATU KALI)
         const res = hitungStatusIndikator(r, bulan, mKeys);
         const cur = res.cur;
+        const umur = res.umurIstri;
 
-        // 1. TOTAL PUS: Hanya bertambah jika status bulan berjalan adalah PESERTA_KB atau BUKAN_PESERTA (umur < 50 dan bukan mutasi)        
-		const res = hitungStatusIndikator(r, bulan, mKeys);
-		const cur = res.cur;
-		const umur = res.umurIstri;
-		
-		// 1. EVALUASI KELOMPOK UMUR & TOTAL PUS
-		if (res.isPusAktif) {
-		  if (umur >= 15 && umur <= 19) grouped[key].u15_19++;
-		  else if (umur >= 20 && umur <= 24) grouped[key].u20_24++;
-		  else if (umur >= 25 && umur <= 29) grouped[key].u25_29++;
-		  else if (umur >= 30 && umur <= 34) grouped[key].u30_34++;
-		  else if (umur >= 35 && umur <= 39) grouped[key].u35_39++;
-		  else if (umur >= 40 && umur <= 44) grouped[key].u40_44++;
-		  else if (umur >= 45 && umur < 50)  grouped[key].u45_plus++;
-		  
-		  // Penjumlahan ke TOTAL PUS (otomatis sama persis dengan total penjumlahan umur di atas)
-		  grouped[key].total_pus++;
-		}
+        // 1. EVALUASI TOTAL PUS & KELOMPOK UMUR
+        if (res.isPusAktif) {
+          if (umur >= 15 && umur <= 19) grouped[key].u15_19++;
+          else if (umur >= 20 && umur <= 24) grouped[key].u20_24++;
+          else if (umur >= 25 && umur <= 29) grouped[key].u25_29++;
+          else if (umur >= 30 && umur <= 34) grouped[key].u30_34++;
+          else if (umur >= 35 && umur <= 39) grouped[key].u35_39++;
+          else if (umur >= 40 && umur <= 44) grouped[key].u40_44++;
+          else if (umur >= 45 && umur < 50)  grouped[key].u45_plus++;
+          
+          // Total PUS adalah akumulasi dari seluruh kelompok umur di atas
+          grouped[key].total_pus++;
+        }
 
-        // 2. PUS BARU: Sesuai syarat aturan baru
+        // 2. PUS BARU
         if (res.isPusBaru) {
           grouped[key].pus_baru++;
         }
