@@ -2039,6 +2039,7 @@
       cancelButtonText: '✈️ Ke Luar Provinsi',
       allowOutsideClick: false
     }).then((result) => {
+      // 1. KONDISI: Jika memilih "Di Dalam Provinsi"
       if (result.isConfirmed) {
         const provKey = userKodeProv || "52";
         let kabOptions = `<option value="">-- PILIH KABUPATEN / KOTA TUJUAN --</option>`;
@@ -2066,7 +2067,9 @@
             </select>
           `,
           icon: 'info',
-          showCancelButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'Batal',
+          cancelButtonColor: '#ef4444',
           confirmButtonColor: '#059669',
           confirmButtonText: '✅ Tetapkan Wilayah Tujuan',
           allowOutsideClick: false,
@@ -2131,6 +2134,7 @@
           }
         }).then((mutRes) => {
           if (mutRes.isConfirmed) {
+            // Berhasil memilih wilayah tujuan di dalam provinsi
             document.getElementById("is_pindah_dalam_prov").value = "true";
             document.getElementById("pindah_kab_tujuan").value = mutRes.value.kab;
             document.getElementById("pindah_kab_nama").value = mutRes.value.kabNama;
@@ -2139,13 +2143,35 @@
             document.getElementById("pindah_desa_tujuan").value = mutRes.value.desa;
             document.getElementById("pindah_desa_nama").value = mutRes.value.desaNama;
 
+            applyMutationAndAgeLocks();
             Swal.fire('Tercatat', `Tujuan pindah: ${mutRes.value.kabNama}, Kec. ${mutRes.value.kecNama}, Desa ${mutRes.value.desaNama}. Tiket mutasi akan dibuat saat disimpan.`, 'success');
           } else {
+            // User membatalkan pemilihan wilayah di dalam provinsi
             BATalkanPilihanPindah(monthIndex);
           }
         });
+
+      // 2. KONDISI: Jika menekan tombol "Ke Luar Provinsi" (Cancel Button)
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        document.getElementById("is_pindah_dalam_prov").value = "false";
+        document.getElementById("pindah_kab_tujuan").value = "";
+        document.getElementById("pindah_kab_nama").value = "";
+        document.getElementById("pindah_kec_tujuan").value = "";
+        document.getElementById("pindah_kec_nama").value = "";
+        document.getElementById("pindah_desa_tujuan").value = "";
+        document.getElementById("pindah_desa_nama").value = "";
+
+        // Tetapkan status bulan sebagai PINDAH dan kunci bulan-bulan berikutnya
+        applyMutationAndAgeLocks();
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Pindah Luar Provinsi',
+          text: 'Status PINDAH keluar provinsi berhasil dicatat (tidak membuat tiket inbox mutasi lokal).'
+        });
+
+      // 3. KONDISI: Jika user menutup pop-up via tombol close / escape / klik di luar
       } else {
-        // Ke Luar Provinsi
         BATalkanPilihanPindah(monthIndex);
       }
     });
@@ -2936,6 +2962,10 @@ function onRecapKabupatenChange() {
       title: 'Data Mutasi Dimuat!',
       text: `Data PUS [${item.nama_istri}] berhasil disalin (status pindah telah dibersihkan untuk wilayah baru). Silakan lengkapi DUSUN dan RT di wilayah Anda, lalu klik SIMPAN DATA.`
     });
+
+    if (isDesaRole()) {
+      updateDusun(); // Memuat daftar dusun milik desa penerima secara otomatis
+    }
   }  
 
   // --- FORM INPUT DROPDOWN & SUBMIT ---
@@ -3285,13 +3315,13 @@ function onRecapKabupatenChange() {
         tahun: thn,
         bulan_pindah: detectedBulanPindah,
         id_pus_asal: idPus,
-        kode_prov_asal: kdProv,
-        kode_kab_asal: kdKab,
+        kode_prov_asal: String(kdProv).padStart(2, '0'),
+        kode_kab_asal: String(kdKab).padStart(2, '0'),
         kabupaten_asal: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex]?.text || "",
-        kode_kec_asal: kdKec,
-        kode_desa_asal: kdDesa,
+        kode_kec_asal: String(kdKec).padStart(2, '0'),
+        kode_desa_asal: String(kdDesa).padStart(4, '0'),
         desa_asal: document.getElementById("desa").options[document.getElementById("desa").selectedIndex]?.text || "",
-        kode_prov_tujuan: kdProv,
+        kode_prov_tujuan: String(kdProv).padStart(2, '0'),
         kode_kab_tujuan: kdKabTujuan,
         kabupaten_tujuan: document.getElementById("pindah_kab_nama").value,
         kode_kec_tujuan: kdKecTujuan,
