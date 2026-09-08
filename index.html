@@ -3304,7 +3304,7 @@ function onRecapKabupatenChange() {
       kb_des: document.getElementById("kb_12").value
     };
 
-    / Simpan data ke ID PUS baru
+    // Simpan data ke ID PUS baru
     const { error } = await db.from('data_pus').upsert([payload], { onConflict: 'id_pus,tahun' });
     if (error) throw error;
 
@@ -3392,8 +3392,9 @@ function onRecapKabupatenChange() {
       showConfirmButton: false
     });
 
-    // 1. Pastikan id_pus di form terisi dengan idPus yang baru dibuat/disimpan
+    // 1. Pastikan id_pus dan old_id_pus di form terisi dengan idPus yang baru dibuat/disimpan
     document.getElementById("id_pus").value = idPus;
+    document.getElementById("old_id_pus").value = idPus;
 
     // 2. JANGAN resetInputForm(), aktifkan Navigasi RT (Back/Next) untuk RT dan Dusun wilayah tersebut
     const namaDsnText = document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex]?.text || "";
