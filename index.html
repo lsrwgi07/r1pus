@@ -4616,7 +4616,54 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
     doc.autoTable({ html: '#recapTable', startY: 45, styles: { fontSize: 6.5, cellPadding: 2 } });
     doc.save("Rekap_PUS.pdf");
-  }  
+  }
+
+  // =========================================================================
+  // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
+  // =========================================================================
+  function exportTableToExcel(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) {
+      Swal.fire("Perhatian", "Tabel tidak ditemukan!", "warning");
+      return;
+    }
+
+    // Cek apakah tabel masih kosong / belum dimuat datanya
+    const tbody = table.querySelector("tbody");
+    if (!tbody || tbody.rows.length === 0 || tbody.innerText.includes("Silakan atur filter") || tbody.innerText.includes("Tidak ada data")) {
+      Swal.fire("Perhatian", "Tabel belum memiliki data untuk diekspor!", "warning");
+      return;
+    }
+
+    // 1. Ekstrak data dari tabel HTML ke worksheet XLSX
+    const ws = XLSX.utils.table_to_sheet(table, { raw: true });
+
+    // 2. Format sel identitas (NIK, Kode Wilayah, ID PUS) agar dibaca sebagai Teks murni
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell_ref]) {
+          const val = String(ws[cell_ref].v || "");
+          // Jika cell berisi deretan 16 digit angka (NIK) atau kode diawali 0, paksa menjadi text
+          if (/^\d{16}$/.test(val) || /^0\d+/.test(val)) {
+            ws[cell_ref].t = 's';
+          }
+        }
+      }
+    }
+
+    // 3. Buat workbook dan unduh file
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "DATA");
+    
+    const timeStamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `${filename}_${timeStamp}.xlsx`);
+  }
+
+  function exportRecapToExcel() { 
+    exportTableToExcel('recapTable', 'REKAP_PUS'); 
+  }
 
   // --- MODAL TRIGGER LAINNYA ---
   function openSearchModal() {
