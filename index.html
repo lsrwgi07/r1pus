@@ -3708,13 +3708,13 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         <td>${totalAll.hamil}</td>
         <td style="background:#fed7aa; font-size:13px; color:#9a3412;">${totalAll.hamil_baru}</td>
         <td>${totalAll.ias}</td><td>${totalAll.iat}</td><td>${totalAll.tial}</td><td>${totalAll.tki}</td>
-		<td style="background:#e0e7ff; color:#3730a3;">${totalAll.u15_19}</td>
-	  <td style="background:#e0e7ff; color:#3730a3;">${totalAll.u20_24}</td>
-	  <td style="background:#e0e7ff; color:#3730a3;">${totalAll.u25_29}</td>
-	  <td style="background:#e0e7ff; color:#3730a3;">${totalAll.u30_34}</td>
-	  <td style="background:#e0e7ff; color:#3730a3;">${totalAll.u35_39}</td>
-	  <td style="background:#e0e7ff; color:#3730a3;">${totalAll.u40_44}</td>
-	  <td style="background:#e0e7ff; color:#3730a3;">${totalAll.u45_plus}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u15_19}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u20_24}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u25_29}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u30_34}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u35_39}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u40_44}</td>
+        <td style="background:#e0e7ff; font-size:13px; color:#3730a3;">${totalAll.u45_plus}</td>
         <td style="background:#d6d8d9; font-size:13px;">${totalAll.bukan_pus}</td>
         <td>${totalAll.bcr}</td><td>${totalAll.mng}</td><td>${totalAll.pndh}</td><td>${totalAll.usia_50}</td>
       </tr>`;
@@ -4612,9 +4612,9 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
   function exportRecapToPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape', 'pt', 'a4');
+    const doc = new jsPDF('landscape', 'pt', 'a3'); // Gunakan format A3 Landscape
     doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
-    doc.autoTable({ html: '#recapTable', startY: 45, styles: { fontSize: 7 } });
+    doc.autoTable({ html: '#recapTable', startY: 45, styles: { fontSize: 6.5, cellPadding: 2 } });
     doc.save("Rekap_PUS.pdf");
   }  
 
