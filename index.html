@@ -4558,6 +4558,25 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     });
   }
 
+  // =========================================================================
+  // HELPER: VALIDASI APAKAH TABEL SUDAH MEMILIKI DATA VALID
+  // =========================================================================
+  function isTableReadyForExport(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return false;
+
+    const tbody = table.querySelector("tbody");
+    if (!tbody || tbody.rows.length === 0) return false;
+
+    // Jika baris pertama memiliki colspan besar (tanda baris placeholder/pesan)
+    const firstCell = tbody.rows[0]?.cells[0];
+    if (firstCell && firstCell.colSpan >= 10) {
+      return false;
+    }
+
+    return true;
+  }
+
   function selectDataForEdit(d) {
     closeSearchModal();
     showFormView();
@@ -4591,78 +4610,102 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   }
 
   function exportBnbaToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape', 'pt', 'a2'); // Ukuran A2 Landscape agar 29 kolom muat rapi
+    if (!isTableReadyForExport('bnbaTable')) {
+      Swal.fire("Perhatian", "Tabel BNBA belum memiliki data untuk diekspor! Silakan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu.", "warning");
+      return;
+    }
 
-    doc.setFontSize(16);
-    doc.text("DATA BNBA PASANGAN USIA SUBUR", 40, 35);
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'pt', 'a2'); // A2 Landscape agar 29 kolom muat rapi
+      doc.setFontSize(16);
+      doc.text("DATA BNBA PASANGAN USIA SUBUR", 40, 35);
 
-    doc.autoTable({
-      html: '#bnbaTable',
-      startY: 50,
-      styles: { fontSize: 7, cellPadding: 3, halign: 'center' },
-      headStyles: { fillColor: [31, 78, 120], textColor: 255 },
-      theme: 'grid'
-    });
+      doc.autoTable({
+        html: '#bnbaTable',
+        startY: 50,
+        styles: { fontSize: 7, cellPadding: 3, halign: 'center' },
+        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+        theme: 'grid'
+      });
 
-    doc.save("DATA_BNBA_PASANGAN_USIA_SUBUR.pdf");
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      doc.save(`DATA_BNBA_PASANGAN_USIA_SUBUR_${timeStamp}.pdf`);
+    } catch (err) {
+      console.error("Export PDF BNBA Error:", err);
+      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
+    }
   }
 
   function exportRecapToExcel() { exportTableToExcel('recapTable', 'REKAP_PUS'); }
 
   function exportRecapToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape', 'pt', 'a3'); // Gunakan format A3 Landscape
-    doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
-    doc.autoTable({ html: '#recapTable', startY: 45, styles: { fontSize: 6.5, cellPadding: 2 } });
-    doc.save("Rekap_PUS.pdf");
+    if (!isTableReadyForExport('recapTable')) {
+      Swal.fire("Perhatian", "Tabel Rekapitulasi belum memiliki data untuk diekspor! Silakan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu.", "warning");
+      return;
+    }
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'pt', 'a3'); // A3 Landscape agar 38 kolom muat rapi
+      doc.setFontSize(14);
+      doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
+
+      doc.autoTable({
+        html: '#recapTable',
+        startY: 45,
+        styles: { fontSize: 6.5, cellPadding: 2, halign: 'center' },
+        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+        theme: 'grid'
+      });
+
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      doc.save(`REKAP_PUS_${timeStamp}.pdf`);
+    } catch (err) {
+      console.error("Export PDF Recap Error:", err);
+      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
+    }
   }
 
   // =========================================================================
   // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
   // =========================================================================
   function exportTableToExcel(tableId, filename) {
-    const table = document.getElementById(tableId);
-    if (!table) {
-      Swal.fire("Perhatian", "Tabel tidak ditemukan!", "warning");
+    if (!isTableReadyForExport(tableId)) {
+      Swal.fire("Perhatian", "Tabel belum memiliki data untuk diekspor! Silakan atur filter dan klik tombol tampilkan terlebih dahulu.", "warning");
       return;
     }
 
-    // Cek apakah tabel masih kosong / belum dimuat datanya
-    const tbody = table.querySelector("tbody");
-    if (!tbody || tbody.rows.length === 0 || tbody.innerText.includes("Silakan atur filter") || tbody.innerText.includes("Tidak ada data")) {
-      Swal.fire("Perhatian", "Tabel belum memiliki data untuk diekspor!", "warning");
-      return;
-    }
+    try {
+      const table = document.getElementById(tableId);
+      const ws = XLSX.utils.table_to_sheet(table, { raw: true });
 
-    // 1. Ekstrak data dari tabel HTML ke worksheet XLSX
-    const ws = XLSX.utils.table_to_sheet(table, { raw: true });
-
-    // 2. Format sel identitas (NIK, Kode Wilayah, ID PUS) agar dibaca sebagai Teks murni
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
-        if (ws[cell_ref]) {
-          const val = String(ws[cell_ref].v || "");
-          // Jika cell berisi deretan 16 digit angka (NIK) atau kode diawali 0, paksa menjadi text
-          if (/^\d{16}$/.test(val) || /^0\d+/.test(val)) {
-            ws[cell_ref].t = 's';
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
+          if (ws[cell_ref]) {
+            const val = String(ws[cell_ref].v || "");
+            if (/^\d{16}$/.test(val) || /^0\d+/.test(val)) {
+              ws[cell_ref].t = 's';
+            }
           }
         }
       }
-    }
 
-    // 3. Buat workbook dan unduh file
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "DATA");
-    
-    const timeStamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `${filename}_${timeStamp}.xlsx`);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DATA");
+
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `${filename}_${timeStamp}.xlsx`);
+    } catch (err) {
+      console.error("Export Excel Error:", err);
+      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor ke Excel: " + err.message, "error");
+    }
   }
 
-  function exportRecapToExcel() { 
-    exportTableToExcel('recapTable', 'REKAP_PUS'); 
+  function exportRecapToExcel() {
+    exportTableToExcel('recapTable', 'REKAP_PUS');
   }
 
   // --- MODAL TRIGGER LAINNYA ---
