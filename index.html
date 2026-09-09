@@ -7030,21 +7030,21 @@ function onUserKecChange() {
   // MODUL DOWNLOAD & UPLOAD EXCEL KELOLA LOGIN
   // ==========================================
   function downloadUserTemplate() {
-    // Menyesuaikan susunan kolom dengan struktur tabel users:
-    // Username, Password, Role, Kode Provinsi, Kode Kabupaten, Kode Kecamatan, Kode Desa
     const headers = [
       "Username", "Password", "Role", 
-      "Kode Provinsi", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa"
+      "Kode Provinsi", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa",
+      "Kode Dusun (Pisahkan Koma)"
     ];
 
+    // Contoh: User Desa yang hanya diberi akses ke dusun 0001 dan 0002
     const sampleRow = [
       "desamareje", "rahasia123", "User Desa", 
-      "52", "01", "05", "0001"
+      "52", "01", "05", "0001",
+      "0001, 0002"
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
     
-    // Pastikan seluruh sel dibaca sebagai Text agar digit 0 di depan (misal: 01, 05, 0001) tidak hilang
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -7053,7 +7053,7 @@ function onUserKecChange() {
       }
     }
     
-    ws['!cols'] = headers.map(() => ({ wch: 18 }));
+    ws['!cols'] = headers.map(() => ({ wch: 22 }));
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TEMPLATE_USERS");
@@ -7090,6 +7090,17 @@ function onUserKecChange() {
           const rawKab = String(r[4] || "").trim();
           const rawKec = String(r[5] || "").trim();
           const rawDesa = String(r[6] || "").trim();
+          
+          // Membaca daftar kode dusun dari kolom 8 (misal: "0001, 0002")
+          const rawDusunStr = String(r[7] || "").trim();
+          let allowedDusunArr = null;
+          
+          if (role === "User Desa" && rawDusunStr !== "") {
+            allowedDusunArr = rawDusunStr
+              .split(",")
+              .map(d => d.trim().padStart(4, '0'))
+              .filter(d => d !== "");
+          }
 
           // Hanya proses baris yang memiliki username dan password
           if (username !== "" && pass !== "") {
@@ -7100,7 +7111,8 @@ function onUserKecChange() {
               kode_prov: kdProv,
               kode_kab: rawKab ? rawKab.padStart(2, '0') : null,
               kode_kec: rawKec ? rawKec.padStart(2, '0') : null,
-              kode_desa: rawDesa ? rawDesa.padStart(4, '0') : null
+              kode_desa: rawDesa ? rawDesa.padStart(4, '0') : null,
+              allowed_dusun: (allowedDusunArr && allowedDusunArr.length > 0) ? allowedDusunArr : null
             });
           }
         });
