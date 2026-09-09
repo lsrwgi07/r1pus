@@ -1266,6 +1266,19 @@
           </select>
         </div>
 
+        <!-- PILIHAN AKSES DUSUN KHUSUS -->
+        <div id="userDusunRow" class="form-group" style="display: none; margin-bottom: 15px;">
+          <label style="align-self: flex-start;">Akses Dusun:</label>
+          <div style="flex: 1;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
+              *Kosongkan centang jika user diizinkan mengakses <b>SEMUA DUSUN</b> di desa ini.
+            </div>
+            <div id="userDusunCheckboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #fff;">
+              <span style="color: #94a3b8; font-size: 12px;">Pilih desa terlebih dahulu...</span>
+            </div>
+          </div>
+        </div>
+
         <div style="display: flex; gap: 10px;">
           <button type="submit" id="btnSaveUserAcc" class="btn-submit" style="margin-top: 0; flex: 1;">💾 SIMPAN</button>
           <button type="button" class="btn-nav btn-secondary" onclick="resetUserForm()">Bersihkan</button>
@@ -1353,7 +1366,8 @@
   let userKodeProv = ""; // State baru
   let userKodeKab = "";
   let userKodeKec = "";
-  let userKodeDesa = ""; 
+  let userKodeDesa = "";
+  let userAllowedDusun = [];
 
   let dataProvinsi = {};
   let dataKabupaten = {};
@@ -2756,6 +2770,7 @@ function onRecapKabupatenChange() {
     userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
     userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
     userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
+    userAllowedDusun = Array.isArray(data.allowed_dusun) ? data.allowed_dusun : [];
 
     let namaProvDinamis = dataProvinsi[userKodeProv || "52"] || "Nusa Tenggara Barat";
 
@@ -3030,7 +3045,14 @@ function onRecapKabupatenChange() {
     if (kodeDesa && dusunObj) {
       const dusunSelect = document.getElementById("dusun");
       dusunSelect.disabled = false;
-      for (let kode in dusunObj) dusunSelect.add(new Option(dusunObj[kode].nama.toUpperCase(), kode));
+      
+      for (let kode in dusunObj) {        
+        if (userAllowedDusun.length > 0 && !userAllowedDusun.includes(kode)) {
+          continue;
+        }
+        dusunSelect.add(new Option(dusunObj[kode].nama.toUpperCase(), kode));
+      }
+      
       if (selectedVal) { setSelectValueCaseInsensitive("dusun", selectedVal); updateRT(); }
     }
   }
@@ -3480,6 +3502,7 @@ function onRecapKabupatenChange() {
       if (filterKec) query = query.eq('kode_kec', filterKec);
       if (filterDesa) query = query.eq('kode_desa', filterDesa);
       if (filterDusun) query = query.eq('kode_dusun', filterDusun);
+      if (userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
 
       const { data, error } = await query.range(from, from + step - 1);
       if (error) throw error;
@@ -3975,6 +3998,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         if (filterDesa) query = query.eq('kode_desa', filterDesa);
         if (filterDusun && filterDusun !== "0000") query = query.eq('kode_dusun', filterDusun);
         if (filterRt && filterRt !== "000") query = query.eq('kode_rt', filterRt);
+        if (userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
 
         const { data: chunk, error } = await query.order('id_pus', { ascending: true }).range(from, from + step - 1);
         if (error) throw error;
@@ -4666,6 +4690,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     let rt = document.getElementById("searchRt").value;
     if (dsn) query = query.eq('kode_dusun', dsn);
     if (rt) query = query.eq('kode_rt', rt);
+    if (userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
 
     const { data, error } = await query.order('id_pus', { ascending: true }).limit(25);
     container.innerHTML = "";
@@ -5434,17 +5459,73 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   }
 
   function onUserKecChange() {
-    const isKab = (userRole.indexOf("KAB") !== -1 || userRole === "ADMIN");
-    const kdKec = isKab ? document.getElementById("user_kec_select").value : userKodeKec;
+  const selKab = document.getElementById("user_kab_select");
+  const selKec = document.getElementById("user_kec_select");
+  const selDesa = document.getElementById("user_desa_select");
+  const roleVal = document.getElementById("user_role_select").value;
+
+  if (roleVal !== "User Desa") return;
+
+  const kdKab = isProvRole() ? (selKab ? selKab.value : "") : userKodeKab;
+  const kdKec = selKec ? selKec.value : "";
+
+  if (selDesa) {
+    if (!kdKec) {
+      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+    } else {
+      selDesa.disabled = false;
+      populateDesaByKec(kdKec, "user_desa_select", kdKab);
+    }
+    // Kosongkan checklist dusun jika kecamatan berganti
+    renderUserDusunCheckboxes();
+  }
+}
+  
+  document.getElementById("user_desa_select").addEventListener("change", () => renderUserDusunCheckboxes());
+
+  function renderUserDusunCheckboxes(selectedDusunArray = []) {
+    const roleVal = document.getElementById("user_role_select").value;
+    const dusunRow = document.getElementById("userDusunRow");
+    const container = document.getElementById("userDusunCheckboxes");    
+    
+    if (roleVal !== "User Desa" || !dusunRow || !container) {
+      if (dusunRow) dusunRow.style.display = "none";
+      return;
+    }
+
+    const selKab = document.getElementById("user_kab_select");
+    const selKec = document.getElementById("user_kec_select");
     const selDesa = document.getElementById("user_desa_select");
-    selDesa.innerHTML = '<option value="">-- PILIH DESA --</option>';
 
-    if (!kdKec) return;
-    let cleanKd = String(kdKec).padStart(2, '0');
-    let desas = dataDesa[cleanKd] || {};
+    const kdKec = (isProvRole() || isKabRole()) ? (selKec ? selKec.value : "") : userKodeKec;
+    const kdDesa = isDesaRole() ? userKodeDesa : (selDesa ? selDesa.value : "");
 
-    for (let kd in desas) {
-      selDesa.add(new Option(desas[kd].toUpperCase(), String(kd).padStart(4, '0')));
+    if (!kdKec || !kdDesa) {
+      dusunRow.style.display = "none";
+      container.innerHTML = '<span style="color: #94a3b8; font-size: 12px;">Pilih desa terlebih dahulu...</span>';
+      return;
+    }
+
+    const dusunList = getDusunList(kdKec, kdDesa);
+    if (!dusunList || Object.keys(dusunList).length === 0) {
+      dusunRow.style.display = "none";
+      return;
+    }
+
+    dusunRow.style.display = "flex";
+    container.innerHTML = "";
+
+    for (let kd in dusunList) {
+      const cleanKd = String(kd).padStart(4, '0');
+      const isChecked = Array.isArray(selectedDusunArray) && selectedDusunArray.includes(cleanKd);
+      
+      const label = document.createElement("label");
+      label.style.cssText = "display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 5px; cursor: pointer; font-weight: normal;";
+      label.innerHTML = `
+        <input type="checkbox" name="user_dusun_checkbox" value="${cleanKd}" ${isChecked ? "checked" : ""}>
+        <span>${dusunList[kd].nama.toUpperCase()} (${cleanKd})</span>
+      `;
+      container.appendChild(label);
     }
   }
 
@@ -5597,6 +5678,10 @@ function onUserKecChange() {
     document.getElementById("user_id").value = "";
     document.getElementById("user_name_input").readOnly = false;
     document.getElementById("btnSaveUserAcc").innerText = "💾 SIMPAN AKUN";
+    
+    const dusunRow = document.getElementById("userDusunRow");
+    if (dusunRow) dusunRow.style.display = "none";    
+
     onUserRoleChange();
   }
 
@@ -5614,40 +5699,43 @@ function onUserKecChange() {
     let targetDesa = "";
 
     if (roleVal === "Admin Prov") {
-	targetKab = null;
-	targetKec = null;
-	targetDesa = null;
-  } else if (roleVal === "Admin Kab") {
-	targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-	targetKec = null;
-	targetDesa = null;
-  } else if (roleVal === "Admin Kec") {
-	targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-	targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
-	targetDesa = null;
-  } else { // "User Desa"
-	targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-	targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
-	targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
-  }
+    targetKab = null;
+    targetKec = null;
+    targetDesa = null;
+    } else if (roleVal === "Admin Kab") {
+    targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+    targetKec = null;
+    targetDesa = null;
+    } else if (roleVal === "Admin Kec") {
+    targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+    targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
+    targetDesa = null;
+    } else { // "User Desa"
+    targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+    targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
+    targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
+    }
 
-    const payload = {
-      username: document.getElementById("user_name_input").value.trim(),
-      password_hash: document.getElementById("user_pass_input").value.trim(),
-      role: roleVal,
-      kode_prov: userKodeProv || "52",
-      kode_kab: targetKab ? targetKab.padStart(2, '0') : null,
-      kode_kec: targetKec ? targetKec.padStart(2, '0') : null,
-      kode_desa: targetDesa ? targetDesa.padStart(4, '0') : null
-    };
+      // === GANTIKAN BLOK PAYLOAD DENGAN INI ===
+      // Ambil daftar kode dusun yang dicentang
+      const checkedDusunBoxes = document.querySelectorAll('input[name="user_dusun_checkbox"]:checked');
+      const selectedDusun = Array.from(checkedDusunBoxes).map(cb => cb.value);
 
-    try {
-      let res;
-      if (userId) {
-        res = await db.from('users').update(payload).eq('id', userId);
-      } else {
-        res = await db.from('users').insert([payload]);
-      }
+      const payload = {
+        username: document.getElementById("user_name_input").value.trim(),
+        password_hash: document.getElementById("user_pass_input").value.trim(),
+        role: roleVal,
+        kode_prov: userKodeProv || "52",
+        kode_kab: targetKab ? targetKab.padStart(2, '0') : null,
+        kode_kec: targetKec ? targetKec.padStart(2, '0') : null,
+        kode_desa: targetDesa ? targetDesa.padStart(4, '0') : null,
+        allowed_dusun: (roleVal === "User Desa" && selectedDusun.length > 0) ? selectedDusun : null
+      };
+      // =======================================
+
+      try {
+        let res;
+        if (userId) {
 
       if (res.error) throw res.error;
 
@@ -5834,6 +5922,8 @@ function onUserKecChange() {
         selDesa.value = desaVal;
       }
     }
+
+    renderUserDusunCheckboxes(item.allowed_dusun || []);
 
     document.getElementById("btnSaveUserAcc").innerText = "💾 PERBARUI AKUN";
     switchUserTab('form');
@@ -6166,6 +6256,7 @@ function onUserKecChange() {
         userKodeKab = "";
         userKodeKec = "";
         userKodeDesa = "";
+        userAllowedDusun = [];
 
         // Reset seluruh modul dan form
         resetLoginForm();
