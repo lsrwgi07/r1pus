@@ -3986,22 +3986,41 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         } else {
           hasMore = false;
         }
-      }
+      }      
       
       const mKeysAll = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
       allData.forEach(row => {
         let mutationSeen = false;
-        mKeysAll.forEach(k => {
+        
+        let age50Start = 13;
+        if (row.tgl_lahir_istri) {
+          const dob = new Date(row.tgl_lahir_istri);
+          if (!isNaN(dob.getTime())) {
+            const birthYear = dob.getFullYear();
+            const birthMonth = dob.getMonth() + 1;
+            const yearTurning50 = birthYear + 50;
+            const currentTahun = parseInt(row.tahun || tahun, 10);
+
+            if (currentTahun > yearTurning50) {
+              age50Start = 1; // Sepanjang tahun sudah 50+
+            } else if (currentTahun === yearTurning50) {
+              age50Start = birthMonth; // Mulai bulan lahir genap 50
+            }
+          }
+        }
+        
+        mKeysAll.forEach((k, mIdx) => {
+          let bulanKe = mIdx + 1;
           let val = String(row[k] || "").toUpperCase().trim();
-          if (mutationSeen) {
-            row[k] = ""; // Kosongkan bulan setelah mutasi pertama
+
+          if (mutationSeen || bulanKe >= age50Start) {
+            row[k] = ""; // Otomatis kosong
           } else if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
-            mutationSeen = true; // Kunci: mutasi pertama ditemukan
+            mutationSeen = true; // Mutasi pertama dicatat, setelahnya kosong
           }
         });
-      });      
-
-      // 2. Filter Pencarian Lanjutan (Termasuk Akseptor KB Baru)
+      });
+      
       if (advCat) {
         const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
         const targetBulan = targetBulanIdx > 0 ? targetBulanIdx : 1;
