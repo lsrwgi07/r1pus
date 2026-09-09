@@ -2528,10 +2528,12 @@ function onRecapKabupatenChange() {
       container.style.display = "block";
       options.forEach(opt => {
         const itemLabel = document.createElement("label");
-        itemLabel.style.cssText = "display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #1e293b; cursor: pointer; user-select: none;";
+        // 1. align-items: flex-start agar checkbox terkunci di baris pertama
+        // 2. hilangkan word-break: break-word agar kata tidak dipotong per suku kata
+        itemLabel.style.cssText = "display: flex; align-items: flex-start; gap: 7px; font-size: 11px; font-weight: 700; color: #1e293b; cursor: pointer; user-select: none; line-height: 1.25;";
         itemLabel.innerHTML = `
-          <input type="checkbox" name="bnba_adv_check" value="${opt.val}" style="width: 15px; height: 15px; cursor: pointer; border: 1px solid #94a3b8; border-radius: 3px;">
-          <span style="word-break: break-word;">${opt.text}</span>
+          <input type="checkbox" name="bnba_adv_check" value="${opt.val}" style="width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0; cursor: pointer; border: 1px solid #94a3b8; border-radius: 3px; accent-color: #1f4e78;">
+          <span style="white-space: normal;">${opt.text}</span>
         `;
         listEl.appendChild(itemLabel);
       });
