@@ -4737,8 +4737,12 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       setSelectValueCaseInsensitive("kb_" + i, d[mKey]);
     }
 	
-	applyMutationAndAgeLocks();    
+    applyMutationAndAgeLocks();    
     initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
+
+    // Tampilkan tombol hapus saat data dibuka untuk edit
+    const delBtn = document.getElementById("btnDeletePus");
+    if (delBtn) delBtn.style.display = "block";
   }
 
   function exportBnbaToExcel() {
@@ -4811,12 +4815,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       console.error("Export PDF Recap Error:", err);
       Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
     }
-  }
-
-    // Tampilkan tombol hapus saat data dibuka untuk edit
-    const delBtn = document.getElementById("btnDeletePus");
-    if (delBtn) delBtn.style.display = "block";
-  }
+  }    
 
   // =========================================================================
   // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
