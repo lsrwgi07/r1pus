@@ -4743,7 +4743,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
   function exportBnbaToExcel() {
     if (!isTableReadyForExport('bnbaTable')) {
-      Swal.fire("Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
+      Swal.fire("Perhatian", "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
       return;
     }
     exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS');
@@ -4751,7 +4751,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
   function exportBnbaToPDF() {
     if (!isTableReadyForExport('bnbaTable')) {
-      Swal.fire("Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
+      Swal.fire("Perhatian", "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
       return;
     }
 
@@ -4779,7 +4779,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
   function exportRecapToExcel() {
     if (!isTableReadyForExport('recapTable')) {
-      Swal.fire("Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
+      Swal.fire("Perhatian", "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
       return;
     }
     exportTableToExcel('recapTable', 'REKAP_PUS');
@@ -4787,7 +4787,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
   function exportRecapToPDF() {
     if (!isTableReadyForExport('recapTable')) {
-      Swal.fire("Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
+      Swal.fire("Perhatian", "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
       return;
     }
 
@@ -4849,22 +4849,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor ke Excel: " + err.message, "error");
     }
   }
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "DATA");
-
-      const timeStamp = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(wb, `${filename}_${timeStamp}.xlsx`);
-    } catch (err) {
-      console.error("Export Excel Error:", err);
-      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor ke Excel: " + err.message, "error");
-    }
-  }
-
-  function exportRecapToExcel() {
-    exportTableToExcel('recapTable', 'REKAP_PUS');
-  }
-
+    
   // --- MODAL TRIGGER LAINNYA ---
   function openSearchModal() {
     document.getElementById("searchKeyword").value = "";
