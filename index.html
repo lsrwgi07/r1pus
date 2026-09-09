@@ -5481,7 +5481,10 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   }
 }
   
-  document.getElementById("user_desa_select").addEventListener("change", () => renderUserDusunCheckboxes());
+  const elUserDesa = document.getElementById("user_desa_select");
+  if (elUserDesa) {
+    elUserDesa.addEventListener("change", () => renderUserDusunCheckboxes());
+  }
 
   function renderUserDusunCheckboxes(selectedDusunArray = []) {
     const roleVal = document.getElementById("user_role_select").value;
@@ -5734,8 +5737,12 @@ function onUserKecChange() {
       // =======================================
 
       try {
-        let res;
-        if (userId) {
+      let res;
+      if (userId) {
+        res = await db.from('users').update(payload).eq('id', userId);
+      } else {
+        res = await db.from('users').insert([payload]);
+      }
 
       if (res.error) throw res.error;
 
@@ -5756,7 +5763,6 @@ function onUserKecChange() {
       btn.disabled = false;
       btn.innerText = userId ? "💾 PERBARUI AKUN" : "💾 SIMPAN AKUN";
     }
-  }
 
   async function loadUsersList() {
     const tbody = document.getElementById("usersTbody");
@@ -6430,9 +6436,27 @@ function onUserKecChange() {
       const mKeysDl = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
       allData.forEach(row => {
         let mutationSeen = false;
-        mKeysDl.forEach(k => {
+        let age50Start = 13;
+        if (row.tgl_lahir_istri) {
+          const dob = new Date(row.tgl_lahir_istri);
+          if (!isNaN(dob.getTime())) {
+            const birthYear = dob.getFullYear();
+            const birthMonth = dob.getMonth() + 1;
+            const yearTurning50 = birthYear + 50;
+            const currentTahun = parseInt(row.tahun || targetTahun, 10);
+
+            if (currentTahun > yearTurning50) {
+              age50Start = 1;
+            } else if (currentTahun === yearTurning50) {
+              age50Start = birthMonth;
+            }
+          }
+        }
+
+        mKeysDl.forEach((k, mIdx) => {
+          let bulanKe = mIdx + 1;
           let val = String(row[k] || "").toUpperCase().trim();
-          if (mutationSeen) {
+          if (mutationSeen || bulanKe >= age50Start) {
             row[k] = "";
           } else if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
             mutationSeen = true;
