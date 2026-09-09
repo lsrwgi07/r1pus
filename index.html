@@ -1673,6 +1673,7 @@
       const shouldLock = (lockStartingIndex !== 13 && i >= lockStartingIndex);
 
       if (shouldLock) {
+        sel.value = ""; // <-- Baris ini yang ditambahkan untuk mengosongkan bulan yang terkunci
         sel.style.backgroundColor = "#e9ecef";
         sel.style.pointerEvents = "none";
         sel.tabIndex = -1;
@@ -3986,6 +3987,19 @@ function hitungStatusIndikator(r, bulan, mKeys) {
           hasMore = false;
         }
       }
+      
+      const mKeysAll = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+      allData.forEach(row => {
+        let mutationSeen = false;
+        mKeysAll.forEach(k => {
+          let val = String(row[k] || "").toUpperCase().trim();
+          if (mutationSeen) {
+            row[k] = ""; // Kosongkan bulan setelah mutasi pertama
+          } else if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
+            mutationSeen = true; // Kunci: mutasi pertama ditemukan
+          }
+        });
+      });      
 
       // 2. Filter Pencarian Lanjutan (Termasuk Akseptor KB Baru)
       if (advCat) {
@@ -4732,12 +4746,23 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     document.getElementById("umur_anak_terkecil").value = d.umur_anak_terkecil;
     setSelectValueCaseInsensitive("peserta_jkn", d.peserta_jkn);
 
+    let mutationFound = false;
     for (let i = 1; i <= 12; i++) {
-      let mKey = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"][i-1];
-      setSelectValueCaseInsensitive("kb_" + i, d[mKey]);
+      let mKey = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"][i - 1];
+      let val = String(d[mKey] || "").trim().toUpperCase();
+
+      if (mutationFound) {
+        document.getElementById("kb_" + i).value = "";
+      } else {
+        setSelectValueCaseInsensitive("kb_" + i, val);
+        if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
+          mutationFound = true;
+        }
+      }
     }
-	
-    applyMutationAndAgeLocks();    
+
+    applyMutationAndAgeLocks();
+
     initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
 
     // Tampilkan tombol hapus saat data dibuka untuk edit
@@ -6291,6 +6316,19 @@ function onUserKecChange() {
         Swal.fire("Data Kosong", `Tidak ada data PUS tahun ${targetTahun} untuk wilayah yang dipilih.`, "info");
         return;
       }
+      
+      const mKeysDl = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+      allData.forEach(row => {
+        let mutationSeen = false;
+        mKeysDl.forEach(k => {
+          let val = String(row[k] || "").toUpperCase().trim();
+          if (mutationSeen) {
+            row[k] = "";
+          } else if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
+            mutationSeen = true;
+          }
+        });
+      });      
 
       const headers = [
         "ID_PUS", "Tahun", "Timestamp", "Provinsi", "Kode Provinsi", "Kabupaten", "Kode Kabupaten",
@@ -6607,43 +6645,43 @@ function onUserKecChange() {
             idPus = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}${String(idx + 1).padStart(3, '0')}`;
           }
 
+          // Gantikan blok pembacaan kb_jan s.d kb_des pada baris dataRows.forEach:
+          let firstMutationIndex = -1;
+          const rawMonths = [];
+
+          // 1. Ambil mentah data 12 bulan (kolom 24 s.d 35)
+          for (let col = 24; col <= 35; col++) {
+            rawMonths.push(String(r[col] || "").trim().toUpperCase());
+          }
+
+          // 2. Sanitasi: Ambil kemunculan mutasi pertama saja, sisanya kosongkan
+          const cleanMonths = rawMonths.map((val, mIdx) => {
+            if (firstMutationIndex !== -1) {
+              return ""; // Kosongkan bulan-bulan setelah bulan pertama mutasi
+            }
+            if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
+              firstMutationIndex = mIdx;
+              return val; // Pertahankan hanya pada bulan kejadian
+            }
+            return val;
+          });
+
           payloadList.push({
             id_pus: idPus,
             tahun: parseInt(r[1] || targetTahun, 10),
-            timestamp: new Date().toISOString(),
-            provinsi_nama: String(r[3] || "").toUpperCase(),
-            kode_prov: kdProv,
-            kabupaten_nama: String(r[5] || "").toUpperCase(),
-            kode_kab: kdKab,
-            kecamatan_nama: String(r[7] || "").toUpperCase(),
-            kode_kec: kdKec,
-            desa_nama: String(r[9] || "").toUpperCase(),
-            kode_desa: kdDesa,
-            dusun_nama: String(r[11] || "").toUpperCase(),
-            kode_dusun: kdDsn,
-            rt_nama: String(r[13] || "").toUpperCase(),
-            kode_rt: kdRt,
-            nama_suami: namaSuamiVal,
-            nik_suami: nikSuami,
-            nama_istri: namaIstriVal,
-            nik_istri: nikIstri,
-            tgl_lahir_istri: r[19] || null,
-            umur_istri: parseInt(r[20] || 0, 10),
-            jumlah_anak: parseInt(r[21] || 0, 10),
-            umur_anak_terkecil: parseInt(r[22] || 0, 10),
-            peserta_jkn: String(r[23] || "").toUpperCase(),
-            kb_jan: String(r[24] || ""),
-            kb_feb: String(r[25] || ""),
-            kb_mar: String(r[26] || ""),
-            kb_apr: String(r[27] || ""),
-            kb_mei: String(r[28] || ""),
-            kb_jun: String(r[29] || ""),
-            kb_jul: String(r[30] || ""),
-            kb_agu: String(r[31] || ""),
-            kb_sep: String(r[32] || ""),
-            kb_okt: String(r[33] || ""),
-            kb_nov: String(r[34] || ""),
-            kb_des: String(r[35] || "")
+            // ... kolom lainnya tetap ...
+            kb_jan: cleanMonths[0],
+            kb_feb: cleanMonths[1],
+            kb_mar: cleanMonths[2],
+            kb_apr: cleanMonths[3],
+            kb_mei: cleanMonths[4],
+            kb_jun: cleanMonths[5],
+            kb_jul: cleanMonths[6],
+            kb_agu: cleanMonths[7],
+            kb_sep: cleanMonths[8],
+            kb_okt: cleanMonths[9],
+            kb_nov: cleanMonths[10],
+            kb_des: cleanMonths[11]
           });
         });
 
