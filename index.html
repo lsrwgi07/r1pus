@@ -2481,7 +2481,7 @@ function onRecapKabupatenChange() {
     // Daftar opsi per kategori
     let options = [];
     if (cat === "JKN") {
-      labelEl.innerText = "PILIH STATUS KEPESERTAAN JKN:";
+      labelEl.innerText = "PILIH KEPESERTAAN JKN:";
       options = [
         { val: "PBI", text: "PBI" },
         { val: "BUKAN PBI", text: "BUKAN PBI" },
@@ -2489,13 +2489,13 @@ function onRecapKabupatenChange() {
         { val: "TIDAK MEMILIKI", text: "TIDAK MEMILIKI" }
       ];
     } else if (cat === "KESERTAAN_KB") {
-      labelEl.innerText = "PILIH STATUS KESERTAAN KB:";
+      labelEl.innerText = "PILIH KESERTAAN KB:";
       options = [
         { val: "BER_KB", text: "BER KB" },
         { val: "TIDAK_BER_KB", text: "TIDAK BER KB" }
       ];
     } else if (cat === "METODE_KONTRASEPSI" || cat === "AKSEPTOR_KB_BARU") {
-      labelEl.innerText = cat === "METODE_KONTRASEPSI" ? "PILIH METODE KONTRASEPSI AKTIF:" : "PILIH METODE AKSEPTOR KB BARU:";
+      labelEl.innerText = cat === "METODE_KONTRASEPSI" ? "PILIH METODE KONTRASEPSI:" : "PILIH METODE AKSEPTOR KB BARU:";
       options = [
         { val: "PIL", text: "PIL" },
         { val: "SUNTIK", text: "SUNTIK" },
