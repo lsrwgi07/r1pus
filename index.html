@@ -4741,15 +4741,23 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
   }
 
+  function exportBnbaToExcel() {
+    if (!isTableReadyForExport('bnbaTable')) {
+      Swal.fire("Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
+      return;
+    }
+    exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS');
+  }
+
   function exportBnbaToPDF() {
     if (!isTableReadyForExport('bnbaTable')) {
-      Swal.fire("Perhatian", "Tabel BNBA belum memiliki data untuk diekspor! Silakan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu.", "warning");
+      Swal.fire("Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
       return;
     }
 
     try {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a2'); // A2 Landscape agar 29 kolom muat rapi
+      const doc = new jsPDF('landscape', 'pt', 'a2');
       doc.setFontSize(16);
       doc.text("DATA BNBA PASANGAN USIA SUBUR", 40, 35);
 
@@ -4769,17 +4777,23 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     }
   }
 
-  function exportRecapToExcel() { exportTableToExcel('recapTable', 'REKAP_PUS'); }
+  function exportRecapToExcel() {
+    if (!isTableReadyForExport('recapTable')) {
+      Swal.fire("Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
+      return;
+    }
+    exportTableToExcel('recapTable', 'REKAP_PUS');
+  }
 
   function exportRecapToPDF() {
     if (!isTableReadyForExport('recapTable')) {
-      Swal.fire("Perhatian", "Tabel Rekapitulasi belum memiliki data untuk diekspor! Silakan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu.", "warning");
+      Swal.fire("Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
       return;
     }
 
     try {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a3'); // A3 Landscape agar 38 kolom muat rapi
+      const doc = new jsPDF('landscape', 'pt', 'a3');
       doc.setFontSize(14);
       doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
 
@@ -4797,6 +4811,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       console.error("Export PDF Recap Error:", err);
       Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
     }
+  }
 
     // Tampilkan tombol hapus saat data dibuka untuk edit
     const delBtn = document.getElementById("btnDeletePus");
@@ -4807,11 +4822,6 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
   // =========================================================================
   function exportTableToExcel(tableId, filename) {
-    if (!isTableReadyForExport(tableId)) {
-      Swal.fire("Perhatian", "Tabel belum memiliki data untuk diekspor! Silakan atur filter dan klik tombol tampilkan terlebih dahulu.", "warning");
-      return;
-    }
-
     try {
       const table = document.getElementById(tableId);
       const ws = XLSX.utils.table_to_sheet(table, { raw: true });
@@ -4828,6 +4838,17 @@ function hitungStatusIndikator(r, bulan, mKeys) {
           }
         }
       }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "DATA");
+
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `${filename}_${timeStamp}.xlsx`);
+    } catch (err) {
+      console.error("Export Excel Error:", err);
+      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor ke Excel: " + err.message, "error");
+    }
+  }
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "DATA");
