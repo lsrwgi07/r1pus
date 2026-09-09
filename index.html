@@ -673,9 +673,9 @@
             </select>
           </div>
 
-          <!-- 2. PENCARIAN LANJUTAN & SUB DROPDOWN -->
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()" style="flex: 1; min-width: 200px;">
+          <!-- 2. PENCARIAN LANJUTAN & SUB CHECKLIST MULTI-PILIH -->
+          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+            <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()" style="width: 100%;">
               <option value="">-- PENCARIAN LANJUTAN --</option>
               <option value="JKN">JKN</option>
               <option value="KESERTAAN_KB">KESERTAAN KB</option>
@@ -688,8 +688,19 @@
               <option value="MUTASI">MUTASI</option>
             </select>
 
-            <select id="bnbaFilterAdvValue" style="display: none; flex: 1; min-width: 200px;">              
-            </select>
+            <!-- Wadah Kotak Centang Multi-Pilihan -->
+            <div id="bnbaFilterAdvCheckboxContainer" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px;">
+                <span id="bnbaAdvSubLabel" style="font-weight: bold; font-size: 12px; color: #1f4e78;">PILIH KRITERIA:</span>
+                <div>
+                  <button type="button" class="btn-nav btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="toggleAllAdvCheckboxes(true)">Pilih Semua</button>
+                  <button type="button" class="btn-nav btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="toggleAllAdvCheckboxes(false)">Hapus Semua</button>
+                </div>
+              </div>
+              <div id="bnbaAdvCheckboxList" style="display: flex; flex-wrap: wrap; gap: 10px 18px;">
+                <!-- Opsi checkbox diisi dinamis oleh JavaScript -->
+              </div>
+            </div>
           </div>
 
           <!-- 3. BULAN (DILETAKKAN DI BAWAH PENCARIAN LANJUTAN) -->
@@ -2434,9 +2445,16 @@ function onRecapKabupatenChange() {
     }
   }
 
+  function toggleAllAdvCheckboxes(check) {
+    const boxes = document.querySelectorAll('input[name="bnba_adv_check"]');
+    boxes.forEach(cb => cb.checked = check);
+  }
+
   function onBnbaAdvCategoryChange() {
     const cat = document.getElementById("bnbaFilterAdvCategory").value;
-    const subSelect = document.getElementById("bnbaFilterAdvValue");
+    const container = document.getElementById("bnbaFilterAdvCheckboxContainer");
+    const listEl = document.getElementById("bnbaAdvCheckboxList");
+    const labelEl = document.getElementById("bnbaAdvSubLabel");
     const bulanSelect = document.getElementById("bnbaBulan");
 
     if (cat) {
@@ -2447,69 +2465,67 @@ function onRecapKabupatenChange() {
       bulanSelect.removeAttribute("title");
     }
 
-    subSelect.innerHTML = "";
-    subSelect.style.display = "none";
+    listEl.innerHTML = "";
+    container.style.display = "none";
 
+    // Daftar opsi per kategori
+    let options = [];
     if (cat === "JKN") {
-      subSelect.innerHTML = `
-        <option value="">-- PILIH STATUS JKN --</option>
-        <option value="PBI">PBI</option>
-        <option value="BUKAN PBI">BUKAN PBI</option>
-        <option value="SWASTA">SWASTA</option>
-        <option value="TIDAK MEMILIKI">TIDAK MEMILIKI</option>
-      `;
-      subSelect.style.display = "block";
+      labelEl.innerText = "PILIH STATUS KEPESERTAAN JKN:";
+      options = [
+        { val: "PBI", text: "PBI" },
+        { val: "BUKAN PBI", text: "BUKAN PBI" },
+        { val: "SWASTA", text: "SWASTA" },
+        { val: "TIDAK MEMILIKI", text: "TIDAK MEMILIKI" }
+      ];
     } else if (cat === "KESERTAAN_KB") {
-      subSelect.innerHTML = `
-        <option value="">-- PILIH KESERTAAN KB --</option>
-        <option value="BER_KB">BER KB</option>
-        <option value="TIDAK_BER_KB">TIDAK BER KB</option>
-      `;
-      subSelect.style.display = "block";
-    } else if (cat === "METODE_KONTRASEPSI") {
-      subSelect.innerHTML = `
-        <option value="">-- PILIH METODE KONTRASEPSI --</option>
-        <option value="PIL">PIL</option>
-        <option value="SUNTIK">SUNTIK</option>
-        <option value="KONDOM">KONDOM</option>
-        <option value="IMPLAN">IMPLAN</option>
-        <option value="IUD">IUD</option>
-        <option value="MOW">MOW</option>
-        <option value="MOP">MOP</option>
-      `;
-      subSelect.style.display = "block";
-    } else if (cat === "AKSEPTOR_KB_BARU") {
-      // Dropdown metode untuk Akseptor KB Baru (opsional: jika kosong = semua metode baru)
-      subSelect.innerHTML = `
-        <option value="">-- PILIH METODE KONTRASEPSI --</option>
-        <option value="PIL">PIL</option>
-        <option value="SUNTIK">SUNTIK</option>
-        <option value="KONDOM">KONDOM</option>
-        <option value="IMPLAN">IMPLAN</option>
-        <option value="IUD">IUD</option>
-        <option value="MOW">MOW</option>
-        <option value="MOP">MOP</option>
-      `;
-      subSelect.style.display = "block";
+      labelEl.innerText = "PILIH STATUS KESERTAAN KB:";
+      options = [
+        { val: "BER_KB", text: "BER KB" },
+        { val: "TIDAK_BER_KB", text: "TIDAK BER KB" }
+      ];
+    } else if (cat === "METODE_KONTRASEPSI" || cat === "AKSEPTOR_KB_BARU") {
+      labelEl.innerText = cat === "METODE_KONTRASEPSI" ? "PILIH METODE KONTRASEPSI AKTIF:" : "PILIH METODE AKSEPTOR KB BARU:";
+      options = [
+        { val: "PIL", text: "PIL" },
+        { val: "SUNTIK", text: "SUNTIK" },
+        { val: "KONDOM", text: "KONDOM" },
+        { val: "IMPLAN", text: "IMPLAN" },
+        { val: "IUD", text: "IUD" },
+        { val: "MOW", text: "MOW" },
+        { val: "MOP", text: "MOP" }
+      ];
     } else if (cat === "ALASAN_TIDAK_KB") {
-      subSelect.innerHTML = `
-        <option value="">-- PILIH ALASAN --</option>
-        <option value="IAS">IAS</option>
-        <option value="IAT">IAT</option>
-        <option value="TIAL">TIAL</option>
-        <option value="HAMIL">HAMIL</option>
-        <option value="TKI">TKI</option>
-      `;
-      subSelect.style.display = "block";
+      labelEl.innerText = "PILIH ALASAN TIDAK BER-KB:";
+      options = [
+        { val: "IAS", text: "IAS (Ingin Anak Segera)" },
+        { val: "IAT", text: "IAT (Ingin Anak Ditunda)" },
+        { val: "TIAL", text: "TIAL (Tidak Ingin Anak Lagi)" },
+        { val: "HAMIL", text: "HAMIL" },
+        { val: "TKI", text: "TKI" }
+      ];
     } else if (cat === "MUTASI") {
-      subSelect.innerHTML = `
-        <option value="">-- PILIH MUTASI --</option>
-        <option value="BERCERAI">BERCERAI</option>
-        <option value="SUAMI/ISTRI MENINGGAL">SUAMI/ISTRI MENINGGAL</option>
-        <option value="PINDAH">PINDAH</option>
-      `;
-      subSelect.style.display = "block";
-    }    
+      labelEl.innerText = "PILIH JENIS MUTASI:";
+      options = [
+        { val: "BERCERAI", text: "BERCERAI" },
+        { val: "SUAMI/ISTRI MENINGGAL", text: "SUAMI/ISTRI MENINGGAL" },
+        { val: "PINDAH", text: "PINDAH" }
+      ];
+    }
+
+    // Jika kategori memiliki sub-pilihan (seperti JKN, Metode, Alasan, Mutasi)
+    if (options.length > 0) {
+      container.style.display = "block";
+      options.forEach(opt => {
+        const itemLabel = document.createElement("label");
+        itemLabel.style.cssText = "display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; color: #334155;";
+        itemLabel.innerHTML = `
+          <input type="checkbox" name="bnba_adv_check" value="${opt.val}" style="width: 15px; height: 15px; cursor: pointer;">
+          <span>${opt.text}</span>
+        `;
+        listEl.appendChild(itemLabel);
+      });
+    }
   }
 
   function resetBnbaFilters() {
@@ -3871,7 +3887,8 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     const tahun = parseInt(document.getElementById("bnbaTahun").value, 10);
     const bulanVal = document.getElementById("bnbaBulan").value;
     const advCat = document.getElementById("bnbaFilterAdvCategory").value;
-    const advVal = document.getElementById("bnbaFilterAdvValue").value;
+    const checkedAdvBoxes = document.querySelectorAll('input[name="bnba_adv_check"]:checked');
+    const selectedAdvVals = Array.from(checkedAdvBoxes).map(cb => cb.value);
 
     const thead = document.getElementById("bnbaTableHeader");
     const tbody = document.getElementById("bnbaTableBody");
@@ -4050,63 +4067,73 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         const targetBulan = targetBulanIdx > 0 ? targetBulanIdx : 1;
 
         allData = allData.filter(r => {
+          // 1. FILTER JKN (Bisa pilih PBI, BUKAN PBI, SWASTA sekaligus)
           if (advCat === "JKN") {
-            const jknVal = String(r.peserta_jkn || "").toUpperCase();
-            if (!advVal) return true;
-            if (advVal === "PBI") return jknVal === "PBI";
-            if (advVal === "BUKAN PBI") return jknVal.includes("BUKAN PBI") || jknVal.includes("NON PBI") || jknVal.includes("NON-PBI");
-            if (advVal === "SWASTA") return jknVal.includes("SWASTA");
-            if (advVal === "TIDAK MEMILIKI") return jknVal.includes("TIDAK");
-            return jknVal === advVal;
+            if (selectedAdvVals.length === 0) return true; // Jika tidak ada centang, ambil semua
+            const jknRaw = String(r.peserta_jkn || "").toUpperCase().trim();
+            
+            return selectedAdvVals.some(v => {
+              if (v === "PBI") return jknRaw === "PBI";
+              if (v === "BUKAN PBI") return jknRaw.includes("BUKAN PBI") || jknRaw.includes("NON PBI") || jknRaw.includes("NON-PBI");
+              if (v === "SWASTA") return jknRaw.includes("SWASTA");
+              if (v === "TIDAK MEMILIKI") return jknRaw.includes("TIDAK");
+              return jknRaw === v;
+            });
           }
 
           const res = hitungStatusIndikator(r, targetBulan, mKeys);
           const cur = res.cur;
 
+          // 2. KESERTAAN KB
           if (advCat === "KESERTAAN_KB") {
-            if (advVal === "BER_KB") return cur.type === "PESERTA_KB" && !res.isMutasiOr50;
-            if (advVal === "TIDAK_BER_KB") return cur.type === "BUKAN_PESERTA" && !res.isMutasiOr50;
-            return res.isPusAktif;
+            if (selectedAdvVals.length === 0) return res.isPusAktif;
+            const isBerKb = (cur.type === "PESERTA_KB" && !res.isMutasiOr50);
+            const isTidakKb = (cur.type === "BUKAN_PESERTA" && !res.isMutasiOr50);
+
+            if (selectedAdvVals.includes("BER_KB") && isBerKb) return true;
+            if (selectedAdvVals.includes("TIDAK_BER_KB") && isTidakKb) return true;
+            return false;
           }
 
+          // 3. METODE KONTRASEPSI AKTIF
           if (advCat === "METODE_KONTRASEPSI") {
             if (cur.type !== "PESERTA_KB" || res.isMutasiOr50) return false;
-            if (!advVal) return true;
-            return cur.method === advVal;
+            if (selectedAdvVals.length === 0) return true;
+            return selectedAdvVals.includes(cur.method);
           }
 
-          // FITUR BARU: AKSEPTOR KB BARU
+          // 4. AKSEPTOR KB BARU
           if (advCat === "AKSEPTOR_KB_BARU") {
             if (!res.isKbBaru || res.isMutasiOr50) return false;
-            if (!advVal) return true; // Jika dropdown tidak dipilih, tampilkan semua jenis akseptor baru
-            return cur.method === advVal; // Jika dipilih, cocokkan dengan metode spesifiknya
+            if (selectedAdvVals.length === 0) return true;
+            return selectedAdvVals.includes(cur.method);
           }
 
+          // 5. ALASAN TIDAK KB
           if (advCat === "ALASAN_TIDAK_KB") {
             if (cur.type !== "BUKAN_PESERTA" || res.isMutasiOr50) return false;
-            if (!advVal) return true;
-            return cur.reason === advVal;
+            if (selectedAdvVals.length === 0) return true;
+            return selectedAdvVals.includes(cur.reason);
           }
 
+          // 6. HAMIL, HAMIL BARU, PUS BARU
           if (advCat === "HAMIL") {
             return cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL" && !res.isMutasiOr50;
           }
+          if (advCat === "HAMIL_BARU") return res.isHamilBaru;
+          if (advCat === "PUS_BARU") return res.isPusBaru;
 
-          if (advCat === "HAMIL_BARU") {
-            return res.isHamilBaru;
-          }
-
-          if (advCat === "PUS_BARU") {
-            return res.isPusBaru;
-          }
-
+          // 7. MUTASI (Bisa pilih BERCERAI & PINDAH sekaligus)
           if (advCat === "MUTASI") {
             if (cur.type !== "BUKAN_PUS") return false;
-            if (!advVal) return true;
-            if (advVal === "BERCERAI") return cur.cat === "CERAI";
-            if (advVal === "SUAMI/ISTRI MENINGGAL") return cur.cat === "MENINGGAL";
-            if (advVal === "PINDAH") return cur.cat === "PINDAH";
-            return false;
+            if (selectedAdvVals.length === 0) return true;
+
+            return selectedAdvVals.some(v => {
+              if (v === "BERCERAI") return cur.cat === "CERAI";
+              if (v === "SUAMI/ISTRI MENINGGAL") return cur.cat === "MENINGGAL";
+              if (v === "PINDAH") return cur.cat === "PINDAH";
+              return false;
+            });
           }
 
           return true;
