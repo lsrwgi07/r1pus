@@ -4372,7 +4372,7 @@ function hitungStatusIndikator(r, bulan, mKeys) {
   async function exportChartsToPDF() {
     // Validasi apakah grafik sudah pernah dimuat
     if (!chartStatusPropInstance) {
-      Swal.fire("Perhatian", "Silakan klik 'Tampilkan Grafik' terlebih dahulu sebelum mengunduh PDF!", "warning");
+      Swal.fire("Perhatian", "Belum ada grafik untuk diekspor, silahkan atur filter dan klik 'Tampilkan Grafik' terlebih dahulu sebelum mengunduh PDF!", "warning");
       return;
     }
 
