@@ -1493,12 +1493,57 @@
     });
   }
 
-  window.onload = function() {
+  window.onload = async function() {
     resetLoginForm();
-    loadMasterWilayahFromDB();
+    await loadMasterWilayahFromDB(); // Tambahkan await agar data wilayah selesai dimuat
     setDefaultYearAndMonth();
+    
+    const savedSession = localStorage.getItem("pus_app_session");
+    if (savedSession) {
+      try {
+        const data = JSON.parse(savedSession);
+        currentUser = data.username;
+        userRole = String(data.role || "User Desa").toUpperCase();
+        userKodeProv = String(data.kode_prov || "52").trim().padStart(2, '0');
+        userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
+        userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
+        userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
+        userAllowedDusun = Array.isArray(data.allowed_dusun) ? data.allowed_dusun : [];
 
-	if ('serviceWorker' in navigator) {
+        // Susun nama wilayah dan sapaan pengguna
+        let namaProvDinamis = dataProvinsi[userKodeProv || "52"] || "Nusa Tenggara Barat";
+        let namaWilayahDinamis = "";
+
+        if (userRole.includes("PROV")) {
+          namaWilayahDinamis = namaProvDinamis;
+        } else if (userRole.includes("KAB")) {
+          const provKey = userKodeProv || "52";
+          if (dataKabupaten[provKey] && dataKabupaten[provKey][userKodeKab]) {
+            namaWilayahDinamis = dataKabupaten[provKey][userKodeKab];
+          }
+        } else if (userRole.includes("KEC") || userRole === "ADMIN") {
+          if (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
+            namaWilayahDinamis = dataKecamatan[userKodeKab][userKodeKec];
+          }
+        } else {
+          if (dataDesa[userKodeKec] && dataDesa[userKodeKec][userKodeDesa]) {
+            namaWilayahDinamis = dataDesa[userKodeKec][userKodeDesa];
+          }
+        }
+
+        setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis);
+
+        // Buka dashboard langsung tanpa lewat halaman login
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        showDashboardView();
+      } catch (err) {
+        console.error("Gagal memuat sesi tersimpan:", err);
+        localStorage.removeItem("pus_app_session");
+      }
+    }    
+
+    if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((reg) => {
@@ -2799,6 +2844,17 @@ function onRecapKabupatenChange() {
     userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
     userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
     userAllowedDusun = Array.isArray(data.allowed_dusun) ? data.allowed_dusun : [];
+
+    const sessionData = {
+      username: data.username,
+      role: data.role,
+      kode_prov: userKodeProv,
+      kode_kab: data.kode_kab,
+      kode_kec: data.kode_kec,
+      kode_desa: data.kode_desa,
+      allowed_dusun: data.allowed_dusun
+    };
+    localStorage.setItem("pus_app_session", JSON.stringify(sessionData));
 
     let namaProvDinamis = dataProvinsi[userKodeProv || "52"] || "Nusa Tenggara Barat";
 
@@ -6297,6 +6353,7 @@ function onUserKecChange() {
       focusCancel: true
     }).then((result) => {
       if (result.isConfirmed) {
+        localStorage.removeItem("pus_app_session");
         currentUser = "";
         userRole = "";
         userKodeKab = "";
