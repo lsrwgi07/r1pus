@@ -5481,38 +5481,29 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
   let allUsersData = [];
 
-  function openManageUsersModal() {
+  function openManageUsersModal() {    
+    if (isDesaRole()) {
+      Swal.fire("Akses Ditolak", "Anda tidak memiliki izin untuk mengelola akun pengguna!", "error");
+      return;
+    }
+
     switchUserTab('form');
     resetUserForm();
     populateUserKecDropdown();
 
     const roleSelect = document.getElementById("user_role_select");
-    const optProv = document.getElementById("optRoleProv");
-    const optKab = document.getElementById("optRoleKab");
-
-    // HIERARKI VISIBILITAS PILIHAN ROLE BERDASARKAN USER LOGIN
-    if (isDesaRole()) {
-      // 1. User Desa: Hanya boleh mengelola akun User Desa
+    
+    if (isKecRole()) {      
       roleSelect.innerHTML = `
         <option value="User Desa" selected>User Desa</option>
       `;
-    } else if (isKecRole()) {
-      // 2. Admin Kec: Hanya boleh mengelola User Desa dan Admin Kec
+    } else if (isKabRole()) {      
       roleSelect.innerHTML = `
         <option value="">-- PILIH ROLE PENGGUNA --</option>
-        <option value="User Desa">User Desa</option>
-        <option value="Admin Kec">Admin Kec</option>
-      `;
-    } else if (isKabRole()) {
-      // 3. Admin Kab: Boleh mengelola Admin Kab, Admin Kec, dan User Desa (sembunyikan Admin Prov)
-      roleSelect.innerHTML = `
-        <option value="">-- PILIH ROLE PENGGUNA --</option>
-        <option value="Admin Kab">Admin Kab</option>
         <option value="Admin Kec">Admin Kec</option>
         <option value="User Desa">User Desa</option>
       `;
-    } else {
-      // 4. Admin Prov: Memiliki akses penuh ke semua role
+    } else {      
       roleSelect.innerHTML = `
         <option value="">-- PILIH ROLE PENGGUNA --</option>
         <option value="Admin Prov">Admin Prov</option>
@@ -6018,6 +6009,26 @@ function onUserKecChange() {
       const nmKec = getNamaKec(item.kode_kab, item.kode_kec);
       const nmDesa = getNamaDesa(item.kode_kab, item.kode_kec, item.kode_desa);
       const strDusun = getNamaDusunFormatted(item.kode_kec, item.kode_desa, item.allowed_dusun, item.role);
+      
+      let canModify = false;
+      const targetRole = String(item.role || "").toUpperCase();
+
+      if (isProvRole()) {        
+        canModify = true;
+      } else if (isKabRole()) {        
+        if (targetRole.includes("KEC") || targetRole.includes("DESA")) {
+          canModify = true;
+        }
+      } else if (isKecRole()) {        
+        if (targetRole.includes("DESA")) {
+          canModify = true;
+        }
+      }
+      
+      const actionButtons = canModify ? `
+        <button type="button" class="btn-nav btn-warning" style="padding: 3px 6px; font-size: 11px;" onclick="populateUserToForm('${item.id}')">✏️</button>
+        <button type="button" class="btn-nav btn-danger" style="padding: 3px 6px; font-size: 11px;" onclick="confirmDeleteUser('${item.id}', '${item.username}')">🗑️</button>
+      ` : `<span style="color:#94a3b8; font-size:11px; font-style:italic;">Terkunci</span>`;
 
       tr.innerHTML = `
         <td style="text-align:center;">${idx + 1}</td>
@@ -6038,8 +6049,7 @@ function onUserKecChange() {
         <td>${nmDesa}</td>
         <td style="font-size: 11px; text-align: left;">${strDusun}</td>
         <td style="text-align:center; white-space:nowrap;">
-          <button type="button" class="btn-nav btn-warning" style="padding: 3px 6px; font-size: 11px;" onclick="populateUserToForm('${item.id}')">✏️</button>
-          <button type="button" class="btn-nav btn-danger" style="padding: 3px 6px; font-size: 11px;" onclick="confirmDeleteUser('${item.id}', '${item.username}')">🗑️</button>
+          ${actionButtons}
         </td>
       `;
       tbody.appendChild(tr);
@@ -7238,15 +7248,21 @@ function onUserKecChange() {
           Swal.fire("Kosong", "File Excel tidak memiliki baris data pengguna!", "warning");
           return;
         }
-
-        // 1. Gunakan Map untuk mengeliminasi duplikasi username di dalam file Excel
+        
         const userMap = new Map();
 
         rows.slice(1).forEach(r => {
           const namaLengkap = String(r[0] || "").trim();
           const username = String(r[1] || "").trim();
           const pass = String(r[2] || "").trim();
-          const role = String(r[3] || "User Desa").trim();
+          let role = String(r[3] || "User Desa").trim();
+          
+          if (isKecRole() && role !== "User Desa") {
+            return;
+          }
+          if (isKabRole() && (role === "Admin Kab" || role === "Admin Prov")) {
+            return;
+          }
           
           const kdProv = String(r[4] || userKodeProv || "52").trim().padStart(2, '0');
           const rawKab = String(r[5] || "").trim();
@@ -7262,11 +7278,10 @@ function onUserKecChange() {
               .map(d => d.trim().padStart(4, '0'))
               .filter(d => d !== "");
           }
-
-          // Hanya proses baris yang memiliki username dan password
+          
           if (username !== "" && pass !== "") {
             userMap.set(username.toLowerCase(), {
-              nama_lengkap: namaLengkap || null, // Disimpan ke tabel users
+              nama_lengkap: namaLengkap || null,
               username: username,
               password_hash: pass,
               role: role,
@@ -7278,16 +7293,14 @@ function onUserKecChange() {
             });
           }
         });
-
-        // 2. Konversi hasil deduplikasi menjadi array payload
+        
         const payloadList = Array.from(userMap.values());
 
         if (payloadList.length === 0) {
           Swal.fire("Data Tidak Valid", "Tidak ada baris pengguna dengan username dan password yang valid.", "warning");
           return;
         }
-
-        // 3. Eksekusi Upsert aman bebas duplikat batch
+        
         const { error } = await db.from('users').upsert(payloadList, { onConflict: 'username' });
         if (error) throw error;
 
