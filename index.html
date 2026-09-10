@@ -1245,6 +1245,11 @@
         <input type="hidden" id="user_id" value="">
 
         <div class="form-group" style="margin-bottom: 12px;">
+          <label>Nama Lengkap:</label>
+          <input type="text" id="user_fullname_input" placeholder="Contoh: Punk Lee (kosongkan jika default)" style="text-transform: none;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
           <label>Username:</label>
           <input type="text" id="user_name_input" placeholder="Masukkan Username" required style="text-transform: none;">
         </div>
@@ -1383,8 +1388,9 @@
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let currentUser = "";
+  let userNamaLengkap = "";
   let userRole = "";
-  let userKodeProv = ""; // State baru
+  let userKodeProv = "";
   let userKodeKab = "";
   let userKodeKec = "";
   let userKodeDesa = "";
@@ -1416,36 +1422,37 @@
     return "Selamat malam";
   }
 
-  function setUserGreeting(role, wilayahNama, username, kodeKab, provNama) {
+  function setUserGreeting(role, wilayahNama, username, kodeKab, provNama, namaLengkap) {
     const timeGreeting = getTimeGreeting();
     let identity = "";
-    const roleUpper = String(role || "").toUpperCase();
+    
+    if (namaLengkap && String(namaLengkap).trim() !== "") {
+      identity = String(namaLengkap).trim();
+    } else {      
+      const roleUpper = String(role || "").toUpperCase();
 
-    if (roleUpper.includes("PROV")) {
-      // Admin Provinsi: langsung sebut nama provinsi
-      identity = "Admin Provinsi " + (provNama || "Nusa Tenggara Barat");
-    } else if (roleUpper.includes("KAB")) {
-      const cleanKdKab = String(kodeKab || "").trim();
-      const nama = wilayahNama || "Lombok Barat";
+      if (roleUpper.includes("PROV")) {
+        identity = "Admin Provinsi " + (provNama || "Nusa Tenggara Barat");
+      } else if (roleUpper.includes("KAB")) {
+        const cleanKdKab = String(kodeKab || "").trim();
+        const nama = wilayahNama || "Lombok Barat";
 
-      if (cleanKdKab.startsWith("7")) {
-        // Jika berawalan 7: "Admin " + nama kab/kotanya langsung (misal: "Admin KOTA BIMA")
-        identity = "Admin " + nama;
+        if (cleanKdKab.startsWith("7")) {
+          identity = "Admin " + nama;
+        } else {
+          const cleanNama = nama.replace(/^KABUPATEN\s+/i, "");
+          identity = "Admin Kabupaten " + cleanNama;
+        }
+      } else if (roleUpper.includes("KEC")) {
+        identity = "Admin Kecamatan " + (wilayahNama || "");
       } else {
-        // Jika berawalan 0 atau lainnya: "Admin Kabupaten " + nama
-        // Menghindari duplikasi jika nama wilayah di database sudah diawali kata "KABUPATEN"
-        const cleanNama = nama.replace(/^KABUPATEN\s+/i, "");
-        identity = "Admin Kabupaten " + cleanNama;
+        identity = "User Desa " + (wilayahNama || "");
       }
-    } else if (roleUpper.includes("KEC")) {
-      identity = "Admin Kecamatan " + (wilayahNama || "");
-    } else {
-      identity = "User Desa " + (wilayahNama || "");
-    }
 
-    identity = identity.trim();
-    if (!wilayahNama && !roleUpper.includes("PROV")) {
-      identity = role + " (" + username + ")";
+      identity = identity.trim();
+      if (!wilayahNama && !roleUpper.includes("PROV")) {
+        identity = role + " (" + username + ")";
+      }
     }
 
     const fullGreeting = `${timeGreeting}, ${identity}`;
@@ -1503,6 +1510,7 @@
       try {
         const data = JSON.parse(savedSession);
         currentUser = data.username;
+        userNamaLengkap = data.nama_lengkap || "";
         userRole = String(data.role || "User Desa").toUpperCase();
         userKodeProv = String(data.kode_prov || "52").trim().padStart(2, '0');
         userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
@@ -1531,7 +1539,7 @@
           }
         }
 
-        setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis);
+        setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis, userNamaLengkap);
 
         // Buka dashboard langsung tanpa lewat halaman login
         document.getElementById("loginContainer").style.display = "none";
@@ -2839,6 +2847,7 @@ function onRecapKabupatenChange() {
     }
 
     currentUser = data.username;
+    userNamaLengkap = data.nama_lengkap || "";
     userRole = String(data.role || "User Desa").toUpperCase();
     userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
     userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
@@ -2847,6 +2856,7 @@ function onRecapKabupatenChange() {
 
     const sessionData = {
       username: data.username,
+      nama_lengkap: userNamaLengkap,
       role: data.role,
       kode_prov: userKodeProv,
       kode_kab: data.kode_kab,
@@ -2876,7 +2886,7 @@ function onRecapKabupatenChange() {
       }
     }
     
-    setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis);
+    setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis, userNamaLengkap);
 
     document.getElementById("loginContainer").style.display = "none";
     document.getElementById("appContainer").style.display = "block";
@@ -5774,6 +5784,7 @@ function onUserKecChange() {
   function resetUserForm() {
     document.getElementById("formUserAccount").reset();
     document.getElementById("user_id").value = "";
+    document.getElementById("user_fullname_input").value = "";
     document.getElementById("user_name_input").readOnly = false;
     document.getElementById("btnSaveUserAcc").innerText = "💾 SIMPAN AKUN";
     
@@ -5821,6 +5832,7 @@ function onUserKecChange() {
 
       const payload = {
         username: document.getElementById("user_name_input").value.trim(),
+        nama_lengkap: document.getElementById("user_fullname_input").value.trim() || null,
         password_hash: document.getElementById("user_pass_input").value.trim(),
         role: roleVal,
         kode_prov: userKodeProv || "52",
@@ -5987,6 +5999,7 @@ function onUserKecChange() {
     if (!item) return;
 
     document.getElementById("user_id").value = item.id;
+    document.getElementById("user_fullname_input").value = item.nama_lengkap || "";
     document.getElementById("user_name_input").value = item.username;
     document.getElementById("user_pass_input").value = item.password_hash;
     document.getElementById("user_role_select").value = item.role;
