@@ -6025,7 +6025,7 @@ function onUserKecChange() {
         <td>${item.username}</td>
         <td style="font-family: monospace; background:#f8fafc;">${item.password_hash || ''}</td>
         <td style="text-align:center;">
-          <span style="padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; background: ${
+          <span style="display: inline-block; text-align: center; line-height: 1.2; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; background: ${
             item.role === 'Admin Prov' ? '#f3e8ff; color:#6b21a8' :
             item.role === 'Admin Kab' ? '#fee2e2; color:#991b1b' : 
             item.role === 'Admin Kec' ? '#fef3c7; color:#92400e' : '#e0f2fe; color:#075985'
