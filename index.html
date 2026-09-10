@@ -3180,45 +3180,49 @@ function onRecapKabupatenChange() {
   }
 
   function hitungUmurIstri() {
-  const tglLahirInput = document.getElementById("tgl_lahir_istri").value;
-  const umurInput = document.getElementById("umur_istri");
-  const tahunPelaporan = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
+    const tglLahirInput = document.getElementById("tgl_lahir_istri").value;
+    const umurInput = document.getElementById("umur_istri");
+    const tahunPelaporan = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
 
-  if (!tglLahirInput) {
-    umurInput.value = 0;
+    if (!tglLahirInput) {
+      umurInput.value = 0;
+      applyMutationAndAgeLocks();
+      return;
+    }
+
+    const dob = new Date(tglLahirInput);    
+    
+    if (isNaN(dob.getTime()) || dob.getFullYear() > tahunPelaporan) {
+      umurInput.value = 0;
+      applyMutationAndAgeLocks();
+      return;
+    }
+
+    const birthYear = dob.getFullYear();
+    const birthMonth = dob.getMonth(); 
+    const birthDay = dob.getDate();
+    
+    const today = new Date();
+    let refDate;
+    if (tahunPelaporan === today.getFullYear()) {
+      refDate = today;
+    } else if (tahunPelaporan < today.getFullYear()) {
+      refDate = new Date(tahunPelaporan, 11, 31);
+    } else {
+      refDate = new Date(tahunPelaporan, 0, 1);
+    }
+
+    let age = refDate.getFullYear() - birthYear;
+    const monthDiff = refDate.getMonth() - birthMonth;
+
+    if (monthDiff < 0 || (monthDiff === 0 && refDate.getDate() < birthDay)) {
+      age--;  
+    }
+    
+    umurInput.value = Math.max(0, age);
+    
     applyMutationAndAgeLocks();
-    return;
   }
-
-  const dob = new Date(tglLahirInput);
-  
-  // Validasi jika format tanggal rusak atau tahun lahir di atas tahun pelaporan
-  if (isNaN(dob.getTime()) || dob.getFullYear() > tahunPelaporan) {
-    umurInput.value = 0;
-    applyMutationAndAgeLocks();
-    return;
-  }
-
-  const birthYear = dob.getFullYear();
-  const birthMonth = dob.getMonth(); 
-  const birthDay = dob.getDate();
-
-  // Patokan akhir tahun pelaporan (31 Desember)
-  const refDate = new Date(tahunPelaporan, 11, 31); 
-
-  let age = refDate.getFullYear() - birthYear;
-  const monthDiff = refDate.getMonth() - birthMonth;
-
-  if (monthDiff < 0 || (monthDiff === 0 && refDate.getDate() < birthDay)) {
-    age--;  
-  }
-
-  // Pastikan nilai batas bawah tidak pernah negatif
-  umurInput.value = Math.max(0, age);
-
-  // Perbarui status penguncian bulan berdasarkan umur
-  applyMutationAndAgeLocks();
-}
   
   function checkJumlahAnak() {
     const val = parseInt(document.getElementById("jumlah_anak").value, 10);
