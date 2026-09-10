@@ -4150,63 +4150,12 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         const targetBulan = targetBulanIdx > 0 ? targetBulanIdx : 1;
 
         allData = allData.filter(r => {
-          // 1. FILTER JKN (Bisa pilih PBI, BUKAN PBI, SWASTA sekaligus)
-          if (advCat === "JKN") {
-            if (selectedAdvVals.length === 0) return true; // Jika tidak ada centang, ambil semua
-            const jknRaw = String(r.peserta_jkn || "").toUpperCase().trim();
-            
-            return selectedAdvVals.some(v => {
-              if (v === "PBI") return jknRaw === "PBI";
-              if (v === "BUKAN PBI") return jknRaw.includes("BUKAN PBI") || jknRaw.includes("NON PBI") || jknRaw.includes("NON-PBI");
-              if (v === "SWASTA") return jknRaw.includes("SWASTA");
-              if (v === "TIDAK MEMILIKI") return jknRaw.includes("TIDAK");
-              return jknRaw === v;
-            });
-          }
-
           const res = hitungStatusIndikator(r, targetBulan, mKeys);
           const cur = res.cur;
 
-          // 2. KESERTAAN KB
-          if (advCat === "KESERTAAN_KB") {
-            if (selectedAdvVals.length === 0) return res.isPusAktif;
-            const isBerKb = (cur.type === "PESERTA_KB" && !res.isMutasiOr50);
-            const isTidakKb = (cur.type === "BUKAN_PESERTA" && !res.isMutasiOr50);
-
-            if (selectedAdvVals.includes("BER_KB") && isBerKb) return true;
-            if (selectedAdvVals.includes("TIDAK_BER_KB") && isTidakKb) return true;
-            return false;
-          }
-
-          // 3. METODE KONTRASEPSI AKTIF
-          if (advCat === "METODE_KONTRASEPSI") {
-            if (cur.type !== "PESERTA_KB" || res.isMutasiOr50) return false;
-            if (selectedAdvVals.length === 0) return true;
-            return selectedAdvVals.includes(cur.method);
-          }
-
-          // 4. AKSEPTOR KB BARU
-          if (advCat === "AKSEPTOR_KB_BARU") {
-            if (!res.isKbBaru || res.isMutasiOr50) return false;
-            if (selectedAdvVals.length === 0) return true;
-            return selectedAdvVals.includes(cur.method);
-          }
-
-          // 5. ALASAN TIDAK KB
-          if (advCat === "ALASAN_TIDAK_KB") {
-            if (cur.type !== "BUKAN_PESERTA" || res.isMutasiOr50) return false;
-            if (selectedAdvVals.length === 0) return true;
-            return selectedAdvVals.includes(cur.reason);
-          }
-
-          // 6. HAMIL, HAMIL BARU, PUS BARU
-          if (advCat === "HAMIL") {
-            return cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL" && !res.isMutasiOr50;
-          }
-          if (advCat === "HAMIL_BARU") return res.isHamilBaru;
-          if (advCat === "PUS_BARU") return res.isPusBaru;
-
-          // 7. MUTASI (Bisa pilih BERCERAI & PINDAH sekaligus)
+          // =========================================================================
+          // 1. KHUSUS KATEGORI MUTASI: Menampilkan yang BUKAN PUS (Mutasi)
+          // =========================================================================
           if (advCat === "MUTASI") {
             if (cur.type !== "BUKAN_PUS") return false;
             if (selectedAdvVals.length === 0) return true;
@@ -4218,6 +4167,66 @@ function hitungStatusIndikator(r, bulan, mKeys) {
               return false;
             });
           }
+
+          // =========================================================================
+          // 2. KATEGORI LAINNYA: WAJIB HANYA PUS AKTIF (Bukan Mutasi & Usia < 50)
+          // =========================================================================
+          if (!res.isPusAktif) {
+            return false; // Langsung buang data jika bukan PUS di bulan terpilih
+          }
+
+          // A. FILTER JKN (Sekarang sudah terkunci khusus PUS Aktif)
+          if (advCat === "JKN") {
+            if (selectedAdvVals.length === 0) return true;
+            const jknRaw = String(r.peserta_jkn || "").toUpperCase().trim();
+            
+            return selectedAdvVals.some(v => {
+              if (v === "PBI") return jknRaw === "PBI";
+              if (v === "BUKAN PBI") return jknRaw.includes("BUKAN PBI") || jknRaw.includes("NON PBI") || jknRaw.includes("NON-PBI");
+              if (v === "SWASTA") return jknRaw.includes("SWASTA");
+              if (v === "TIDAK MEMILIKI") return jknRaw.includes("TIDAK");
+              return jknRaw === v;
+            });
+          }
+
+          // B. KESERTAAN KB
+          if (advCat === "KESERTAAN_KB") {
+            if (selectedAdvVals.length === 0) return true;
+            const isBerKb = (cur.type === "PESERTA_KB");
+            const isTidakKb = (cur.type === "BUKAN_PESERTA");
+
+            if (selectedAdvVals.includes("BER_KB") && isBerKb) return true;
+            if (selectedAdvVals.includes("TIDAK_BER_KB") && isTidakKb) return true;
+            return false;
+          }
+
+          // C. METODE KONTRASEPSI AKTIF
+          if (advCat === "METODE_KONTRASEPSI") {
+            if (cur.type !== "PESERTA_KB") return false;
+            if (selectedAdvVals.length === 0) return true;
+            return selectedAdvVals.includes(cur.method);
+          }
+
+          // D. AKSEPTOR KB BARU
+          if (advCat === "AKSEPTOR_KB_BARU") {
+            if (!res.isKbBaru) return false;
+            if (selectedAdvVals.length === 0) return true;
+            return selectedAdvVals.includes(cur.method);
+          }
+
+          // E. ALASAN TIDAK KB
+          if (advCat === "ALASAN_TIDAK_KB") {
+            if (cur.type !== "BUKAN_PESERTA") return false;
+            if (selectedAdvVals.length === 0) return true;
+            return selectedAdvVals.includes(cur.reason);
+          }
+
+          // F. HAMIL, HAMIL BARU, PUS BARU
+          if (advCat === "HAMIL") {
+            return cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL";
+          }
+          if (advCat === "HAMIL_BARU") return res.isHamilBaru;
+          if (advCat === "PUS_BARU") return res.isPusBaru;
 
           return true;
         });
