@@ -1341,11 +1341,12 @@
               <th style="background: #1f4e78; color: white;">KABUPATEN / KOTA</th>
               <th style="background: #1f4e78; color: white;">KECAMATAN</th>
               <th style="background: #1f4e78; color: white;">DESA</th>
+              <th style="background: #1f4e78; color: white;">DUSUN</th> <!-- KOLOM BARU -->
               <th style="background: #1f4e78; color: white;">AKSI</th>
             </tr>
           </thead>
           <tbody id="usersTbody">
-            <tr><td colspan="8" style="text-align: center; padding: 15px;">Memuat data...</td></tr>
+            <tr><td colspan="10" style="text-align: center; padding: 15px;">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -5907,7 +5908,7 @@ function onUserKecChange() {
     const { data, error } = await query;
     if (error || !data) {
       console.error("Gagal memuat daftar users:", error);
-      tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align: center; padding: 15px;">Gagal memuat: ${error ? error.message : 'Error koneksi'}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="color:red; text-align: center; padding: 15px;">Gagal memuat: ${error ? error.message : 'Error koneksi'}</td></tr>`;
       return;
     }
 
@@ -5934,7 +5935,7 @@ function onUserKecChange() {
       return kdKab;
     }
 
-    // Helper pencarian nama kecamatan yang presisi dengan Kabupaten
+    // Helper pencarian nama kecamatan
     function getNamaKec(kdKab, kdKec) {
       if (!kdKec) return "-";
       const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
@@ -5949,23 +5950,57 @@ function onUserKecChange() {
       return kdKec;
     }
 
-    // Helper pencarian nama desa yang presisi dengan Kecamatan
-    function getNamaDesa(kdKec, kdDesa) {
+    // Helper pencarian nama desa yang akurat
+    function getNamaDesa(kdKab, kdKec, kdDesa) {
       if (!kdDesa) return "-";
+      const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
       const cleanKec = String(kdKec || "").padStart(2, '0');
       const cleanDesa = String(kdDesa).padStart(4, '0');
       
+      // Coba composite key kab_kec
+      const compositeKey = cleanKab + "_" + cleanKec;
+      if (dataDesa[compositeKey] && dataDesa[compositeKey][cleanDesa]) {
+        return dataDesa[compositeKey][cleanDesa];
+      }
+      // Coba key kec saja
       if (dataDesa[cleanKec] && dataDesa[cleanKec][cleanDesa]) {
         return dataDesa[cleanKec][cleanDesa];
       }
+      // Pencarian mendalam di seluruh dataDesa jika key tidak langsung cocok
+      for (let k in dataDesa) {
+        if (dataDesa[k][cleanDesa]) return dataDesa[k][cleanDesa];
+      }
       return kdDesa;
+    }
+
+    // Helper pencarian nama dusun berdasarkan array allowed_dusun
+    function getNamaDusunFormatted(kdKec, kdDesa, allowedDusunArr, role) {
+      if (role !== "User Desa") return "-";
+      if (!allowedDusunArr || !Array.isArray(allowedDusunArr) || allowedDusunArr.length === 0) {
+        return `<span style="color:#059669; font-weight:600;">SEMUA DUSUN</span>`;
+      }
+
+      const cleanKec = String(kdKec || "").padStart(2, '0');
+      const cleanDesa = String(kdDesa || "").padStart(4, '0');
+      const dusunObj = getDusunList(cleanKec, cleanDesa);
+
+      const namaList = allowedDusunArr.map(kdDsn => {
+        const cleanDsn = String(kdDsn).padStart(4, '0');
+        if (dusunObj && dusunObj[cleanDsn]) {
+          return dusunObj[cleanDsn].nama;
+        }
+        return cleanDsn; // Fallback jika nama tidak ditemukan di cache
+      });
+
+      return `<span style="color:#0284c7; font-weight:bold;">${namaList.join(", ")}</span>`;
     }
 
     const filtered = allUsersData.filter(item => {
       const nmKab = getNamaKab(item.kode_kab).toLowerCase();
       const nmKec = getNamaKec(item.kode_kab, item.kode_kec).toLowerCase();
-      const nmDesa = getNamaDesa(item.kode_kec, item.kode_desa).toLowerCase();
+      const nmDesa = getNamaDesa(item.kode_kab, item.kode_kec, item.kode_desa).toLowerCase();
       return (item.username || '').toLowerCase().includes(filter) ||
+             (item.nama_lengkap || '').toLowerCase().includes(filter) ||
              (item.role || '').toLowerCase().includes(filter) ||
              nmKab.includes(filter) ||
              nmKec.includes(filter) ||
@@ -5973,7 +6008,7 @@ function onUserKecChange() {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
       return;
     }
 
@@ -5981,11 +6016,12 @@ function onUserKecChange() {
       const tr = document.createElement("tr");
       const nmKab = getNamaKab(item.kode_kab);
       const nmKec = getNamaKec(item.kode_kab, item.kode_kec);
-      const nmDesa = getNamaDesa(item.kode_kec, item.kode_desa);
+      const nmDesa = getNamaDesa(item.kode_kab, item.kode_kec, item.kode_desa);
+      const strDusun = getNamaDusunFormatted(item.kode_kec, item.kode_desa, item.allowed_dusun, item.role);
 
       tr.innerHTML = `
         <td style="text-align:center;">${idx + 1}</td>
-        <td><b>${item.nama_lengkap || '-'}</b></td> <!-- KOLOM BARU DI SINI -->
+        <td><b>${item.nama_lengkap || '-'}</b></td>
         <td>${item.username}</td>
         <td style="font-family: monospace; background:#f8fafc;">${item.password_hash || ''}</td>
         <td style="text-align:center;">
@@ -5999,7 +6035,8 @@ function onUserKecChange() {
         </td>
         <td>${nmKab}</td>
         <td>${nmKec}</td>
-        <td>${nmDesa}</td>
+        <td><b>${nmDesa}</b></td>
+        <td style="font-size: 11px; text-align: left;">${strDusun}</td>
         <td style="text-align:center; white-space:nowrap;">
           <button type="button" class="btn-nav btn-warning" style="padding: 3px 6px; font-size: 11px;" onclick="populateUserToForm('${item.id}')">✏️</button>
           <button type="button" class="btn-nav btn-danger" style="padding: 3px 6px; font-size: 11px;" onclick="confirmDeleteUser('${item.id}', '${item.username}')">🗑️</button>
