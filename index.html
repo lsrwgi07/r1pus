@@ -1334,6 +1334,7 @@
           <thead>
             <tr>
               <th style="background: #1f4e78; color: white;">NO</th>
+              <th style="background: #1f4e78; color: white;">NAMA LENGKAP</th>
               <th style="background: #1f4e78; color: white;">USERNAME</th>
               <th style="background: #1f4e78; color: white;">PASSWORD</th>
               <th style="background: #1f4e78; color: white;">ROLE</th>
@@ -5959,7 +5960,7 @@ function onUserKecChange() {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
       return;
     }
 
@@ -5971,7 +5972,8 @@ function onUserKecChange() {
 
       tr.innerHTML = `
         <td style="text-align:center;">${idx + 1}</td>
-        <td><b>${item.username}</b></td>
+        <td><b>${item.nama_lengkap || '-'}</b></td> <!-- KOLOM BARU DI SINI -->
+        <td>${item.username}</td>
         <td style="font-family: monospace; background:#f8fafc;">${item.password_hash || ''}</td>
         <td style="text-align:center;">
           <span style="padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; background: ${
@@ -7140,15 +7142,15 @@ function onUserKecChange() {
   // ==========================================
   function downloadUserTemplate() {
     const headers = [
-      "Username", "Password", "Role", 
-      "Kode Provinsi", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa",
+      "Nama Lengkap (Opsional)", "Username", "Password", "Role", 
+      "Kode Provinsi", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa", 
       "Kode Dusun (Pisahkan Koma)"
     ];
 
-    // Contoh: User Desa yang hanya diberi akses ke dusun 0001 dan 0002
+    // Contoh: User Desa dengan nama lengkap terisi
     const sampleRow = [
-      "desamareje", "rahasia123", "User Desa", 
-      "52", "01", "05", "0001",
+      "Punk Lee", "desamareje", "rahasia123", "User Desa", 
+      "52", "01", "05", "0001", 
       "0001, 0002"
     ];
 
@@ -7162,7 +7164,7 @@ function onUserKecChange() {
       }
     }
     
-    ws['!cols'] = headers.map(() => ({ wch: 22 }));
+    ws['!cols'] = headers.map(() => ({ wch: 24 }));
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TEMPLATE_USERS");
@@ -7191,17 +7193,17 @@ function onUserKecChange() {
         const userMap = new Map();
 
         rows.slice(1).forEach(r => {
-          const username = String(r[0] || "").trim();
-          const pass = String(r[1] || "").trim();
-          const role = String(r[2] || "User Desa").trim();
+          const namaLengkap = String(r[0] || "").trim();
+          const username = String(r[1] || "").trim();
+          const pass = String(r[2] || "").trim();
+          const role = String(r[3] || "User Desa").trim();
           
-          const kdProv = String(r[3] || userKodeProv || "52").trim().padStart(2, '0');
-          const rawKab = String(r[4] || "").trim();
-          const rawKec = String(r[5] || "").trim();
-          const rawDesa = String(r[6] || "").trim();
+          const kdProv = String(r[4] || userKodeProv || "52").trim().padStart(2, '0');
+          const rawKab = String(r[5] || "").trim();
+          const rawKec = String(r[6] || "").trim();
+          const rawDesa = String(r[7] || "").trim();
           
-          // Membaca daftar kode dusun dari kolom 8 (misal: "0001, 0002")
-          const rawDusunStr = String(r[7] || "").trim();
+          const rawDusunStr = String(r[8] || "").trim();
           let allowedDusunArr = null;
           
           if (role === "User Desa" && rawDusunStr !== "") {
@@ -7214,6 +7216,7 @@ function onUserKecChange() {
           // Hanya proses baris yang memiliki username dan password
           if (username !== "" && pass !== "") {
             userMap.set(username.toLowerCase(), {
+              nama_lengkap: namaLengkap || null, // Disimpan ke tabel users
               username: username,
               password_hash: pass,
               role: role,
