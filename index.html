@@ -2671,7 +2671,7 @@ function onRecapKabupatenChange() {
 
   // --- LOGIC DROPDOWN BERTINGKAT GRAFIK ---
   function onChartTingkatChange() {
-    const t = document.getElementById("chartTingkat").value;
+    const t = document.getElementById("chartTingkat") ? document.getElementById("chartTingkat").value : "";
     const cKab = document.getElementById("chartFilterKabContainer");
     const cKec = document.getElementById("chartFilterKecContainer");
     const cDes = document.getElementById("chartFilterDesaContainer");
@@ -2689,7 +2689,7 @@ function onRecapKabupatenChange() {
 
     // 1. KASUS: USER DESA
     if (isDesaRole()) {
-      populateDesaByKec(userKodeKec, "chartDesa");
+      populateDesaByKec(userKodeKec, "chartDesa", userKodeKab);
       setSelectValueCaseInsensitive("chartDesa", userKodeDesa);
       if (selDes) selDes.disabled = true;
 
@@ -2707,16 +2707,17 @@ function onRecapKabupatenChange() {
 
       if (t === "Desa" || t === "Dusun") {
         if (cDes) cDes.style.display = "block";
-        populateDesaByKec(userKodeKec, "chartDesa");
+        populateDesaByKec(userKodeKec, "chartDesa", userKodeKab);
         if (selDes) selDes.disabled = false;
       }
       if (t === "Dusun") {
         if (cDsn) cDsn.style.display = "block";
+        onChartDesaChange();
       }
 
     // 3. KASUS: ADMIN KABUPATEN
     } else if (isKabRole()) {
-      populateKabupatenDropdown("chartKabupaten");
+      populateKabupatenDropdown("chartKabupaten", userKodeKab);
       setSelectValueCaseInsensitive("chartKabupaten", userKodeKab);
       if (selKab) selKab.disabled = true;
 
@@ -2734,7 +2735,7 @@ function onRecapKabupatenChange() {
         if (cDsn) cDsn.style.display = "block";
       }
 
-    // 4. KASUS: ADMIN PROVINSI (TERBUKA PENUH)
+    // 4. KASUS: ADMIN PROVINSI
     } else {
       populateKabupatenDropdown("chartKabupaten");
       if (selKab) selKab.disabled = false;
@@ -2771,6 +2772,15 @@ function onRecapKabupatenChange() {
     if (bln) bln.value = ""; // Default -- PILIH BULAN --
 
     onChartTingkatChange();
+  }
+
+  function onChartKabupatenChange() {
+    const kab = document.getElementById("chartKabupaten") ? document.getElementById("chartKabupaten").value : "";
+    populateKecamatanByKab(kab, "chartKecamatan");
+    const cDes = document.getElementById("chartDesa");
+    const cDsn = document.getElementById("chartDusun");
+    if (cDes) cDes.innerHTML = '<option value="">-- PILIH DESA --</option>';
+    if (cDsn) cDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
   }
 
   function onChartKecamatanChange() {
