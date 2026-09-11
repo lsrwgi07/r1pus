@@ -701,33 +701,29 @@
               <option value="PUS_BARU">PUS BARU</option>
               <option value="MUTASI">MUTASI</option>
             </select>
-          </div> 
 
             <!-- Wadah Kotak Centang Multi-Pilihan -->
-			<div id="bnbaFilterAdvCheckboxContainer" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; box-sizing: border-box; width: 100%;">
-			  
-			  <!-- Header: Judul & Dua Tombol Pil -->
-			  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">
-			    <span id="bnbaAdvSubLabel" style="font-weight: 800; font-size: 13px; color: #1f4e78; line-height: 1.2; flex: 1;">
-			      PILIH KEPESERTAAN JKN:
-			    </span>
-			    
-			    <div style="display: flex; gap: 6px; flex-shrink: 0;">
-			      <button type="button" onclick="toggleAllAdvCheckboxes(true)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
-			        Pilih<br>Semua
-			      </button>
-			      <button type="button" onclick="toggleAllAdvCheckboxes(false)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
-			        Hapus<br>Semua
-			      </button>
-			    </div>
-			  </div>
-			
-          <!-- Area Checkbox: Menggunakan Grid 3 Kolom -->
-          <div id="bnbaAdvCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; align-items: start;">
-            <!-- Diisi otomatis oleh JavaScript -->
-          </div>
-        </div>
-      </div>
+            <div id="bnbaFilterAdvCheckboxContainer" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; box-sizing: border-box; width: 100%;">
+              <!-- Header: Judul & Dua Tombol Pil -->
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">
+                <span id="bnbaAdvSubLabel" style="font-weight: 800; font-size: 13px; color: #1f4e78; line-height: 1.2; flex: 1;">
+                  PILIH KEPESERTAAN JKN:
+                </span>
+                <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                  <button type="button" onclick="toggleAllAdvCheckboxes(true)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
+                    Pilih<br>Semua
+                  </button>
+                  <button type="button" onclick="toggleAllAdvCheckboxes(false)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
+                    Hapus<br>Semua
+                  </button>
+                </div>
+              </div>
+              <!-- Area Checkbox: Menggunakan Grid 3 Kolom -->
+              <div id="bnbaAdvCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; align-items: start;">
+                <!-- Diisi otomatis oleh JavaScript -->
+              </div>
+            </div>
+          </div>          
 
           <!-- 3. BULAN (DILETAKKAN DI BAWAH PENCARIAN LANJUTAN) -->
           <div>
@@ -4422,8 +4418,23 @@
       tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; color:red; padding: 20px;'>Gagal memuat data: ${err.message}</td></tr>`;
       Swal.fire("Error", "Gagal memuat BNBA: " + err.message, "error");
     }
-  }    
+  }  
   
+  async function fetchChartData() {
+    const tingkat = document.getElementById("chartTingkat").value;
+    const tahun = parseInt(document.getElementById("chartTahun").value, 10);
+    const bulanVal = document.getElementById("chartBulan").value;
+
+    if (!tingkat) {
+      Swal.fire("Perhatian", "Silakan pilih Tingkat Wilayah terlebih dahulu!", "warning");
+      return;
+    }
+    
+    if (!bulanVal) {
+      Swal.fire("Perhatian", "Silakan pilih Bulan terlebih dahulu!", "warning");
+      return;
+    }
+
     const bulan = parseInt(bulanVal, 10);
     const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
     const monthKey = mKeys[bulan - 1];
