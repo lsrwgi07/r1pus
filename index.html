@@ -2450,7 +2450,13 @@
     if (kec && desa) {
       const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
-        for (let kd in dsn) sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        for (let kd in dsn) {
+          // Filter hak akses dusun user desa
+          if (isDesaRole() && userAllowedDusun.length > 0 && !userAllowedDusun.includes(kd)) {
+            continue;
+          }
+          sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        }
       }
     }
   }
@@ -2704,12 +2710,18 @@
     const selDsn = document.getElementById("bnbaDusun");
     const selRt = document.getElementById("bnbaRt");
     if (selDsn) selDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
-    if (selRt) selRt.innerHTML = '<option value="">-- PILIH RT --</option>';
+    if (selRt)  selRt.innerHTML  = '<option value="">-- PILIH RT --</option>';
     
     if (kec && desa) {
       const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
-        for (let kd in dsn) selDsn.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        for (let kd in dsn) {
+          // Filter hak akses dusun user desa
+          if (isDesaRole() && userAllowedDusun.length > 0 && !userAllowedDusun.includes(kd)) {
+            continue;
+          }
+          selDsn.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        }
       }
     }
   }
@@ -2871,7 +2883,13 @@
     if (kec && desa) {
       const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
-        for (let kd in dsn) sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        for (let kd in dsn) {
+          // Filter hak akses dusun user desa
+          if (isDesaRole() && userAllowedDusun.length > 0 && !userAllowedDusun.includes(kd)) {
+            continue;
+          }
+          sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        }
       }
     }
   }
@@ -2891,7 +2909,13 @@
     sel.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
     const dsn = getDusunList(kec, desa);
     if (dsn) {
-      for (let kd in dsn) sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+      for (let kd in dsn) {
+        // Kunci dropdown pencarian jika user desa dibatasi
+        if (isDesaRole() && userAllowedDusun.length > 0 && !userAllowedDusun.includes(kd)) {
+          continue;
+        }
+        sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+      }
     }
   }
 
