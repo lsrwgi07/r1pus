@@ -3678,7 +3678,7 @@
 }    
 
   // --- REKAPITULASI DENGAN FILTER TINGKAT ---
-  async function fetchAllPusDataChunked(tahun, filterKec, filterDesa, filterDusun) {
+  async function fetchAllPusDataChunked(tahun, filterKab, filterKec, filterDesa, filterDusun) {
     let allData = [];
     let from = 0;
     const step = 1000;
@@ -3687,9 +3687,11 @@
     while (hasMore) {
       let query = db.from('data_pus').select('*').eq('tahun', tahun);
 
+      // KUNCI KABUPATEN DI LEVEL QUERY DATABASE
+      if (filterKab) query = query.eq('kode_kab', filterKab);
       if (filterKec) query = query.eq('kode_kec', filterKec);
       if (filterDesa) query = query.eq('kode_desa', filterDesa);
-      if (filterDusun) query = query.eq('kode_dusun', filterDusun);
+      if (filterDusun && filterDusun !== "0000") query = query.eq('kode_dusun', filterDusun);
       if (userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
 
       const { data, error } = await query.range(from, from + step - 1);
@@ -3707,105 +3709,105 @@
   }
 
   // Helper evaluasi komprehensif status PUS, PUS Baru, Hamil Baru, dan Akseptor KB Baru
-function hitungStatusIndikator(r, bulan, mKeys) {
-  const monthKey = mKeys[bulan - 1];
-  const cur = evaluateKbStatus(r[monthKey]);
-  const prev = bulan > 1 ? evaluateKbStatus(r[mKeys[bulan - 2]]) : null;
-  const umurIstri = parseInt(r.umur_istri || 0, 10);
+  function hitungStatusIndikator(r, bulan, mKeys) {
+    const monthKey = mKeys[bulan - 1];
+    const cur = evaluateKbStatus(r[monthKey]);
+    const prev = bulan > 1 ? evaluateKbStatus(r[mKeys[bulan - 2]]) : null;
+    const umurIstri = parseInt(r.umur_istri || 0, 10);
 
-  // 1. EVALUASI TOTAL PUS & BUKAN PUS
-  const isMutasiOr50 = (cur.type === "BUKAN_PUS" || umurIstri >= 50);
-  const isPusAktif = !isMutasiOr50 && (cur.type === "PESERTA_KB" || cur.type === "BUKAN_PESERTA");
+    // 1. EVALUASI TOTAL PUS & BUKAN PUS
+    const isMutasiOr50 = (cur.type === "BUKAN_PUS" || umurIstri >= 50);
+    const isPusAktif = !isMutasiOr50 && (cur.type === "PESERTA_KB" || cur.type === "BUKAN_PESERTA");
 
-  // 2. EVALUASI RIWAYAT BULAN SEBELUMNYA
-  let allPrevEmpty = true;
-  let everKbBefore = false;
-  let consecutiveNonKbCount = 0; // Menghitung putus pakai mundur dari bulan lalu
+    // 2. EVALUASI RIWAYAT BULAN SEBELUMNYA
+    let allPrevEmpty = true;
+    let everKbBefore = false;
+    let consecutiveNonKbCount = 0; // Menghitung putus pakai mundur dari bulan lalu
 
-  for (let i = 0; i < bulan - 1; i++) {
-    const st = evaluateKbStatus(r[mKeys[i]]);
-    if (st.type !== "EMPTY") {
-      allPrevEmpty = false;
-    }
-    if (st.type === "PESERTA_KB") {
-      everKbBefore = true;
-    }
-  }
-
-  // Hitung berapa bulan berturut-turut tidak ber-KB tepat sebelum bulan ini
-  if (bulan > 1) {
-    for (let i = bulan - 2; i >= 0; i--) {
+    for (let i = 0; i < bulan - 1; i++) {
       const st = evaluateKbStatus(r[mKeys[i]]);
-      if (st.type === "BUKAN_PESERTA") {
-        consecutiveNonKbCount++;
-      } else {
-        break;
+      if (st.type !== "EMPTY") {
+        allPrevEmpty = false;
+      }
+      if (st.type === "PESERTA_KB") {
+        everKbBefore = true;
       }
     }
-  }
 
-  // 3. EVALUASI PUS BARU
-  let isPusBaru = false;
-  const isBukanPindah = (r.is_pindah_dalam_kab !== true && r.is_pindah_dalam_kab !== "true" && !r.id_mutasi_tiket);
-  if (!isMutasiOr50 && isBukanPindah && isPusAktif) {
-    if (bulan === 1) {
-      isPusBaru = true;
-    } else if (allPrevEmpty) {
-      isPusBaru = true;
-    }
-  }
-
-  // 4. EVALUASI HAMIL BARU
-  let isHamilBaru = false;
-  if (cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL") {
-    if (bulan === 1) {
-      isHamilBaru = true;
-    } else if (prev && prev.reason !== "HAMIL") {
-      isHamilBaru = true;
-    }
-  }
-
-  // 5. EVALUASI AKSEPTOR KB BARU & GANTI CARA
-  let isKbBaru = false;
-  let kbBaruSub = ""; // 'KBPP' | 'PASCA_DO' | 'MURNI'
-  let isGantiCara = false;
-
-  if (cur.type === "PESERTA_KB") {
+    // Hitung berapa bulan berturut-turut tidak ber-KB tepat sebelum bulan ini
     if (bulan > 1) {
-      if (prev && prev.type === "PESERTA_KB") {
-        // Bukan KB baru, cek apakah ganti metode
-        if (prev.method && prev.method !== cur.method) {
-          isGantiCara = true;
+      for (let i = bulan - 2; i >= 0; i--) {
+        const st = evaluateKbStatus(r[mKeys[i]]);
+        if (st.type === "BUKAN_PESERTA") {
+          consecutiveNonKbCount++;
+        } else {
+          break;
         }
-      } else if (prev && prev.reason === "HAMIL") {
-        // KBPP: Bulan lalu berstatus HAMIL
-        isKbBaru = true;
-        kbBaruSub = "KBPP";
-      } else if (everKbBefore && consecutiveNonKbCount >= 3) {
-        // Pasca DO: Pernah ber-KB dan putus pakai minimal 3 bulan berturut-turut
-        isKbBaru = true;
-        kbBaruSub = "PASCA_DO";
-      } else if (!everKbBefore) {
-        // Baru Murni: Belum pernah tercatat ber-KB sebelumnya
-        isKbBaru = true;
-        kbBaruSub = "MURNI";
       }
     }
-  }
 
-  return {
-    cur,
-    prev,
-    umurIstri,
-    isPusAktif,
-    isMutasiOr50,
-    isPusBaru,
-    isHamilBaru,
-    isKbBaru,
-    kbBaruSub,
-    isGantiCara
-  };  
-}
+    // 3. EVALUASI PUS BARU
+    let isPusBaru = false;
+    const isBukanPindah = (r.is_pindah_dalam_kab !== true && r.is_pindah_dalam_kab !== "true" && !r.id_mutasi_tiket);
+    if (!isMutasiOr50 && isBukanPindah && isPusAktif) {
+      if (bulan === 1) {
+        isPusBaru = true;
+      } else if (allPrevEmpty) {
+        isPusBaru = true;
+      }
+    }
+
+    // 4. EVALUASI HAMIL BARU
+    let isHamilBaru = false;
+    if (cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL") {
+      if (bulan === 1) {
+        isHamilBaru = true;
+      } else if (prev && prev.reason !== "HAMIL") {
+        isHamilBaru = true;
+      }
+    }
+
+    // 5. EVALUASI AKSEPTOR KB BARU & GANTI CARA
+    let isKbBaru = false;
+    let kbBaruSub = ""; // 'KBPP' | 'PASCA_DO' | 'MURNI'
+    let isGantiCara = false;
+
+    if (cur.type === "PESERTA_KB") {
+      if (bulan > 1) {
+        if (prev && prev.type === "PESERTA_KB") {
+          // Bukan KB baru, cek apakah ganti metode
+          if (prev.method && prev.method !== cur.method) {
+            isGantiCara = true;
+          }
+        } else if (prev && prev.reason === "HAMIL") {
+          // KBPP: Bulan lalu berstatus HAMIL
+          isKbBaru = true;
+          kbBaruSub = "KBPP";
+        } else if (everKbBefore && consecutiveNonKbCount >= 3) {
+          // Pasca DO: Pernah ber-KB dan putus pakai minimal 3 bulan berturut-turut
+          isKbBaru = true;
+          kbBaruSub = "PASCA_DO";
+        } else if (!everKbBefore) {
+          // Baru Murni: Belum pernah tercatat ber-KB sebelumnya
+          isKbBaru = true;
+          kbBaruSub = "MURNI";
+        }
+      }
+    }
+
+    return {
+      cur,
+      prev,
+      umurIstri,
+      isPusAktif,
+      isMutasiOr50,
+      isPusBaru,
+      isHamilBaru,
+      isKbBaru,
+      kbBaruSub,
+      isGantiCara
+    };  
+  }
   
   async function fetchRecap() {
     const tingkat = document.getElementById("recapTingkat").value;
@@ -3829,33 +3831,65 @@ function hitungStatusIndikator(r, bulan, mKeys) {
 
     const tbody = document.getElementById("recapTableBody");
     tbody.innerHTML = "<tr><td colspan='38' style='text-align:center; padding: 20px;'>Mengambil seluruh data rekapitulasi...</td></tr>";
+    
+    let filterKab = getActiveKabupaten("recap");
+    let filterKec = "";
+    let filterDesa = "";
+    let filterDusun = "";
 
-    let filterKab = (isDesaRole() || isKecRole() || isKabRole()) ? userKodeKab : document.getElementById("recapKabupaten").value;
-    let filterKec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("recapKecamatan").value;
-    let filterDesa = isDesaRole() ? userKodeDesa : (document.getElementById("recapDesa") ? document.getElementById("recapDesa").value : "");
-    let filterDusun = document.getElementById("recapDusun") ? document.getElementById("recapDusun").value : "";
-
-    if ((tingkat === "Kabupaten" || tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") && isProvRole() && !filterKab) {
-      Swal.fire("Perhatian", "Silakan pilih Kabupaten/Kota terlebih dahulu!", "warning");
+    if (isProvRole() && tingkat !== "Provinsi" && !filterKab) {
+      Swal.fire("Perhatian", "Silakan pilih Kabupaten / Kota terlebih dahulu!", "warning");
       return;
     }
-
-    if ((tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") && !filterKec) {
-      Swal.fire("Perhatian", "Silakan pilih Kecamatan terlebih dahulu!", "warning");
-      tbody.innerHTML = "<tr><td colspan='38' style='text-align:center; color:red; padding: 20px;'>Kecamatan belum dipilih.</td></tr>";
-      return;
+    
+    if (isDesaRole()) {
+      filterKab  = String(userKodeKab || "").trim().padStart(2, '0');
+      filterKec  = String(userKodeKec || "").trim().padStart(2, '0');
+      filterDesa = String(userKodeDesa || "").trim().padStart(4, '0');
+      if (tingkat === "Dusun") {
+        const dsVal = document.getElementById("recapDusun")?.value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
+    } else if (isKecRole()) {
+      filterKab = String(userKodeKab || "").trim().padStart(2, '0');
+      filterKec = String(userKodeKec || "").trim().padStart(2, '0');
+      if (tingkat === "Desa" || tingkat === "Dusun") {
+        const dVal = document.getElementById("recapDesa")?.value;
+        if (dVal) filterDesa = dVal.trim().padStart(4, '0');
+      }
+      if (tingkat === "Dusun") {
+        const dsVal = document.getElementById("recapDusun")?.value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
+    } else {      
+      if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") {
+        const kVal = document.getElementById("recapKecamatan")?.value;
+        if (!kVal) {
+          Swal.fire("Perhatian", "Silakan pilih Kecamatan terlebih dahulu!", "warning");
+          tbody.innerHTML = "<tr><td colspan='38' style='text-align:center; color:red; padding: 20px;'>Kecamatan belum dipilih.</td></tr>";
+          return;
+        }
+        filterKec = kVal.trim().padStart(2, '0');
+      }
+      if (tingkat === "Desa" || tingkat === "Dusun") {
+        const dVal = document.getElementById("recapDesa")?.value;
+        if (dVal) filterDesa = dVal.trim().padStart(4, '0');
+      }
+      if (tingkat === "Dusun") {
+        const dsVal = document.getElementById("recapDusun")?.value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
     }
 
     let allData = [];
-    try {
-      allData = await fetchAllPusDataChunked(tahun, filterKec, filterDesa, filterDusun);
+    try {      
+      allData = await fetchAllPusDataChunked(tahun, filterKab, filterKec, filterDesa, filterDusun);
     } catch (err) {
       console.error("Fetch Error:", err);
       tbody.innerHTML = `<tr><td colspan='38' style='text-align:center; color:red; padding: 20px;'>Gagal memuat: ${err.message}</td></tr>`;
       return;
     }
-
-    // CEK VALIDASI: Jika tidak ada data dari database
+    
     if (!allData || allData.length === 0) {
       tbody.innerHTML = "<tr><td colspan='38' style='text-align:center; color:#dc2626; font-weight:bold; padding: 30px;'>Tidak ada data PUS yang terdaftar untuk filter wilayah dan tahun ini.</td></tr>";
       Swal.fire({
@@ -4051,9 +4085,8 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       console.error("Render Loop Error:", renderErr);
       tbody.innerHTML = `<tr><td colspan='38' style='text-align:center; color:red; padding: 20px;'>Terjadi kesalahan saat memproses data: ${renderErr.message}</td></tr>`;
     }
-  }
+  }  
   
-  // --- BNBA DATA FETCH DENGAN FILTER TINGKAT (FIXED) ---
   async function fetchBnba() {
     const tingkat = document.getElementById("bnbaTingkat").value;
     const tahun = parseInt(document.getElementById("bnbaTahun").value, 10);
@@ -4078,38 +4111,79 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       });
       return;
     }
-
+    
+    let filterKab = getActiveKabupaten("bnba");
     let filterKec = "";
     let filterDesa = "";
     let filterDusun = "";
     let filterRt = "";
 
+    if (isProvRole() && tingkat !== "Provinsi" && !filterKab) {
+      Swal.fire("Perhatian", "Silakan pilih Kabupaten / Kota terlebih dahulu!", "warning");
+      return;
+    }
+
     if (isDesaRole()) {
-      filterKec = userKodeKec;
-      filterDesa = userKodeDesa;
+      filterKab  = String(userKodeKab || "").trim().padStart(2, '0');
+      filterKec  = String(userKodeKec || "").trim().padStart(2, '0');
+      filterDesa = String(userKodeDesa || "").trim().padStart(4, '0');
+
       if (tingkat === "Dusun" || tingkat === "RT") {
-        filterDusun = (document.getElementById("bnbaDusun").value || "").trim().padStart(4, '0');
+        const dsVal = document.getElementById("bnbaDusun").value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
       }
       if (tingkat === "RT") {
-        filterRt = (document.getElementById("bnbaRt").value || "").trim().padStart(3, '0');
+        const rtVal = document.getElementById("bnbaRt").value;
+        if (rtVal) filterRt = rtVal.trim().padStart(3, '0');
       }
+
     } else if (isKecRole()) {
-      filterKec = userKodeKec;
+      filterKab = String(userKodeKab || "").trim().padStart(2, '0');
+      filterKec = String(userKodeKec || "").trim().padStart(2, '0');
+
       if (tingkat === "Desa" || tingkat === "Dusun" || tingkat === "RT") {
         const dVal = document.getElementById("bnbaDesa").value;
         if (!dVal && tingkat !== "Kecamatan") {
           Swal.fire("Perhatian", "Silakan pilih Desa terlebih dahulu!", "warning");
           return;
         }
-        filterDesa = dVal ? dVal.trim().padStart(4, '0') : "";
+        if (dVal) filterDesa = dVal.trim().padStart(4, '0');
       }
       if (tingkat === "Dusun" || tingkat === "RT") {
-        filterDusun = (document.getElementById("bnbaDusun").value || "").trim().padStart(4, '0');
+        const dsVal = document.getElementById("bnbaDusun").value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
       }
       if (tingkat === "RT") {
-        filterRt = (document.getElementById("bnbaRt").value || "").trim().padStart(3, '0');
+        const rtVal = document.getElementById("bnbaRt").value;
+        if (rtVal) filterRt = rtVal.trim().padStart(3, '0');
       }
+
+    } else if (isKabRole()) {
+      filterKab = String(userKodeKab || "").trim().padStart(2, '0');
+
+      if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun" || tingkat === "RT") {
+        const kVal = document.getElementById("bnbaKecamatan").value;
+        if (!kVal) {
+          Swal.fire("Perhatian", "Silakan pilih Kecamatan terlebih dahulu!", "warning");
+          return;
+        }
+        filterKec = kVal.trim().padStart(2, '0');
+      }
+      if (tingkat === "Desa" || tingkat === "Dusun" || tingkat === "RT") {
+        const dVal = document.getElementById("bnbaDesa").value;
+        if (dVal) filterDesa = dVal.trim().padStart(4, '0');
+      }
+      if (tingkat === "Dusun" || tingkat === "RT") {
+        const dsVal = document.getElementById("bnbaDusun").value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
+      if (tingkat === "RT") {
+        const rtVal = document.getElementById("bnbaRt").value;
+        if (rtVal) filterRt = rtVal.trim().padStart(3, '0');
+      }
+
     } else {
+      // Admin Prov
       if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun" || tingkat === "RT") {
         const kVal = document.getElementById("bnbaKecamatan").value;
         if (!kVal) {
@@ -4132,14 +4206,10 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       }
     }
 
-    // Cek peran User Desa untuk menyembunyikan NIK
     const hideNik = isDesaRole();
-
-    // Inisialisasi header bulan terlebih dahulu
     const monthHeaders = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
     const targetBulanIdx = bulanVal ? parseInt(bulanVal, 10) : 0;
 
-    // 1. Tentukan Kolom Bulan Dinamis
     let dynamicMonthTh = "";
     if (targetBulanIdx > 0) {
       dynamicMonthTh = `<th style="background:#0284c7; color:white;">STATUS (${monthHeaders[targetBulanIdx - 1]})</th>`;
@@ -4147,7 +4217,6 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       dynamicMonthTh = monthHeaders.map(m => `<th style="background:#28a745; color:white;">${m}</th>`).join("");
     }
 
-    // 2. Header Tabel
     thead.innerHTML = `<tr>
       <th style="background:#1f4e78; color:white; width:35px;">NO.</th>
       <th style="background:#1f4e78; color:white;">ID PUS</th>
@@ -4169,7 +4238,6 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       ${dynamicMonthTh}
     </tr>`;
 
-    // 3. Hitung colspan secara tepat
     const baseColCount = hideNik ? 15 : 17;
     const totalColSpan = targetBulanIdx > 0 ? (baseColCount + 1) : (baseColCount + 12);
     tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; padding: 20px;'>Memuat data BNBA...</td></tr>`;
@@ -4182,7 +4250,8 @@ function hitungStatusIndikator(r, bulan, mKeys) {
     try {
       while (hasMore) {
         let query = db.from('data_pus').select('*').eq('tahun', tahun);
-
+        
+        if (filterKab) query = query.eq('kode_kab', filterKab);
         if (filterKec) query = query.eq('kode_kec', filterKec);
         if (filterDesa) query = query.eq('kode_desa', filterDesa);
         if (filterDusun && filterDusun !== "0000") query = query.eq('kode_dusun', filterDusun);
@@ -4215,9 +4284,9 @@ function hitungStatusIndikator(r, bulan, mKeys) {
             const currentTahun = parseInt(row.tahun || tahun, 10);
 
             if (currentTahun > yearTurning50) {
-              age50Start = 1; // Sepanjang tahun sudah 50+
+              age50Start = 1;
             } else if (currentTahun === yearTurning50) {
-              age50Start = birthMonth; // Mulai bulan lahir genap 50
+              age50Start = birthMonth;
             }
           }
         }
@@ -4227,9 +4296,9 @@ function hitungStatusIndikator(r, bulan, mKeys) {
           let val = String(row[k] || "").toUpperCase().trim();
 
           if (mutationSeen || bulanKe >= age50Start) {
-            row[k] = ""; // Otomatis kosong
+            row[k] = "";
           } else if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
-            mutationSeen = true; // Mutasi pertama dicatat, setelahnya kosong
+            mutationSeen = true;
           }
         });
       });
@@ -4242,9 +4311,6 @@ function hitungStatusIndikator(r, bulan, mKeys) {
           const res = hitungStatusIndikator(r, targetBulan, mKeys);
           const cur = res.cur;
 
-          // =========================================================================
-          // 1. KHUSUS KATEGORI MUTASI: Menampilkan yang BUKAN PUS (Mutasi)
-          // =========================================================================
           if (advCat === "MUTASI") {
             if (cur.type !== "BUKAN_PUS") return false;
             if (selectedAdvVals.length === 0) return true;
@@ -4257,14 +4323,8 @@ function hitungStatusIndikator(r, bulan, mKeys) {
             });
           }
 
-          // =========================================================================
-          // 2. KATEGORI LAINNYA: WAJIB HANYA PUS AKTIF (Bukan Mutasi & Usia < 50)
-          // =========================================================================
-          if (!res.isPusAktif) {
-            return false; // Langsung buang data jika bukan PUS di bulan terpilih
-          }
+          if (!res.isPusAktif) return false;
 
-          // A. FILTER JKN (Sekarang sudah terkunci khusus PUS Aktif)
           if (advCat === "JKN") {
             if (selectedAdvVals.length === 0) return true;
             const jknRaw = String(r.peserta_jkn || "").toUpperCase().trim();
@@ -4278,7 +4338,6 @@ function hitungStatusIndikator(r, bulan, mKeys) {
             });
           }
 
-          // B. KESERTAAN KB
           if (advCat === "KESERTAAN_KB") {
             if (selectedAdvVals.length === 0) return true;
             const isBerKb = (cur.type === "PESERTA_KB");
@@ -4289,28 +4348,24 @@ function hitungStatusIndikator(r, bulan, mKeys) {
             return false;
           }
 
-          // C. METODE KONTRASEPSI AKTIF
           if (advCat === "METODE_KONTRASEPSI") {
             if (cur.type !== "PESERTA_KB") return false;
             if (selectedAdvVals.length === 0) return true;
             return selectedAdvVals.includes(cur.method);
           }
 
-          // D. AKSEPTOR KB BARU
           if (advCat === "AKSEPTOR_KB_BARU") {
             if (!res.isKbBaru) return false;
             if (selectedAdvVals.length === 0) return true;
             return selectedAdvVals.includes(cur.method);
           }
 
-          // E. ALASAN TIDAK KB
           if (advCat === "ALASAN_TIDAK_KB") {
             if (cur.type !== "BUKAN_PESERTA") return false;
             if (selectedAdvVals.length === 0) return true;
             return selectedAdvVals.includes(cur.reason);
           }
 
-          // F. HAMIL, HAMIL BARU, PUS BARU
           if (advCat === "HAMIL") {
             return cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL";
           }
@@ -4326,7 +4381,6 @@ function hitungStatusIndikator(r, bulan, mKeys) {
         return;
       }
 
-      // 3. Render Baris Data
       const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
       let htmlRows = "";
 
@@ -4368,38 +4422,70 @@ function hitungStatusIndikator(r, bulan, mKeys) {
       tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; color:red; padding: 20px;'>Gagal memuat data: ${err.message}</td></tr>`;
       Swal.fire("Error", "Gagal memuat BNBA: " + err.message, "error");
     }
-  }
-    
-  // --- GRAFIK ANALYTICS DENGAN FILTER TINGKAT ---
-  async function fetchChartData() {
-    const tingkat = document.getElementById("chartTingkat").value;
-    const tahun = parseInt(document.getElementById("chartTahun").value, 10);
-    const bulanVal = document.getElementById("chartBulan").value;
-
-    if (!tingkat) {
-      Swal.fire("Perhatian", "Silakan pilih Tingkat Wilayah terlebih dahulu!", "warning");
-      return;
-    }
-    
-    if (!bulanVal) {
-      Swal.fire("Perhatian", "Silakan pilih Bulan terlebih dahulu!", "warning");
-      return;
-    }
-
+  }    
+  
     const bulan = parseInt(bulanVal, 10);
     const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
     const monthKey = mKeys[bulan - 1];
     const prevMonthKey = bulan > 1 ? mKeys[bulan - 2] : null;    
 
-    let filterKec = isDesaRole() || isKecRole() ? userKodeKec : document.getElementById("chartKecamatan").value;
-    let filterDesa = isDesaRole() ? userKodeDesa : (document.getElementById("chartDesa") ? document.getElementById("chartDesa").value : "");
-    let filterDusun = document.getElementById("chartDusun") ? document.getElementById("chartDusun").value : "";
+    // 1. RESOLVE KABUPATEN AKTIF
+    let filterKab = getActiveKabupaten("chart");
+    let filterKec = "";
+    let filterDesa = "";
+    let filterDusun = "";
+
+    if (isProvRole() && tingkat !== "Provinsi" && !filterKab) {
+      Swal.fire("Perhatian", "Silakan pilih Kabupaten / Kota terlebih dahulu!", "warning");
+      return;
+    }
+
+    // 2. PENENTUAN HIERARKI FILTER SECARA KETAT & BAKU
+    if (isDesaRole()) {
+      filterKab  = String(userKodeKab || "").trim().padStart(2, '0');
+      filterKec  = String(userKodeKec || "").trim().padStart(2, '0');
+      filterDesa = String(userKodeDesa || "").trim().padStart(4, '0');
+      if (tingkat === "Dusun") {
+        const dsVal = document.getElementById("chartDusun")?.value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
+    } else if (isKecRole()) {
+      filterKab = String(userKodeKab || "").trim().padStart(2, '0');
+      filterKec = String(userKodeKec || "").trim().padStart(2, '0');
+      if (tingkat === "Desa" || tingkat === "Dusun") {
+        const dVal = document.getElementById("chartDesa")?.value;
+        if (dVal) filterDesa = dVal.trim().padStart(4, '0');
+      }
+      if (tingkat === "Dusun") {
+        const dsVal = document.getElementById("chartDusun")?.value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
+    } else {
+      // Admin Kab / Admin Prov
+      if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") {
+        const kVal = document.getElementById("chartKecamatan")?.value;
+        if (!kVal) {
+          Swal.fire("Perhatian", "Silakan pilih Kecamatan terlebih dahulu!", "warning");
+          return;
+        }
+        filterKec = kVal.trim().padStart(2, '0');
+      }
+      if (tingkat === "Desa" || tingkat === "Dusun") {
+        const dVal = document.getElementById("chartDesa")?.value;
+        if (dVal) filterDesa = dVal.trim().padStart(4, '0');
+      }
+      if (tingkat === "Dusun") {
+        const dsVal = document.getElementById("chartDusun")?.value;
+        if (dsVal) filterDusun = dsVal.trim().padStart(4, '0');
+      }
+    }
 
     Swal.fire({ title: 'Memuat Grafik...', text: 'Mengambil seluruh data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
 
     let data = [];
     try {
-      data = await fetchAllPusDataChunked(tahun, filterKec, filterDesa, filterDusun);
+      // KIRIM filterKab sebagai parameter ke-2
+      data = await fetchAllPusDataChunked(tahun, filterKab, filterKec, filterDesa, filterDusun);
       Swal.close();
     } catch (err) {
       Swal.fire("Error", "Gagal memuat data grafik: " + err.message, "error");
