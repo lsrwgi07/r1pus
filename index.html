@@ -707,11 +707,12 @@
 			    </div>
 			  </div>
 			
-			  <!-- Area Checkbox: Menggunakan Grid 3 Kolom -->
-			  <div id="bnbaAdvCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; align-items: start;">
-			    <!-- Diisi otomatis oleh JavaScript -->
-			  </div>
-			</div>
+          <!-- Area Checkbox: Menggunakan Grid 3 Kolom -->
+          <div id="bnbaAdvCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; align-items: start;">
+            <!-- Diisi otomatis oleh JavaScript -->
+          </div>
+        </div>
+      </div>
 
           <!-- 3. BULAN (DILETAKKAN DI BAWAH PENCARIAN LANJUTAN) -->
           <div>
@@ -733,12 +734,12 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-          <button type="button" class="btn-action" style="padding: 12px 20px; flex: 1; min-width: 160px;" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
-          <button type="button" class="btn-nav btn-warning" style="padding: 12px 15px;" onclick="exportBnbaToExcel()">📥 EKSPOR EXCEL</button>
-          <button type="button" class="btn-nav btn-danger" style="padding: 12px 15px;" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
+          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <button type="button" class="btn-action" style="padding: 12px 20px; flex: 1; min-width: 160px;" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
+            <button type="button" class="btn-nav btn-warning" style="padding: 12px 15px;" onclick="exportBnbaToExcel()">📥 EKSPOR EXCEL</button>
+            <button type="button" class="btn-nav btn-danger" style="padding: 12px 15px;" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
+          </div>
         </div>
-      </div>
 
       <div style="overflow-x: auto; margin-top: 15px;">
         <table id="bnbaTable" class="kb-table" style="font-size: 11px; white-space: nowrap;">
