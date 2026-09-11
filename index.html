@@ -1620,39 +1620,43 @@
   };
 
   async function loadMasterWilayahFromDB() {
-    const { data, error } = await db.from('master_wilayah').select('*');
-    if (error || !data) return;
+  const { data, error } = await db.from('master_wilayah').select('*');
+  if (error || !data) return;
 
-    dataProvinsi = {}; dataKabupaten = {}; dataKecamatan = {}; dataDesa = {}; dataDusun = {};
+  dataProvinsi = {}; dataKabupaten = {}; dataKecamatan = {}; dataDesa = {}; dataDusun = {};
 
-    data.forEach(r => {
-      let kdProv = String(r.kode_prov).padStart(2, '0');
-      let kdKab  = String(r.kode_kab).padStart(2, '0');
-      let kdKec  = String(r.kode_kec).padStart(2, '0');
-      let kdDesa = String(r.kode_desa).padStart(4, '0');
-      let kdDsn  = String(r.kode_dusun).padStart(4, '0');
+  data.forEach(r => {
+    let kdProv = String(r.kode_prov).padStart(2, '0');
+    let kdKab  = String(r.kode_kab).padStart(2, '0');
+    let kdKec  = String(r.kode_kec).padStart(2, '0');
+    let kdDesa = String(r.kode_desa).padStart(4, '0');
+    let kdDsn  = String(r.kode_dusun).padStart(4, '0');
 
-      dataProvinsi[kdProv] = r.provinsi;
-      if (!dataKabupaten[kdProv]) dataKabupaten[kdProv] = {};
-      dataKabupaten[kdProv][kdKab] = r.kabupaten;
-      if (!dataKecamatan[kdKab]) dataKecamatan[kdKab] = {};
-      dataKecamatan[kdKab][kdKec] = r.kecamatan;
-      let desaKey = kdKab + "_" + kdKec;
-  	  if (!dataDesa[desaKey]) dataDesa[desaKey] = {};
-  	  dataDesa[desaKey][kdDesa] = r.desa;
-      
-      let dsnKey = kdKec + "_" + kdDesa;
-      if (!dataDusun[dsnKey]) dataDusun[dsnKey] = {};
-      dataDusun[dsnKey][kdDsn] = { nama: r.dusun, jumlah_rt: r.jumlah_rt || 1 };
-    });
+    dataProvinsi[kdProv] = r.provinsi;
+    
+    if (!dataKabupaten[kdProv]) dataKabupaten[kdProv] = {};
+    dataKabupaten[kdProv][kdKab] = r.kabupaten;
 
-    const provSelect = document.getElementById("provinsi");
-    if (provSelect) {
-      provSelect.innerHTML = '<option value="">-- PILIH --</option>';
-      for (let kode in dataProvinsi) provSelect.add(new Option(dataProvinsi[kode].toUpperCase(), kode));
-    }
-    populateAllKecamatanDropdowns();
+    if (!dataKecamatan[kdKab]) dataKecamatan[kdKab] = {};
+    dataKecamatan[kdKab][kdKec] = r.kecamatan;
+
+    // Composite Key Desa: kdKab_kdKec
+    let desaKey = kdKab + "_" + kdKec;
+    if (!dataDesa[desaKey]) dataDesa[desaKey] = {};
+    dataDesa[desaKey][kdDesa] = r.desa;
+    
+    // Composite Key Dusun: kdKab_kdKec_kdDesa (Mencegah bentrok antarkabupaten)
+    let dsnKey = kdKab + "_" + kdKec + "_" + kdDesa;
+    if (!dataDusun[dsnKey]) dataDusun[dsnKey] = {};
+    dataDusun[dsnKey][kdDsn] = { nama: r.dusun, jumlah_rt: r.jumlah_rt || 1 };
+  });
+
+  const provSelect = document.getElementById("provinsi");
+  if (provSelect) {
+    provSelect.innerHTML = '<option value="">-- PILIH --</option>';
+    for (let kode in dataProvinsi) provSelect.add(new Option(dataProvinsi[kode].toUpperCase(), kode));
   }
+}
 
   // Helper: Mengecek apakah Data Wilayah dan Identitas PUS sudah lengkap
   function isPusDataComplete() {
@@ -1940,6 +1944,15 @@
       }
     }
   }
+
+  function getActiveKabupaten(modulePrefix) {
+    if (!isProvRole()) {
+      return String(userKodeKab || "").padStart(2, '0');
+    }
+    const sel = document.getElementById(modulePrefix + "Kabupaten");
+    return sel && sel.value ? String(sel.value).padStart(2, '0') : "";
+  }
+
   function populateKabupatenDropdown(targetSelectId, selectedProv = "") {
     const sel = document.getElementById(targetSelectId);
     if (!sel) return;
@@ -2011,11 +2024,23 @@
     }
   }
 	
-  function getDusunList(kdKec, kdDesa) {
-    let cleanKec = String(kdKec).padStart(2, '0');
-    let cleanDesa = String(kdDesa).padStart(4, '0');
-    return dataDusun[cleanKec + "_" + cleanDesa] || null;
+  function getDusunList(kdKec, kdDesa, kdKab = "") {
+  let cleanKab = String(kdKab || userKodeKab || document.getElementById("kode_kab")?.value || "").padStart(2, '0');
+  let cleanKec = String(kdKec).padStart(2, '0');
+  let cleanDesa = String(kdDesa).padStart(4, '0');
+  
+  // 1. Coba composite key lengkap (paling aman & presisi)
+  let fullKey = cleanKab + "_" + cleanKec + "_" + cleanDesa;
+  if (dataDusun[fullKey]) return dataDusun[fullKey];
+
+  // 2. Fallback jika kdKab tidak terdeteksi
+  for (let k in dataDusun) {
+    if (k.endsWith("_" + cleanKec + "_" + cleanDesa)) {
+      return dataDusun[k];
+    }
   }
+  return null;
+}
   
   function isProvRole() {
   const r = String(userRole || "").toUpperCase();
@@ -2290,85 +2315,94 @@
 
   // --- LOGIC DROPDOWN BERTINGKAT REKAP ---
   function onRecapTingkatChange() {
-  const t = document.getElementById("recapTingkat").value;
-  const cKab = document.getElementById("recapFilterKabContainer");
-  const cKec = document.getElementById("recapFilterKecContainer");
-  const cDes = document.getElementById("recapFilterDesaContainer");
-  const cDsn = document.getElementById("recapFilterDusunContainer");
-  const thHeader = document.getElementById("thHeaderWilayah");
+    const t = document.getElementById("recapTingkat").value;
+    const cKab = document.getElementById("recapFilterKabContainer");
+    const cKec = document.getElementById("recapFilterKecContainer");
+    const cDes = document.getElementById("recapFilterDesaContainer");
+    const cDsn = document.getElementById("recapFilterDusunContainer");
+    const thHeader = document.getElementById("thHeaderWilayah");
 
-  const selKab = document.getElementById("recapKabupaten");
-  const selKec = document.getElementById("recapKecamatan");
-  const selDes = document.getElementById("recapDesa");
+    const selKab = document.getElementById("recapKabupaten");
+    const selKec = document.getElementById("recapKecamatan");
+    const selDes = document.getElementById("recapDesa");
 
-  // Penyesuaian Header Tabel Wilayah
-  if (t === "Provinsi") thHeader.innerText = "KABUPATEN/KOTA";
-  else if (t === "Kabupaten") thHeader.innerText = "KECAMATAN";
-  else if (t === "Kecamatan") thHeader.innerText = "DESA";
-  else if (t === "Desa") thHeader.innerText = "DUSUN";
-  else if (t === "Dusun") thHeader.innerText = "RT";
-  else thHeader.innerText = "WILAYAH";
+    // Penyesuaian Header Tabel Wilayah
+    if (t === "Provinsi") thHeader.innerText = "KABUPATEN/KOTA";
+    else if (t === "Kabupaten") thHeader.innerText = "KECAMATAN";
+    else if (t === "Kecamatan") thHeader.innerText = "DESA";
+    else if (t === "Desa") thHeader.innerText = "DUSUN";
+    else if (t === "Dusun") thHeader.innerText = "RT";
+    else thHeader.innerText = "WILAYAH";
 
-  cKab.style.display = "none";
-  cKec.style.display = "none";
-  cDes.style.display = "none";
-  cDsn.style.display = "none";
-
-  if (isDesaRole()) {
+    cKab.style.display = "none";
     cKec.style.display = "none";
-    populateDesaByKec(userKodeKec, "recapDesa");
-    setSelectValueCaseInsensitive("recapDesa", userKodeDesa);
-    selDes.disabled = true;
+    cDes.style.display = "none";
+    cDsn.style.display = "none";
 
-    if (t === "Dusun") {
-      cDes.style.display = "block";
-      cDsn.style.display = "block";
-      onRecapDesaChange();
-    }
-  } else if (isKecRole()) {
-    populateKecamatanByKab(userKodeKab, "recapKecamatan");
-    setSelectValueCaseInsensitive("recapKecamatan", userKodeKec);
-    selKec.disabled = true;
+    const activeKab = getActiveKabupaten("recap");
 
-    if (t === "Desa" || t === "Dusun") {
-      cDes.style.display = "block";
-      populateDesaByKec(userKodeKec, "recapDesa");
+    if (isDesaRole()) {
+      cKec.style.display = "none";
+      populateDesaByKec(userKodeKec, "recapDesa", userKodeKab);
+      setSelectValueCaseInsensitive("recapDesa", userKodeDesa);
+      selDes.disabled = true;
+
+      if (t === "Dusun") {
+        cDes.style.display = "block";
+        cDsn.style.display = "block";
+        onRecapDesaChange();
+      }
+    } else if (isKecRole()) {
+      populateKecamatanByKab(userKodeKab, "recapKecamatan");
+      setSelectValueCaseInsensitive("recapKecamatan", userKodeKec);
+      selKec.disabled = true;
+
+      if (t === "Desa" || t === "Dusun") {
+        cDes.style.display = "block";
+        populateDesaByKec(userKodeKec, "recapDesa", userKodeKab);
+        selDes.disabled = false;
+      }
+      if (t === "Dusun") cDsn.style.display = "block";
+    } else if (isKabRole()) {
+      populateKabupatenDropdown("recapKabupaten");
+      setSelectValueCaseInsensitive("recapKabupaten", userKodeKab);
+      selKab.disabled = true;
+
+      selKec.disabled = false;
       selDes.disabled = false;
+
+      // Pastikan kecamatan SELALU terisi sesuai userKodeKab
+      populateKecamatanByKab(userKodeKab, "recapKecamatan");
+
+      cKec.style.display = (t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
+      cDes.style.display = (t === "Desa" || t === "Dusun") ? "block" : "none";
+      cDsn.style.display = (t === "Dusun") ? "block" : "none";
+    } else {
+      // Admin Prov: Bebas memilih Kabupaten
+      populateKabupatenDropdown("recapKabupaten");
+      selKab.disabled = false;
+      selKec.disabled = false;
+      selDes.disabled = false;
+
+      cKab.style.display = (t === "Kabupaten" || t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
+      cKec.style.display = (t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
+      cDes.style.display = (t === "Desa" || t === "Dusun") ? "block" : "none";
+      cDsn.style.display = (t === "Dusun") ? "block" : "none";
+
+      if (activeKab) {
+        populateKecamatanByKab(activeKab, "recapKecamatan");
+      }
     }
-    if (t === "Dusun") cDsn.style.display = "block";
-  } else if (isKabRole()) {
-    populateKabupatenDropdown("recapKabupaten");
-    setSelectValueCaseInsensitive("recapKabupaten", userKodeKab);
-    selKab.disabled = true;
 
-    selKec.disabled = false;
-    selDes.disabled = false;
-    cKec.style.display = (t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
-    cDes.style.display = (t === "Desa" || t === "Dusun") ? "block" : "none";
-    cDsn.style.display = (t === "Dusun") ? "block" : "none";
-    populateKecamatanByKab(userKodeKab, "recapKecamatan");
-  } else {
-    // Admin Prov: Bebas memilih Kabupaten
-    populateKabupatenDropdown("recapKabupaten");
-    selKab.disabled = false;
-    selKec.disabled = false;
-    selDes.disabled = false;
-
-    cKab.style.display = (t === "Kabupaten" || t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
-    cKec.style.display = (t === "Kecamatan" || t === "Desa" || t === "Dusun") ? "block" : "none";
-    cDes.style.display = (t === "Desa" || t === "Dusun") ? "block" : "none";
-    cDsn.style.display = (t === "Dusun") ? "block" : "none";
+    document.getElementById("recapTableBody").innerHTML = "<tr><td colspan='38' style='text-align:center; padding: 20px;'>Silakan atur filter dan klik Tampilkan Rekap</td></tr>";
   }
 
-  document.getElementById("recapTableBody").innerHTML = "<tr><td colspan='38' style='text-align:center; padding: 20px;'>Silakan atur filter dan klik Tampilkan Rekap</td></tr>";
-}
-
-function onRecapKabupatenChange() {
-  const kab = document.getElementById("recapKabupaten").value;
-  populateKecamatanByKab(kab, "recapKecamatan");
-  document.getElementById("recapDesa").innerHTML = '<option value="">-- PILIH DESA --</option>';
-  document.getElementById("recapDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
-}
+  function onRecapKabupatenChange() {
+    const kab = getActiveKabupaten("recap");
+    populateKecamatanByKab(kab, "recapKecamatan");
+    document.getElementById("recapDesa").innerHTML = '<option value="">-- PILIH DESA --</option>';
+    document.getElementById("recapDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+  }
   
   function resetRecapFilters() {
     const tingkat = document.getElementById("recapTingkat");
@@ -2388,20 +2422,22 @@ function onRecapKabupatenChange() {
   }
 
   function onRecapKecamatanChange() {
+    const kab = getActiveKabupaten("recap");
     const kec = document.getElementById("recapKecamatan").value;
-    populateDesaByKec(kec, "recapDesa");
-    // Reset dropdown turunan di bawahnya
-    const dsn = document.getElementById("recapDusun");
-    if (dsn) dsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    populateDesaByKec(kec, "recapDesa", kab);
+    document.getElementById("recapDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
   }
 
   function onRecapDesaChange() {
-    const kec = isKabRole() ? document.getElementById("recapKecamatan").value : userKodeKec;
-    const desa = document.getElementById("recapDesa").value;
+    const kab = getActiveKabupaten("recap");
+    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("recapKecamatan").value;
+    const desa = isDesaRole() ? userKodeDesa : document.getElementById("recapDesa").value;
     const sel = document.getElementById("recapDusun");
+    if (!sel) return;
     sel.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    
     if (kec && desa) {
-      const dsn = getDusunList(kec, desa);
+      const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
         for (let kd in dsn) sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
       }
@@ -2421,16 +2457,17 @@ function onRecapKabupatenChange() {
     const selKec = document.getElementById("bnbaKecamatan");
     const selDes = document.getElementById("bnbaDesa");
 
-    // Sembunyikan semua kontainer filter terlebih dahulu
     if (cKab) cKab.style.display = "none";
     if (cKec) cKec.style.display = "none";
     if (cDes) cDes.style.display = "none";
     if (cDsn) cDsn.style.display = "none";
     if (cRt)  cRt.style.display  = "none";
 
+    const activeKab = getActiveKabupaten("bnba");
+
     // 1. KASUS: USER DESA
     if (isDesaRole()) {
-      populateDesaByKec(userKodeKec, "bnbaDesa");
+      populateDesaByKec(userKodeKec, "bnbaDesa", userKodeKab);
       setSelectValueCaseInsensitive("bnbaDesa", userKodeDesa);
       if (selDes) selDes.disabled = true;
 
@@ -2451,7 +2488,7 @@ function onRecapKabupatenChange() {
 
       if (t === "Desa" || t === "Dusun" || t === "RT") {
         if (cDes) cDes.style.display = "block";
-        populateDesaByKec(userKodeKec, "bnbaDesa");
+        populateDesaByKec(userKodeKec, "bnbaDesa", userKodeKab);
         if (selDes) selDes.disabled = false;
       }
       if (t === "Dusun" || t === "RT") {
@@ -2470,10 +2507,11 @@ function onRecapKabupatenChange() {
       if (selKec) selKec.disabled = false;
       if (selDes) selDes.disabled = false;
 
-      // Tampilkan kontainer sesuai tingkat yang dipilih
+      // Menyiapkan kecamatan milik kabupaten login langsung
+      populateKecamatanByKab(userKodeKab, "bnbaKecamatan");
+
       if (t === "Kecamatan" || t === "Desa" || t === "Dusun" || t === "RT") {
         if (cKec) cKec.style.display = "block";
-        populateKecamatanByKab(userKodeKab, "bnbaKecamatan");
       }
       if (t === "Desa" || t === "Dusun" || t === "RT") {
         if (cDes) cDes.style.display = "block";
@@ -2485,14 +2523,13 @@ function onRecapKabupatenChange() {
         if (cRt) cRt.style.display = "block";
       }
 
-    // 4. KASUS: ADMIN PROVINSI (TERBUKA PENUH)
+    // 4. KASUS: ADMIN PROVINSI
     } else {
       populateKabupatenDropdown("bnbaKabupaten");
       if (selKab) selKab.disabled = false;
       if (selKec) selKec.disabled = false;
       if (selDes) selDes.disabled = false;
 
-      // Tampilkan dropdown Kabupaten jika memilih tingkat Kabupaten sampai ke bawah
       if (t === "Kabupaten" || t === "Kecamatan" || t === "Desa" || t === "Dusun" || t === "RT") {
         if (cKab) cKab.style.display = "block";
       }
@@ -2507,6 +2544,10 @@ function onRecapKabupatenChange() {
       }
       if (t === "RT") {
         if (cRt) cRt.style.display = "block";
+      }
+
+      if (activeKab) {
+        populateKecamatanByKab(activeKab, "bnbaKecamatan");
       }
     }
   }
@@ -2629,42 +2670,54 @@ function onRecapKabupatenChange() {
     onBnbaTingkatChange();
   }
 
+  function onBnbaKabupatenChange() {
+    const kab = getActiveKabupaten("bnba");
+    populateKecamatanByKab(kab, "bnbaKecamatan");
+    document.getElementById("bnbaDesa").innerHTML = '<option value="">-- PILIH DESA --</option>';
+    document.getElementById("bnbaDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    document.getElementById("bnbaRt").innerHTML = '<option value="">-- PILIH RT --</option>';
+  }
+
   function onBnbaKecamatanChange() {
+    const kab = getActiveKabupaten("bnba");
     const kec = document.getElementById("bnbaKecamatan").value;
-    populateDesaByKec(kec, "bnbaDesa");
+    populateDesaByKec(kec, "bnbaDesa", kab);
     document.getElementById("bnbaDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
     document.getElementById("bnbaRt").innerHTML = '<option value="">-- PILIH RT --</option>';
   }
 
   function onBnbaDesaChange() {
-    const kec = isKabRole() ? document.getElementById("bnbaKecamatan").value : userKodeKec;
-    const desa = document.getElementById("bnbaDesa").value;
-    const dsnSel = document.getElementById("bnbaDusun");
-    const rtSel = document.getElementById("bnbaRt");
-    dsnSel.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
-    rtSel.innerHTML = '<option value="">-- PILIH RT --</option>';
-
+    const kab = getActiveKabupaten("bnba");
+    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("bnbaKecamatan").value;
+    const desa = isDesaRole() ? userKodeDesa : document.getElementById("bnbaDesa").value;
+    const selDsn = document.getElementById("bnbaDusun");
+    const selRt = document.getElementById("bnbaRt");
+    if (selDsn) selDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    if (selRt) selRt.innerHTML = '<option value="">-- PILIH RT --</option>';
+    
     if (kec && desa) {
-      const dsn = getDusunList(kec, desa);
+      const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
-        for (let kd in dsn) dsnSel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
+        for (let kd in dsn) selDsn.add(new Option(dsn[kd].nama.toUpperCase(), kd));
       }
     }
   }
 
   function onBnbaDusunChange() {
-    const kec = isKabRole() ? document.getElementById("bnbaKecamatan").value : userKodeKec;
+    const kab = getActiveKabupaten("bnba");
+    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("bnbaKecamatan").value;
     const desa = isDesaRole() ? userKodeDesa : document.getElementById("bnbaDesa").value;
     const dusun = document.getElementById("bnbaDusun").value;
-    const sel = document.getElementById("bnbaRt");
-    sel.innerHTML = '<option value="">-- PILIH RT --</option>';
+    const selRt = document.getElementById("bnbaRt");
+    if (!selRt) return;
+    selRt.innerHTML = '<option value="">-- PILIH RT --</option>';
 
     if (kec && desa && dusun) {
-      const dsn = getDusunList(kec, desa);
+      const dsn = getDusunList(kec, desa, kab);
       if (dsn && dsn[dusun]) {
         for (let i = 1; i <= dsn[dusun].jumlah_rt; i++) {
           let formatted = String(i).padStart(3, '0');
-          sel.add(new Option("RT " + formatted, formatted));
+          selRt.add(new Option("RT " + formatted, formatted));
         }
       }
     }
@@ -2682,11 +2735,12 @@ function onRecapKabupatenChange() {
     const selKec = document.getElementById("chartKecamatan");
     const selDes = document.getElementById("chartDesa");
 
-    // Sembunyikan semua kontainer filter terlebih dahulu
     if (cKab) cKab.style.display = "none";
     if (cKec) cKec.style.display = "none";
     if (cDes) cDes.style.display = "none";
     if (cDsn) cDsn.style.display = "none";
+
+    const activeKab = getActiveKabupaten("chart");
 
     // 1. KASUS: USER DESA
     if (isDesaRole()) {
@@ -2725,9 +2779,11 @@ function onRecapKabupatenChange() {
       if (selKec) selKec.disabled = false;
       if (selDes) selDes.disabled = false;
 
+      // Pastikan kecamatan langsung dimuat untuk kabupaten login
+      populateKecamatanByKab(userKodeKab, "chartKecamatan");
+
       if (t === "Kecamatan" || t === "Desa" || t === "Dusun") {
         if (cKec) cKec.style.display = "block";
-        populateKecamatanByKab(userKodeKab, "chartKecamatan");
       }
       if (t === "Desa" || t === "Dusun") {
         if (cDes) cDes.style.display = "block";
@@ -2755,6 +2811,10 @@ function onRecapKabupatenChange() {
       if (t === "Dusun") {
         if (cDsn) cDsn.style.display = "block";
       }
+
+      if (activeKab) {
+        populateKecamatanByKab(activeKab, "chartKecamatan");
+      }
     }
   }
 
@@ -2776,27 +2836,29 @@ function onRecapKabupatenChange() {
   }
 
   function onChartKabupatenChange() {
-    const kab = document.getElementById("chartKabupaten") ? document.getElementById("chartKabupaten").value : "";
+    const kab = getActiveKabupaten("chart");
     populateKecamatanByKab(kab, "chartKecamatan");
-    const cDes = document.getElementById("chartDesa");
-    const cDsn = document.getElementById("chartDusun");
-    if (cDes) cDes.innerHTML = '<option value="">-- PILIH DESA --</option>';
-    if (cDsn) cDsn.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    document.getElementById("chartDesa").innerHTML = '<option value="">-- PILIH DESA --</option>';
+    document.getElementById("chartDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
   }
 
   function onChartKecamatanChange() {
+    const kab = getActiveKabupaten("chart");
     const kec = document.getElementById("chartKecamatan").value;
-    populateDesaByKec(kec, "chartDesa");
+    populateDesaByKec(kec, "chartDesa", kab);
     document.getElementById("chartDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
   }
 
   function onChartDesaChange() {
-    const kec = isKabRole() ? document.getElementById("chartKecamatan").value : userKodeKec;
-    const desa = document.getElementById("chartDesa").value;
+    const kab = getActiveKabupaten("chart");
+    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("chartKecamatan").value;
+    const desa = isDesaRole() ? userKodeDesa : document.getElementById("chartDesa").value;
     const sel = document.getElementById("chartDusun");
+    if (!sel) return;
     sel.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
+    
     if (kec && desa) {
-      const dsn = getDusunList(kec, desa);
+      const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
         for (let kd in dsn) sel.add(new Option(dsn[kd].nama.toUpperCase(), kd));
       }
