@@ -3914,42 +3914,69 @@
     const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
     const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
     const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
-    
+
     const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
-    
     const oldIdPus = document.getElementById("old_id_pus").value.trim();
     let isRelocatedInSameVillage = false;
     
     if (oldIdPus && !oldIdPus.startsWith(expectedPrefix)) {
-      isRelocatedInSameVillage = true;      
-      idPus = ""; 
-    }    
+      isRelocatedInSameVillage = true;
+      document.getElementById("id_pus").value = "";
     
-    if (!idPus) {
-      const { data: matchedRows } = await db
-        .from('data_pus')
-        .select('id_pus')
-        .ilike('id_pus', `${expectedPrefix}%`)
-        .eq('tahun', thn);
+    const isEditMode = (document.getElementById("id_pus").value.trim() !== "");
+    let idPus = isEditMode ? document.getElementById("id_pus").value.trim() : null;
 
-      let maxSeq = 0;
-      if (matchedRows && matchedRows.length > 0) {
-        matchedRows.forEach(row => {
-          const cleanId = String(row.id_pus || "").trim();
-          // Ambil 3 digit terakhir khusus data di RT ini
-          if (cleanId.length >= 3) {
-            const lastThree = cleanId.slice(-3);
-            const seqPart = parseInt(lastThree, 10);
-            if (!isNaN(seqPart) && seqPart > maxSeq) {
-              maxSeq = seqPart;
-            }
-          }
-        });
-      }
-      
-      const nextNum = maxSeq + 1;
-      idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
+    const payload = {
+      id_pus: idPus, // Jika null, trigger SQL Supabase yang membuatkan nomor secara aman
+      tahun: thn,
+      timestamp: new Date().toISOString(),
+      provinsi_nama: document.getElementById("provinsi").options[document.getElementById("provinsi").selectedIndex].text,
+      kode_prov: kdProv,
+      kabupaten_nama: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex].text,
+      kode_kab: kdKab,
+      kecamatan_nama: document.getElementById("kecamatan").options[document.getElementById("kecamatan").selectedIndex].text,
+      kode_kec: kdKec,
+      desa_nama: document.getElementById("desa").options[document.getElementById("desa").selectedIndex].text,
+      kode_desa: kdDesa,
+      dusun_nama: document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex].text,
+      kode_dusun: kdDsn,
+      rt_nama: document.getElementById("rt").options[document.getElementById("rt").selectedIndex].text,
+      kode_rt: kdRt,
+      nama_suami: document.getElementById("nama_suami").value.trim().toUpperCase(),
+      nik_suami: document.getElementById("nik_suami").value.trim(),
+      nama_istri: document.getElementById("nama_istri").value.trim().toUpperCase(),
+      nik_istri: nikIstriVal,
+      tgl_lahir_istri: document.getElementById("tgl_lahir_istri").value || null,
+      umur_istri: parseInt(document.getElementById("umur_istri").value || 0, 10),
+      jumlah_anak: parseInt(document.getElementById("jumlah_anak").value || 0, 10),
+      umur_anak_terkecil: parseInt(document.getElementById("umur_anak_terkecil").value || 0, 10),
+      peserta_jkn: document.getElementById("peserta_jkn").value,
+      kb_jan: document.getElementById("kb_1").value,
+      kb_feb: document.getElementById("kb_2").value,
+      kb_mar: document.getElementById("kb_3").value,
+      kb_apr: document.getElementById("kb_4").value,
+      kb_mei: document.getElementById("kb_5").value,
+      kb_jun: document.getElementById("kb_6").value,
+      kb_jul: document.getElementById("kb_7").value,
+      kb_agu: document.getElementById("kb_8").value,
+      kb_sep: document.getElementById("kb_9").value,
+      kb_okt: document.getElementById("kb_10").value,
+      kb_nov: document.getElementById("kb_11").value,
+      kb_des: document.getElementById("kb_12").value
+    };
+    
+    const { data: savedData, error } = await db
+      .from('data_pus')
+      .upsert([payload], { onConflict: 'id_pus,tahun' })
+      .select('id_pus')
+      .single();
+
+    if (error) throw error;
+    
+    if (savedData && savedData.id_pus) {
+      idPus = savedData.id_pus;
       document.getElementById("id_pus").value = idPus;
+      document.getElementById("old_id_pus").value = idPus;
     }
 
     const payload = {
@@ -3990,12 +4017,10 @@
       kb_nov: document.getElementById("kb_11").value,
       kb_des: document.getElementById("kb_12").value
     };
-
-    // Simpan data ke ID PUS baru
+    
     const { error } = await db.from('data_pus').upsert([payload], { onConflict: 'id_pus,tahun' });
     if (error) throw error;
-
-    // JIKA TERJADI PINDAH DALAM 1 DESA: HAPUS ID PUS LAMA DARI DATABASE
+    
     if (isRelocatedInSameVillage && oldIdPus) {
       const { error: delErr } = await db
         .from('data_pus')
@@ -4009,8 +4034,7 @@
         console.log(`Data lama ${oldIdPus} berhasil digantikan oleh ${idPus}`);
       }
     }
-
-    // Mutasi Pindah
+    
     const isPindahDalamProv = document.getElementById("is_pindah_dalam_prov").value === "true";
     let detectedBulanPindah = 0;
     
