@@ -3915,72 +3915,24 @@
     const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
     const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
 
+    // 1. Cek mode form dan deteksi jika ada perpindahan Dusun / RT saat edit (Mendukung old_id_pus maupun original_id_pus)
     const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
-    const oldIdPus = document.getElementById("old_id_pus").value.trim();
+    const elOld = document.getElementById("original_id_pus") || document.getElementById("old_id_pus");
+    const originalIdPus = elOld ? elOld.value.trim() : "";
+    
     let isRelocatedInSameVillage = false;
-    
-    if (oldIdPus && !oldIdPus.startsWith(expectedPrefix)) {
-      isRelocatedInSameVillage = true;
-      document.getElementById("id_pus").value = "";
-    
-    const isEditMode = (document.getElementById("id_pus").value.trim() !== "");
+    let isEditMode = (document.getElementById("id_pus").value.trim() !== "");
     let idPus = isEditMode ? document.getElementById("id_pus").value.trim() : null;
 
-    const payload = {
-      id_pus: idPus, // Jika null, trigger SQL Supabase yang membuatkan nomor secara aman
-      tahun: thn,
-      timestamp: new Date().toISOString(),
-      provinsi_nama: document.getElementById("provinsi").options[document.getElementById("provinsi").selectedIndex].text,
-      kode_prov: kdProv,
-      kabupaten_nama: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex].text,
-      kode_kab: kdKab,
-      kecamatan_nama: document.getElementById("kecamatan").options[document.getElementById("kecamatan").selectedIndex].text,
-      kode_kec: kdKec,
-      desa_nama: document.getElementById("desa").options[document.getElementById("desa").selectedIndex].text,
-      kode_desa: kdDesa,
-      dusun_nama: document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex].text,
-      kode_dusun: kdDsn,
-      rt_nama: document.getElementById("rt").options[document.getElementById("rt").selectedIndex].text,
-      kode_rt: kdRt,
-      nama_suami: document.getElementById("nama_suami").value.trim().toUpperCase(),
-      nik_suami: document.getElementById("nik_suami").value.trim(),
-      nama_istri: document.getElementById("nama_istri").value.trim().toUpperCase(),
-      nik_istri: nikIstriVal,
-      tgl_lahir_istri: document.getElementById("tgl_lahir_istri").value || null,
-      umur_istri: parseInt(document.getElementById("umur_istri").value || 0, 10),
-      jumlah_anak: parseInt(document.getElementById("jumlah_anak").value || 0, 10),
-      umur_anak_terkecil: parseInt(document.getElementById("umur_anak_terkecil").value || 0, 10),
-      peserta_jkn: document.getElementById("peserta_jkn").value,
-      kb_jan: document.getElementById("kb_1").value,
-      kb_feb: document.getElementById("kb_2").value,
-      kb_mar: document.getElementById("kb_3").value,
-      kb_apr: document.getElementById("kb_4").value,
-      kb_mei: document.getElementById("kb_5").value,
-      kb_jun: document.getElementById("kb_6").value,
-      kb_jul: document.getElementById("kb_7").value,
-      kb_agu: document.getElementById("kb_8").value,
-      kb_sep: document.getElementById("kb_9").value,
-      kb_okt: document.getElementById("kb_10").value,
-      kb_nov: document.getElementById("kb_11").value,
-      kb_des: document.getElementById("kb_12").value
-    };
-    
-    const { data: savedData, error } = await db
-      .from('data_pus')
-      .upsert([payload], { onConflict: 'id_pus,tahun' })
-      .select('id_pus')
-      .single();
-
-    if (error) throw error;
-    
-    if (savedData && savedData.id_pus) {
-      idPus = savedData.id_pus;
-      document.getElementById("id_pus").value = idPus;
-      document.getElementById("old_id_pus").value = idPus;
+    // Jika sedang edit data TETAPI Dusun/RT diganti, anggap sebagai data baru di RT tujuan
+    if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
+      isRelocatedInSameVillage = true;
+      isEditMode = false;
+      idPus = null; // Biarkan trigger database membuatkan nomor urut baru di RT tujuan
     }
 
+    // 2. Susun Payload Data
     const payload = {
-      id_pus: idPus,
       tahun: thn,
       timestamp: new Date().toISOString(),
       provinsi_nama: document.getElementById("provinsi").options[document.getElementById("provinsi").selectedIndex].text,
@@ -4017,21 +3969,48 @@
       kb_nov: document.getElementById("kb_11").value,
       kb_des: document.getElementById("kb_12").value
     };
-    
-    const { error } = await db.from('data_pus').upsert([payload], { onConflict: 'id_pus,tahun' });
-    if (error) throw error;
-    
-    if (isRelocatedInSameVillage && oldIdPus) {
-      const { error: delErr } = await db
+
+    // 3. Eksekusi Simpan: Insert (Trigger Aktif) vs Update
+    if (!isEditMode) {
+      // DATA BARU: id_pus tidak dikirim agar trigger database membuatkan nomor urut anti-bentrok
+      delete payload.id_pus; 
+      
+      const { data: insertedData, error: insertErr } = await db
         .from('data_pus')
-        .delete()
-        .eq('id_pus', oldIdPus)
+        .insert([payload])
+        .select('id_pus')
+        .single();
+
+      if (insertErr) throw insertErr;
+
+      // Ambil ID PUS yang baru saja dibuatkan oleh trigger database
+      idPus = insertedData.id_pus;
+      document.getElementById("id_pus").value = idPus;
+      if (document.getElementById("old_id_pus")) document.getElementById("old_id_pus").value = idPus;
+      if (document.getElementById("original_id_pus")) document.getElementById("original_id_pus").value = idPus;
+
+    } else {
+      // MODE EDIT: id_pus sudah ada, lakukan pembaruan data
+      payload.id_pus = idPus;
+      const { error: updateErr } = await db
+        .from('data_pus')
+        .update(payload)
+        .eq('id_pus', idPus)
         .eq('tahun', thn);
 
-      if (delErr) {
-        console.error("Gagal menghapus ID lama:", delErr);
-      } else {
-        console.log(`Data lama ${oldIdPus} berhasil digantikan oleh ${idPus}`);
+      if (updateErr) throw updateErr;
+    }
+
+    // 4. Hapus ID PUS lama jika data dipindahkan Dusun/RT saat edit
+    if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
+      const { error: errDelOld } = await db
+        .from('data_pus')
+        .delete()
+        .eq('id_pus', originalIdPus)
+        .eq('tahun', thn);
+
+      if (errDelOld) {
+        console.warn("Gagal menghapus ID PUS lama:", errDelOld);
       }
     }
     
