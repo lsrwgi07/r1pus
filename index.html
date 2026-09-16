@@ -3914,24 +3914,17 @@
     const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
     const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
     const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
-
-    // Prefix ID PUS baru berdasarkan lokasi Dusun dan RT yang dipilih saat ini
+    
     const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
     
     const oldIdPus = document.getElementById("old_id_pus").value.trim();
     let isRelocatedInSameVillage = false;
-
-    // JIKA INI MODE EDIT, TAPI DUSUN ATAU RT DIUBAH:
+    
     if (oldIdPus && !oldIdPus.startsWith(expectedPrefix)) {
-      isRelocatedInSameVillage = true;
-      // Kosongkan idPus agar sistem men-generate ID PUS baru sesuai RT/Dusun tujuan
+      isRelocatedInSameVillage = true;      
       idPus = ""; 
-    }
-
-    // 1. Tentukan prefix lengkap sampai tingkat RT
-    const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
-
-    // 2. Generate nomor urut baru khusus RT tersebut (mulai 001)
+    }    
+    
     if (!idPus) {
       const { data: matchedRows } = await db
         .from('data_pus')
@@ -3953,8 +3946,7 @@
           }
         });
       }
-
-      // Jika RT baru / belum ada data, maxSeq = 0 -> nextNum = 1 -> '001'
+      
       const nextNum = maxSeq + 1;
       idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
       document.getElementById("id_pus").value = idPus;
