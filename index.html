@@ -352,6 +352,13 @@
           <div class="card-title">Mutasi Masuk (Inbox)</div>
           <div class="card-desc">Cek dan input otomatis data PUS pindahan dari wilayah lain.</div>
         </div>
+        
+        <div class="dashboard-card" onclick="openPelayananKbModal()" style="position: relative;">
+          <span id="badgeAntreanLayanan" style="display: none; position: absolute; top: 12px; right: 12px; background: #2563eb; color: white; border-radius: 50%; padding: 4px 8px; font-size: 11px; font-weight: bold;">0</span>
+          <div class="card-icon" style="background-color: #e0e7ff; color: #4338ca;">💉</div>
+          <div class="card-title">Pelayanan KB</div>
+          <div class="card-desc">Daftarkan calon akseptor & input otomatis realisasi tindakan KB.</div>
+        </div>
       </div>
     </div>
 
@@ -1142,53 +1149,59 @@
       <form id="formMasterWilayah" onsubmit="handleSaveMasterWilayah(event)">
         <input type="hidden" id="mw_id" value="">
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 12px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #475569; font-weight: bold;">Provinsi & Kode (2 Digit):</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="mw_provinsi_nama" value="NUSA TENGGARA BARAT" required placeholder="NAMA PROVINSI" style="flex: 1;">
-              <input type="text" id="mw_kode_prov" value="52" maxlength="2" required placeholder="KODE" style="width: 70px; text-align: center; background-color: #f8fafc;">
-            </div>
+        <!-- BARIS 1: PROVINSI & KABUPATEN -->
+        <div style="display: grid; grid-template-columns: 1fr 85px 1fr 85px; gap: 10px; margin-bottom: 12px; align-items: end;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">PROVINSI</label>
+            <input type="text" id="mw_provinsi_nama" value="NUSA TENGGARA BARAT" required placeholder="NAMA PROVINSI" style="width: 100%; box-sizing: border-box;">
           </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #475569; font-weight: bold;">Kabupaten & Kode (2 Digit):</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="mw_kabupaten_nama" value="LOMBOK BARAT" required placeholder="NAMA KABUPATEN" style="flex: 1;">
-              <input type="text" id="mw_kode_kab" value="01" maxlength="2" required placeholder="KODE" style="width: 70px; text-align: center; background-color: #f8fafc;">
-            </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase; white-space: nowrap;">KD PROV</label>
+            <input type="text" id="mw_kode_prov" value="52" maxlength="2" required placeholder="KODE" style="width: 100%; text-align: center; background-color: #f8fafc; box-sizing: border-box;">
           </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 12px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #475569; font-weight: bold;">Kecamatan & Kode (2 Digit):</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="mw_kecamatan_nama" required placeholder="NAMA KECAMATAN" style="flex: 1;">
-              <input type="text" id="mw_kode_kec" maxlength="2" required placeholder="KODE" style="width: 70px; text-align: center;">
-            </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">KABUPATEN</label>
+            <input type="text" id="mw_kabupaten_nama" required placeholder="NAMA KABUPATEN" style="width: 100%; box-sizing: border-box;">
           </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #475569; font-weight: bold;">Desa & Kode (4 Digit):</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="mw_desa_nama" required placeholder="NAMA DESA" style="flex: 1;">
-              <input type="text" id="mw_kode_desa" maxlength="4" required placeholder="K0DE" style="width: 70px; text-align: center;">
-            </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; text-align: center; font-weight: bold; text-transform: uppercase; white-space: nowrap;">KD KAB</label>
+            <input type="text" id="mw_kode_kab" maxlength="2" required placeholder="KODE" style="width: 100%; text-align: center; box-sizing: border-box;">
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 20px;">
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #475569; font-weight: bold;">Dusun & Kode Dusun (4 Digit):</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="text" id="mw_dusun_nama" required placeholder="NAMA DUSUN" style="flex: 1;">
-              <input type="text" id="mw_kode_dusun" maxlength="4" required placeholder="KODE" style="width: 70px; text-align: center;">
-            </div>
+        <!-- BARIS 2: KECAMATAN & DESA -->
+        <div style="display: grid; grid-template-columns: 1fr 85px 1fr 85px; gap: 10px; margin-bottom: 12px; align-items: end;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">KECAMATAN</label>
+            <input type="text" id="mw_kecamatan_nama" required placeholder="NAMA KECAMATAN" style="width: 100%; box-sizing: border-box;">
           </div>
-          <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 12px; color: #475569; font-weight: bold;">Jumlah RT:</label>
-            <div style="display: flex; gap: 6px;">
-              <input type="number" id="mw_jumlah_rt" min="1" value="1" required placeholder="Jml" style="width: 100px; text-align: center;">
-            </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase; white-space: nowrap;">KD KEC</label>
+            <input type="text" id="mw_kode_kec" maxlength="2" required placeholder="KODE" style="width: 100%; text-align: center; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">DESA</label>
+            <input type="text" id="mw_desa_nama" required placeholder="NAMA DESA" style="width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase; white-space: nowrap;">KD DESA</label>
+            <input type="text" id="mw_kode_desa" maxlength="4" required placeholder="KODE" style="width: 100%; text-align: center; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <!-- BARIS 3: DUSUN, KD DSN & JUMLAH RT -->
+        <div style="display: grid; grid-template-columns: 1fr 85px 1fr 85px; gap: 10px; margin-bottom: 20px; align-items: end;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">DUSUN</label>
+            <input type="text" id="mw_dusun_nama" required placeholder="NAMA DUSUN" style="width: 100%; box-sizing: border-box;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase; white-space: nowrap;">KD DSN</label>
+            <input type="text" id="mw_kode_dusun" maxlength="4" required placeholder="KODE" style="width: 100%; text-align: center; box-sizing: border-box;">
+          </div>
+          <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 4px;">
+            <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">JUMLAH RT</label>
+            <input type="number" id="mw_jumlah_rt" min="1" value="1" required placeholder="Jml" style="width: 100%; text-align: center; box-sizing: border-box;">
           </div>
         </div>
 
@@ -1561,6 +1574,11 @@
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         showDashboardView();
+
+        if (typeof initRealtimePelayananKb === "function") {
+          initRealtimePelayananKb();
+        }
+
       } catch (err) {
         console.error("Gagal memuat sesi tersimpan:", err);
         localStorage.removeItem("pus_app_session");
@@ -2251,15 +2269,16 @@
             };          
 
             window.onSwalMutasiDesaChange = function() {
-              const selKab = document.getElementById('swalMutasiKab').value;
-              const selKec = document.getElementById('swalMutasiKec').value;
-              const selDesa = document.getElementById('swalMutasiDesa').value;              
+              const selKab = document.getElementById('swalMutasiKab')?.value || userKodeKab;
+              const selKec = document.getElementById('swalMutasiKec')?.value;
+              const selDesa = document.getElementById('swalMutasiDesa')?.value;
               const dsnContainer = document.getElementById('swalContainerDusunTujuan');
               const selDusun = document.getElementById('swalMutasiDusun');
               
               const asalKab = document.getElementById("kode_kab").value;
               const asalKec = document.getElementById("kode_kec").value;
               const asalDesa = document.getElementById("kode_desa").value;
+              const asalDusun = document.getElementById("kode_dusun").value;
               
               const isSameVillage = (selKab === asalKab && selKec === asalKec && selDesa === asalDesa);
 
@@ -2267,13 +2286,13 @@
                 dsnContainer.style.display = 'block';
                 selDusun.innerHTML = '<option value="">-- PILIH DUSUN TUJUAN --</option>';
                 const dsnList = getDusunList(selKec, selDesa, selKab);
-                const dsnAsal = document.getElementById("kode_dusun").value;
 
                 if (dsnList) {
                   for (let kd in dsnList) {
-                    // Sembunyikan dusun asal agar tidak dipilih lagi
-                    if (kd === dsnAsal) continue;
-                    selDusun.add(new Option(dsnList[kd].nama.toUpperCase(), kd));
+                    let cleanKd = String(kd).trim().padStart(4, '0');
+                    // Jangan tampilkan dusun asal
+                    if (cleanKd === String(asalDusun).padStart(4, '0')) continue;
+                    selDusun.add(new Option(dsnList[kd].nama.toUpperCase(), cleanKd));
                   }
                 }
               } else {
@@ -2627,9 +2646,9 @@
     }
   }
 
-  function toggleAllAdvCheckboxes(check) {
-    const boxes = document.querySelectorAll('input[name="bnba_adv_check"]');
-    boxes.forEach(cb => cb.checked = check);
+  function toggleAllAdvCheckboxes(status) {    
+    const checkboxes = document.querySelectorAll('input[name="bnba_adv_check"], input[name="bnba_adv_cb"]');
+    checkboxes.forEach(cb => cb.checked = status);
   }
 
   function onBnbaAdvCategoryChange() {
@@ -3102,7 +3121,11 @@
     }
 
     checkPendingMutasiNotifications();
-  }
+
+    if (typeof updateDashboardBadgeLayanan === "function") {
+      updateDashboardBadgeLayanan();
+    }
+  }  
 
   /// =========================================================================
   // FUNGSI INBOX & NOTIFIKASI MUTASI MASUK (BERDIRI SENDIRI DI TOP-LEVEL)
@@ -3212,8 +3235,7 @@
     const monthPayloadKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
     monthPayloadKeys.forEach(mKey => {
       let val = String(payloadData[mKey] || "").toUpperCase();
-      // Jika statusnya adalah mutasi (PINDAH, BERCERAI, atau SUAMI/ISTRI MENINGGAL), kosongkan agar tidak masuk ke desa tujuan
-      if (val === "PINDAH" || val === "BERCERAI" || val === "SUAMI/ISTRI MENINGGAL") {
+      if (val === "PINDAH" || val === "BERCERAI" || val.includes("MENINGGAL")) {
         payloadData[mKey] = ""; 
       }
     });
@@ -6719,6 +6741,13 @@ function onUserKecChange() {
         userKodeDesa = "";
         userAllowedDusun = [];
 
+        if (realtimeLayananChannel) {
+          db.removeChannel(realtimeLayananChannel);
+          realtimeLayananChannel = null;
+        }
+
+        localStorage.removeItem("pus_app_session");
+
         // Reset seluruh modul dan form
         resetLoginForm();
         resetInputForm();
@@ -7179,7 +7208,10 @@ function onUserKecChange() {
           }
 
           let idPus = String(r[0] || "").trim();
-          let isDummy = (nikIstri === "9999999999999999");
+          let isDummy = (nikIstri === "9999999999999999" || /^9{10,}$/.test(rawNikIstri) || rawNikIstri === "10000000000000000");
+          if (isDummy) {
+            nikIstri = "9999999999999999";
+          }
           let namaIstriVal = String(r[17] || "").toUpperCase().trim();
           let namaSuamiVal = String(r[15] || "").toUpperCase().trim();
 
@@ -7646,6 +7678,1281 @@ function onUserKecChange() {
         .maybeSingle();
 
       if (data) selectDataForEdit(data);
+    }
+  }
+
+  <!-- MODAL PENDAFTARAN & PELAYANAN KB (DILENGKAPI FILTER KABUPATEN UNTUK PROVINSI) -->
+  <div id="modalPelayananKb" class="modal">
+    <div class="modal-content" style="max-width: 850px; width: 95%; max-height: 90vh; overflow-y: auto;">
+      <span class="close" onclick="closePelayananKbModal()">&times;</span>
+      <h3 style="margin-top:0; color:#1f4e78; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+        💉 PENDAFTARAN & PELAYANAN KB
+      </h3>
+
+      <!-- TAB SWITCHER -->
+      <div style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
+        <button type="button" id="tabBtnLayananAntrean" class="btn-nav btn-action" onclick="switchLayananTab('antrean')">📋 Antrean Pelayanan</button>
+        <button type="button" id="tabBtnLayananDaftar" class="btn-nav btn-secondary" onclick="switchLayananTab('daftar')">➕ Daftarkan Calon Akseptor</button>
+      </div>
+
+      <!-- TAB 1: DAFTAR ANTREAN & REALISASI LAYANAN -->
+      <div id="layananTabAntrean" style="display: block;">
+        <div style="background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+          
+          <!-- FILTER STATUS, TAHUN & PERIODE BULAN -->
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 140px;">
+              <label style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase;">Status:</label>
+              <select id="filterStatusLayanan" onchange="loadAntreanLayananTable()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: bold; width: 100%;">
+                <option value="TERDAFTAR" selected>Calon Akseptor</option>
+                <option value="SELESAI">Akseptor Terlayani</option>
+                <option value="BATAL">Batal</option>
+                <option value="SEMUA">Semua Status</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 100px;">
+              <label style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase;">Tahun:</label>
+              <select id="filterLayananTahun" onchange="onLayananPeriodeChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+                <option value="2030">2030</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 120px;">
+              <label style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase;">Bulan Mulai:</label>
+              <select id="filterLayananBulanMulai" onchange="onLayananPeriodeChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+                <option value="">-- PILIH --</option>
+                <option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option>
+                <option value="4">APRIL</option><option value="5">MEI</option><option value="6">JUNI</option>
+                <option value="7">JULI</option><option value="8">AGUSTUS</option><option value="9">SEPTEMBER</option>
+                <option value="10">OKTOBER</option><option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+              </select>
+            </div>
+
+            <div style="flex: 1; min-width: 120px;">
+              <label style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase;">Bulan Sampai:</label>
+              <select id="filterLayananBulanSampai" onchange="onLayananPeriodeChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+                <option value="">-- PILIH --</option>
+                <option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option>
+                <option value="4">APRIL</option><option value="5">MEI</option><option value="6">JUNI</option>
+                <option value="7">JULI</option><option value="8">AGUSTUS</option><option value="9">SEPTEMBER</option>
+                <option value="10">OKTOBER</option><option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+              </select>
+            </div>
+
+            <div style="align-self: flex-end;">
+              <button type="button" class="btn-nav btn-secondary" style="padding: 7px 12px; font-size: 12px;" onclick="loadAntreanLayananTable()">🔄 Segarkan</button>
+            </div>
+          </div>
+
+          <!-- KONTAINER FILTER WILAYAH BERTINGKAT PROVINSI -->
+          <div id="filterWilayahLayananWrapper" style="display: none; flex-direction: column; gap: 10px;">
+            <!-- Dropdown Kabupaten (Khusus Admin Prov) -->
+            <div id="filterExpLayananKabContainer" style="display: none; width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+              <label style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase;">Kabupaten / Kota:</label>
+              <select id="filterExpLayananKab" onchange="onLayananKabChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+                <option value="">-- SEMUA KABUPATEN/KOTA --</option>
+              </select>
+            </div>
+
+            <!-- Dropdown Kecamatan (Admin Prov & Admin Kab) -->
+            <div id="filterExpLayananKecContainer" style="display: none; width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+              <label style="font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase;">Kecamatan:</label>
+              <select id="filterExpLayananKec" onchange="onLayananKecChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+                <option value="">-- SEMUA KECAMATAN --</option>
+              </select>
+            </div>
+
+            <!-- CHECKBOX FILTER DESA -->
+            <div id="filterExpLayananDesaWrapper" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: bold; color: #0369a1; text-transform: uppercase;">Pilih Desa untuk Ekspor / Tampilan:</span>
+                <div style="display: flex; gap: 5px;">
+                  <button type="button" onclick="toggleAllLayananCheckboxes('cb_layanan_desa', true)" style="font-size: 10px; padding: 2px 6px; cursor: pointer; border-radius: 3px; border: 1px solid #cbd5e1; background: #fff;">Pilih Semua</button>
+                  <button type="button" onclick="toggleAllLayananCheckboxes('cb_layanan_desa', false)" style="font-size: 10px; padding: 2px 6px; cursor: pointer; border-radius: 3px; border: 1px solid #cbd5e1; background: #fff;">Hapus Semua</button>
+                </div>
+              </div>
+              <div id="filterExpLayananDesaGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; max-height: 100px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px;"></div>
+            </div>
+
+            <!-- CHECKBOX FILTER DUSUN -->
+            <div id="filterExpLayananDusunWrapper" style="display: none; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: bold; color: #0369a1; text-transform: uppercase;">Pilih Dusun untuk Ekspor / Tampilan:</span>
+                <div style="display: flex; gap: 5px;">
+                  <button type="button" onclick="toggleAllLayananCheckboxes('cb_layanan_dusun', true)" style="font-size: 10px; padding: 2px 6px; cursor: pointer; border-radius: 3px; border: 1px solid #cbd5e1; background: #fff;">Pilih Semua</button>
+                  <button type="button" onclick="toggleAllLayananCheckboxes('cb_layanan_dusun', false)" style="font-size: 10px; padding: 2px 6px; cursor: pointer; border-radius: 3px; border: 1px solid #cbd5e1; background: #fff;">Hapus Semua</button>
+                </div>
+              </div>
+              <div id="filterExpLayananDusunGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; max-height: 100px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px;"></div>
+            </div>
+          </div>
+
+          <!-- TOMBOL DOWNLOAD EXCEL & PDF -->
+          <div style="display: flex; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 4px;">
+            <button type="button" class="btn-nav btn-warning" style="flex: 1; justify-content: center; padding: 8px 12px; font-size: 12px; font-weight: bold;" onclick="exportLayananToExcel()">
+              📥 Ekspor Excel (.xlsx)
+            </button>
+            <button type="button" class="btn-nav btn-danger" style="flex: 1; justify-content: center; padding: 8px 12px; font-size: 12px; font-weight: bold;" onclick="exportLayananToPDF()">
+              📄 Ekspor PDF (.pdf)
+            </button>
+          </div>
+        </div>
+
+        <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <table class="kb-table" style="font-size: 11.5px; width: 100%; margin-top: 0; white-space: nowrap;">
+            <thead>
+              <tr>
+                <th style="background:#1f4e78; color:white; width: 30px;">NO</th>
+                <th style="background:#1f4e78; color:white;">CALON AKSEPTOR</th>
+                <th style="background:#1f4e78; color:white;">RENCANA METODE</th>
+                <th style="background:#1f4e78; color:white;">RENCANA BULAN/TGL</th>
+                <th style="background:#1f4e78; color:white;">FASKES / CATATAN</th>
+                <th style="background:#1f4e78; color:white;">STATUS</th>
+                <th style="background:#1f4e78; color:white; width: 140px;">AKSI</th>
+              </tr>
+            </thead>
+            <tbody id="antreanLayananTbody">
+              <tr><td colspan="7" style="text-align: center; padding: 20px;">Silakan pilih periode Bulan Mulai & Sampai terlebih dahulu.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>      
+
+      <!-- TAB 2: FORM DAFTARKAN CALON AKSEPTOR DARI DATABASE PUS -->
+      <div id="layananTabDaftar" style="display: none;">
+        <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #0284c7;">
+          <div style="font-size: 12.5px; color: #334155; font-weight: bold; margin-bottom: 6px;">Cari Calon Akseptor dari Database</div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="cariPusLayananInput" placeholder="KETIK NAMA ISTRI, NIK, ATAU ID PUS..." oninput="this.value = this.value.toUpperCase()" style="flex: 1; padding: 10px 12px; font-size: 13px; text-transform: uppercase; border: 1px solid #cbd5e1; border-radius: 6px;">
+            <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 12px;" onclick="cariPusUntukLayanan()">🔍 Cari PUS</button>
+          </div>
+          <div id="hasilPencarianPusLayanan" style="max-height: 240px; overflow-y: auto; margin-top: 8px; border: 1px solid #cbd5e1; border-radius: 6px; display: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></div>
+        </div>
+
+        <form id="formPendaftaranLayanan" onsubmit="handleSimpanPendaftaranLayanan(event)">
+          <input type="hidden" id="reg_id_pus" value="">
+          <input type="hidden" id="reg_tahun" value="">
+          <input type="hidden" id="reg_kode_prov" value="">
+          <input type="hidden" id="reg_kode_kab" value="">
+          <input type="hidden" id="reg_kode_kec" value="">
+          <input type="hidden" id="reg_kode_desa" value="">
+          <input type="hidden" id="reg_kode_dusun" value="">
+          <input type="hidden" id="reg_kode_rt" value="">
+          <input type="hidden" id="reg_nik_suami" value="">
+
+          <!-- KARTU 1: IDENTITAS CALON AKSEPTOR -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 18px;">
+            <div style="font-size: 12px; font-weight: 800; color: #1e293b; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="background: #0284c7; color: white; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
+              Data Identitas Calon Akseptor
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nama Istri:</label>
+                <input type="text" id="reg_nama_istri" readonly placeholder="PILIH PUS TERLEBIH DAHULU" style="background: #e2e8f0; font-weight: bold; color: #0f172a; border-color: #cbd5e1; cursor: not-allowed;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">NIK Istri:</label>
+                <input type="text" id="reg_nik_istri" readonly placeholder="-" style="background: #e2e8f0; font-family: monospace; color: #334155; border-color: #cbd5e1; cursor: not-allowed;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+              <div>
+                <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nama Suami:</label>
+                <input type="text" id="reg_nama_suami" readonly placeholder="-" style="background: #e2e8f0; color: #334155; border-color: #cbd5e1; cursor: not-allowed;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Wilayah Domisili:</label>
+                <input type="text" id="reg_info_wilayah" readonly placeholder="-" style="background: #e2e8f0; font-size: 12px; color: #334155; border-color: #cbd5e1; cursor: not-allowed;">
+              </div>
+            </div>
+          </div>
+
+          <!-- KARTU 2: FORM RENCANA PELAYANAN MEDIS -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 18px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="background: #0284c7; color: #ffffff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">2</span>
+                <span style="font-size: 13px; font-weight: 800; color: #1e293b; letter-spacing: 0.3px; text-transform: uppercase;">
+                  Rencana Pelayanan & Tindakan KB
+                </span>
+              </div>
+              <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">* Wajib diisi</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px;">
+              <!-- Dropdown Jenis Pelayanan -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="reg_jenis_pelayanan" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Jenis Pelayanan <span style="color: #ef4444;">*</span>
+                </label>
+                <select id="reg_jenis_pelayanan" onchange="onJenisPelayananChange()" required style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-weight: 700; color: #1e293b; background-color: #ffffff; font-size: 13px; box-sizing: border-box;">
+                  <option value="">-- PILIH PELAYANAN --</option>
+                  <option value="PEMASANGAN/PEMAKAIAN">PEMASANGAN / PEMAKAIAN</option>
+                  <option value="CABUT/LEPAS">CABUT / LEPAS</option>
+                  <option value="BONGKAR PASANG">BONGKAR PASANG</option>
+                </select>
+              </div>
+
+              <!-- Dropdown Metode Kontrasepsi -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="reg_rencana_metode" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Metode Kontrasepsi <span style="color: #ef4444;">*</span>
+                </label>
+                <select id="reg_rencana_metode" onchange="evaluasiOtomatisJenisAkseptor()" disabled required style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-weight: 700; color: #0369a1; background-color: #e9ecef; font-size: 13px; box-sizing: border-box;">
+                  <option value="">-- PILIH JENIS PELAYANAN DAHULU --</option>
+                </select>
+              </div>
+
+              <!-- Jenis Akseptor Otomatis -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Jenis Akseptor <span style="font-size: 10px; color: #0284c7; font-weight: 800;">(OTOMATIS)</span>
+                </label>
+                <input type="hidden" id="reg_jenis_akseptor" value="">
+                <div id="badgeJenisAkseptorDisplay" style="height: 42px; width: 100%; padding: 0 14px; border-radius: 6px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 12.5px; font-weight: 700; color: #94a3b8; display: flex; align-items: center; box-sizing: border-box;">
+                  Menunggu pemilihan metode...
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: -8px; margin-bottom: 16px;">
+              <small id="infoRiwayatKb" style="font-size: 11px; font-weight: 600; color: #64748b; display: block; line-height: 1.4;"></small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="reg_bulan_rencana" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Bulan Pelayanan <span style="color: #ef4444;">*</span>
+                </label>
+                <select id="reg_bulan_rencana" onchange="evaluasiOtomatisJenisAkseptor()" required style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-weight: 600; font-size: 13px;">
+                  <option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option>
+                  <option value="4">APRIL</option><option value="5">MEI</option><option value="6">JUNI</option>
+                  <option value="7">JULI</option><option value="8">AGUSTUS</option><option value="9">SEPTEMBER</option>
+                  <option value="10">OKTOBER</option><option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+                </select>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="reg_tgl_rencana" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Tanggal Rencana Tindakan:
+                </label>
+                <input type="date" id="reg_tgl_rencana" style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 13px;">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="reg_faskes_tujuan" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Tempat / Fasilitas Pelayanan:
+                </label>
+                <input type="text" id="reg_faskes_tujuan" placeholder="CONTOH: RS / PUSKESMAS / PMB" oninput="this.value = this.value.toUpperCase()" style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 13px; text-transform: uppercase;">
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="reg_nama_kader" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                  Nama Kader Pendamping <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="text" id="reg_nama_kader" required placeholder="NAMA LENGKAP KADER" oninput="this.value = this.value.toUpperCase()" style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 13px; font-weight: 600; text-transform: uppercase;">
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label for="reg_catatan" style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase;">
+                Catatan Tambahan (Opsional):
+              </label>
+              <input type="text" id="reg_catatan" placeholder="Contoh: Riwayat tensi tinggi, ganti dari suntik 3 bulanan, dll." style="height: 42px; width: 100%; padding: 0 12px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 13px; text-transform: none;">
+            </div>
+          </div>          
+
+          <!-- TOMBOL AKSI -->
+          <div style="display: flex; gap: 10px;">
+            <button type="submit" id="btnSimpanPendaftaranLayanan" class="btn-submit" style="margin-top: 0; flex: 2; background-color: #0284c7; padding: 13px; font-size: 14px; cursor: pointer;">
+              💾 DAFTARKAN CALON AKSEPTOR
+            </button>
+            <button type="button" class="btn-nav btn-secondary" style="flex: 1; justify-content: center; padding: 13px; font-size: 14px;" onclick="resetFormPendaftaranLayanan()">
+              Bersihkan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  // =========================================================================
+  // MODUL FITUR PENDAFTARAN & REALISASI PELAYANAN KB (SKALA PROVINSI)
+  // =========================================================================
+  let cachedAntreanLayanan = [];
+  let pusTerpilihDataLayanan = null;
+  let realtimeLayananChannel = null;
+
+  function onLayananPeriodeChange() {
+    const bMulai = document.getElementById("filterLayananBulanMulai").value;
+    const bSampai = document.getElementById("filterLayananBulanSampai").value;
+    const wrapperWilayah = document.getElementById("filterWilayahLayananWrapper");
+
+    if (bMulai && bSampai) {
+      if (parseInt(bMulai, 10) > parseInt(bSampai, 10)) {
+        Swal.fire("Perhatian", "Bulan Mulai tidak boleh lebih besar dari Bulan Sampai!", "warning");
+        wrapperWilayah.style.display = "none";
+        return;
+      }
+      wrapperWilayah.style.display = "flex";
+      initLayananWilayahFilter();
+    } else {
+      wrapperWilayah.style.display = "none";
+      const tbody = document.getElementById("antreanLayananTbody");
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Silakan pilih periode Bulan Mulai & Sampai terlebih dahulu.</td></tr>`;
+      }
+    }
+  }
+
+  function openPelayananKbModal() {    
+    const modal = document.getElementById("modalPelayananKb");
+    if (modal) modal.style.display = "block";
+    switchLayananTab('antrean');
+    resetFormPendaftaranLayanan();
+    
+    const currentMonth = new Date().getMonth() + 1;
+    const blnEl = document.getElementById("reg_bulan_rencana");
+    if (blnEl) blnEl.value = String(currentMonth);
+
+    const tahunEl = document.getElementById("filterLayananTahun");
+    if (tahunEl) tahunEl.value = String(new Date().getFullYear());
+
+    const bMulaiEl = document.getElementById("filterLayananBulanMulai");
+    const bSampaiEl = document.getElementById("filterLayananBulanSampai");
+    if (bMulaiEl) bMulaiEl.value = "";
+    if (bSampaiEl) bSampaiEl.value = "";
+    
+    const wrapperWilayah = document.getElementById("filterWilayahLayananWrapper");
+    if (wrapperWilayah) wrapperWilayah.style.display = "none";
+    
+    const tbody = document.getElementById("antreanLayananTbody");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Silakan pilih periode Bulan Mulai & Sampai terlebih dahulu.</td></tr>`;
+    }
+  }
+
+  function closePelayananKbModal() {
+    document.getElementById("modalPelayananKb").style.display = "none";
+    resetFormPendaftaranLayanan();
+  }
+
+  function switchLayananTab(tab) {
+    const isAntrean = (tab === 'antrean');
+    document.getElementById("layananTabAntrean").style.display = isAntrean ? "block" : "none";
+    document.getElementById("layananTabDaftar").style.display = isAntrean ? "none" : "block";
+
+    document.getElementById("tabBtnLayananAntrean").className = isAntrean ? "btn-nav btn-action" : "btn-nav btn-secondary";
+    document.getElementById("tabBtnLayananDaftar").className = isAntrean ? "btn-nav btn-secondary" : "btn-nav btn-action";
+
+    if (isAntrean) {
+      loadAntreanLayananTable();
+    }
+  }
+
+  // Kontrol Filter Wilayah Bertingkat (Provinsi -> Kab -> Kec -> Desa -> Dusun)
+  function initLayananWilayahFilter() {
+    const cKab = document.getElementById("filterExpLayananKabContainer");
+    const selKab = document.getElementById("filterExpLayananKab");
+    const cKec = document.getElementById("filterExpLayananKecContainer");
+    const selKec = document.getElementById("filterExpLayananKec");
+    const wDesa = document.getElementById("filterExpLayananDesaWrapper");
+    const wDusun = document.getElementById("filterExpLayananDusunWrapper");
+
+    cKab.style.display = "none";
+    cKec.style.display = "none";
+    wDesa.style.display = "none";
+    wDusun.style.display = "none";
+
+    if (isDesaRole()) {
+      renderLayananDusunCheckboxes(userKodeKec, userKodeDesa, userKodeKab);
+    } else if (isKecRole()) {
+      renderLayananDesaCheckboxes(userKodeKec, userKodeKab);
+    } else if (isKabRole()) {
+      cKec.style.display = "block";
+      populateKecamatanByKab(userKodeKab, "filterExpLayananKec");
+      loadAntreanLayananTable();
+    } else {
+      // Admin Prov: Tampilkan Dropdown Kabupaten
+      cKab.style.display = "block";
+      populateKabupatenDropdown("filterExpLayananKab", userKodeProv || "52");
+      loadAntreanLayananTable();
+    }
+  }
+
+  function onLayananKabChange() {
+    const kdKab = document.getElementById("filterExpLayananKab").value;
+    const cKec = document.getElementById("filterExpLayananKecContainer");
+    const selKec = document.getElementById("filterExpLayananKec");
+    
+    document.getElementById("filterExpLayananDesaWrapper").style.display = "none";
+    document.getElementById("filterExpLayananDusunWrapper").style.display = "none";
+
+    if (kdKab) {
+      cKec.style.display = "block";
+      populateKecamatanByKab(kdKab, "filterExpLayananKec");
+    } else {
+      cKec.style.display = "none";
+      selKec.innerHTML = '<option value="">-- SEMUA KECAMATAN --</option>';
+    }
+    loadAntreanLayananTable();
+  }
+
+  function onLayananKecChange() {
+    const kdKab = isProvRole() ? document.getElementById("filterExpLayananKab").value : userKodeKab;
+    const kdKec = document.getElementById("filterExpLayananKec").value;
+    if (kdKec) {
+      renderLayananDesaCheckboxes(kdKec, kdKab);
+    } else {
+      document.getElementById("filterExpLayananDesaWrapper").style.display = "none";
+      document.getElementById("filterExpLayananDusunWrapper").style.display = "none";
+      loadAntreanLayananTable();
+    }
+  }
+
+  function renderLayananDesaCheckboxes(kdKec, kdKab) {
+    const wrapper = document.getElementById("filterExpLayananDesaWrapper");
+    const grid = document.getElementById("filterExpLayananDesaGrid");
+    const wDusun = document.getElementById("filterExpLayananDusunWrapper");
+    
+    grid.innerHTML = "";
+    wDusun.style.display = "none";
+
+    let cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
+    let cleanKec = String(kdKec).padStart(2, '0');
+    let desaKey = cleanKab + "_" + cleanKec;
+    let desas = dataDesa[desaKey] || dataDesa[cleanKec] || {};
+
+    let listDesaKeys = Object.keys(desas);
+    if (listDesaKeys.length === 0) {
+      wrapper.style.display = "none";
+      loadAntreanLayananTable();
+      return;
+    }
+
+    wrapper.style.display = "block";
+    listDesaKeys.forEach(kd => {
+      const cleanKd = String(kd).padStart(4, '0');
+      const label = document.createElement("label");
+      label.style.cssText = "display: flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; color: #334155;";
+      label.innerHTML = `
+        <input type="checkbox" name="cb_layanan_desa" value="${cleanKd}" onchange="onLayananDesaCheckboxChange('${cleanKec}', '${cleanKab}')" style="accent-color: #0284c7;">
+        <span>${desas[kd]}</span>
+      `;
+      grid.appendChild(label);
+    });
+
+    loadAntreanLayananTable();
+  }
+
+  function onLayananDesaCheckboxChange(kdKec, kdKab) {
+    const checkedDesa = Array.from(document.querySelectorAll('input[name="cb_layanan_desa"]:checked')).map(cb => cb.value);
+    const wDusun = document.getElementById("filterExpLayananDusunWrapper");
+
+    if (checkedDesa.length === 1) {
+      renderLayananDusunCheckboxes(kdKec, checkedDesa[0], kdKab);
+    } else {
+      wDusun.style.display = "none";
+      loadAntreanLayananTable();
+    }
+  }
+
+  function renderLayananDusunCheckboxes(kdKec, kdDesa, kdKab) {
+    const wrapper = document.getElementById("filterExpLayananDusunWrapper");
+    const grid = document.getElementById("filterExpLayananDusunGrid");
+    grid.innerHTML = "";
+
+    const dsnMap = getDusunList(kdKec, kdDesa, kdKab);
+    if (!dsnMap || Object.keys(dsnMap).length === 0) {
+      wrapper.style.display = "none";
+      loadAntreanLayananTable();
+      return;
+    }
+
+    wrapper.style.display = "block";
+    for (let kd in dsnMap) {
+      let cleanKd = String(kd).padStart(4, '0');
+      if (isDesaRole() && userAllowedDusun && userAllowedDusun.length > 0) {
+        if (!userAllowedDusun.includes(cleanKd)) continue;
+      }
+
+      const label = document.createElement("label");
+      label.style.cssText = "display: flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; color: #334155;";
+      label.innerHTML = `
+        <input type="checkbox" name="cb_layanan_dusun" value="${cleanKd}" onchange="loadAntreanLayananTable()" style="accent-color: #0284c7;">
+        <span>${dsnMap[kd].nama}</span>
+      `;
+      grid.appendChild(label);
+    }
+
+    loadAntreanLayananTable();
+  }
+
+  function toggleAllLayananCheckboxes(name, status) {
+    const boxes = document.querySelectorAll(`input[name="${name}"]`);
+    boxes.forEach(cb => cb.checked = status);
+    
+    if (name === 'cb_layanan_desa') {
+      const kab = isProvRole() ? document.getElementById("filterExpLayananKab").value : userKodeKab;
+      const kec = isKecRole() ? userKodeKec : document.getElementById("filterExpLayananKec").value;
+      onLayananDesaCheckboxChange(kec, kab);
+    } else {
+      loadAntreanLayananTable();
+    }
+  }
+
+  // Load Data Antrean dengan batasan wilayah Provinsi
+  async function loadAntreanLayananTable() {
+    const tbody = document.getElementById("antreanLayananTbody");
+    const bMulai = document.getElementById("filterLayananBulanMulai")?.value;
+    const bSampai = document.getElementById("filterLayananBulanSampai")?.value;
+
+    if (!bMulai || !bSampai) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#64748b;">Silakan tentukan periode Bulan Mulai & Sampai terlebih dahulu.</td></tr>`;
+      return;
+    }
+
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:15px;">Memuat antrean...</td></tr>`;
+
+    const statusFilter = document.getElementById("filterStatusLayanan").value;
+    const tahunFilter = parseInt(document.getElementById("filterLayananTahun").value, 10);
+
+    let query = db.from('pendaftaran_layanan_kb')
+      .select('*')
+      .eq('tahun', tahunFilter)
+      .gte('bulan_rencana', parseInt(bMulai, 10))
+      .lte('bulan_rencana', parseInt(bSampai, 10))
+      .order('created_at', { ascending: false });
+
+    if (statusFilter !== "SEMUA") query = query.eq('status', statusFilter);
+
+    // Filter Provinsi / Kabupaten / Kecamatan
+    if (isProvRole()) {
+      const selKab = document.getElementById("filterExpLayananKab")?.value;
+      if (selKab) query = query.eq('kode_kab', String(selKab).padStart(2, '0'));
+    } else if (isKabRole()) {
+      query = query.eq('kode_kab', String(userKodeKab).padStart(2, '0'));
+    } else {
+      query = query.eq('kode_kab', String(userKodeKab).padStart(2, '0'))
+                   .eq('kode_kec', String(userKodeKec).padStart(2, '0'));
+    }
+
+    const selKec = document.getElementById("filterExpLayananKec")?.value;
+    if ((isProvRole() || isKabRole()) && selKec) {
+      query = query.eq('kode_kec', String(selKec).padStart(2, '0'));
+    }
+
+    if (isDesaRole()) {
+      query = query.eq('kode_desa', String(userKodeDesa).padStart(4, '0'));
+    } else {
+      const checkedDesa = Array.from(document.querySelectorAll('input[name="cb_layanan_desa"]:checked')).map(cb => String(cb.value).padStart(4, '0'));
+      if (checkedDesa.length > 0) query = query.in('kode_desa', checkedDesa);
+    }
+
+    const checkedDusun = Array.from(document.querySelectorAll('input[name="cb_layanan_dusun"]:checked')).map(cb => String(cb.value).padStart(4, '0'));
+    if (checkedDusun.length > 0) {
+      query = query.in('kode_dusun', checkedDusun);
+    } else if (isDesaRole() && userAllowedDusun && userAllowedDusun.length > 0) {
+      query = query.in('kode_dusun', userAllowedDusun);
+    }
+
+    const { data, error } = await query;
+    if (error || !data) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center; padding:15px;">Gagal memuat: ${error ? error.message : 'Error koneksi'}</td></tr>`;
+      return;
+    }
+
+    cachedAntreanLayanan = data;
+    renderAntreanLayananTable();
+  }
+
+  function renderAntreanLayananTable() {
+    const tbody = document.getElementById("antreanLayananTbody");
+    tbody.innerHTML = "";
+
+    if (cachedAntreanLayanan.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#64748b;">Tidak ada data antrean pelayanan.</td></tr>`;
+      return;
+    }
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+    cachedAntreanLayanan.forEach((item, idx) => {
+      const tr = document.createElement("tr");
+
+      let badgeStatus = "";
+      if (item.status === 'TERDAFTAR') {
+        badgeStatus = `<span style="background:#dbeafe; color:#1d4ed8; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px;">TERDAFTAR</span>`;
+      } else if (item.status === 'SELESAI') {
+        badgeStatus = `<span style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px;">SELESAI (${item.metode_realisasi || item.rencana_metode})</span>`;
+      } else {
+        badgeStatus = `<span style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px;">BATAL</span>`;
+      }
+
+      let aksiHtml = "-";
+      if (item.status === 'TERDAFTAR') {
+        const cleanNamaIstri = (item.nama_istri || '').replace(/['"\\]/g, ' ');
+        const cleanMetode = (item.rencana_metode || '').replace(/['"\\]/g, ' ');
+
+        aksiHtml = `
+          <button type="button" class="btn-nav btn-action" style="padding: 4px 8px; font-size: 11px; background-color:#16a34a;" onclick="promptSelesaikanPelayanan('${item.id}', '${item.id_pus}', ${item.tahun || new Date().getFullYear()}, ${item.bulan_rencana || 1}, '${cleanMetode}', '${cleanNamaIstri}')" title="Catat Tindakan Selesai">
+            💉 Layani
+          </button>
+          <button type="button" class="btn-nav btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="batalkanAntreanLayanan('${item.id}', '${cleanNamaIstri}')" title="Batalkan Pendaftaran">
+            ❌
+          </button>
+        `;
+      }
+
+      tr.innerHTML = `
+        <td style="text-align:center;">${idx + 1}</td>
+        <td>
+          <b>${item.nama_istri}</b> (${item.nik_istri || '-' })<br>
+          <small style="color:#64748b;">Suami: ${item.nama_suami || '-'} | ID: ${item.id_pus}</small>
+          ${item.nama_kader ? `<br><span style="background:#fef3c7; color:#92400e; padding:1px 5px; border-radius:3px; font-size:10.5px; font-weight:bold;">Kader: ${item.nama_kader}</span>` : ''}
+        </td>
+        <td style="text-align:center; font-weight:bold; color:#0284c7;">${item.rencana_metode}</td>
+        <td style="text-align:center;">
+          <b>${monthNames[(item.bulan_rencana || 1) - 1]} ${item.tahun}</b>
+          ${item.tgl_rencana_layanan ? `<br><small style="color:#64748b;">${item.tgl_rencana_layanan}</small>` : ''}
+        </td>
+        <td>
+          <b>${item.faskes_tujuan || '-'}</b>
+          ${item.catatan ? `<br><small style="color:#64748b;">${item.catatan}</small>` : ''}
+        </td>
+        <td style="text-align:center;">${badgeStatus}</td>
+        <td style="text-align:center; white-space:nowrap;">${aksiHtml}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function updateDashboardBadgeLayanan() {
+    if (!currentUser) return;
+
+    try {
+      const currentYear = new Date().getFullYear();
+      let query = db.from('pendaftaran_layanan_kb')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'TERDAFTAR')
+        .eq('tahun', currentYear);
+
+      // Hierarki penyaringan angka badge:
+      if (isDesaRole()) {
+        // User Desa: hanya menghitung desa binaannya
+        query = query.eq('kode_kab', String(userKodeKab).padStart(2, '0'))
+                     .eq('kode_kec', String(userKodeKec).padStart(2, '0'))
+                     .eq('kode_desa', String(userKodeDesa).padStart(4, '0'));
+                     
+        if (userAllowedDusun && userAllowedDusun.length > 0) {
+          query = query.in('kode_dusun', userAllowedDusun);
+        }
+      } else if (isKecRole()) {
+        // Admin Kecamatan: hanya menghitung kecamatannya
+        query = query.eq('kode_kab', String(userKodeKab).padStart(2, '0'))
+                     .eq('kode_kec', String(userKodeKec).padStart(2, '0'));
+      } else if (isKabRole()) {
+        // Admin Kabupaten: menghitung se-kabupatennya
+        query = query.eq('kode_kab', String(userKodeKab).padStart(2, '0'));
+      } else {
+        // Admin Provinsi: menghitung seluruh kabupaten di bawah provinsinya
+        query = query.eq('kode_prov', String(userKodeProv || '52').padStart(2, '0'));
+      }
+
+      const { count, error } = await query;
+      if (!error) {
+        const badge = document.getElementById("badgeAntreanLayanan");
+        if (badge) {
+          badge.innerText = count || 0;
+          badge.style.display = (count && count > 0) ? "inline-block" : "none";
+        }
+      }
+    } catch (err) {
+      console.error("Error updateDashboardBadgeLayanan:", err);
+    }
+  }
+
+  function initRealtimePelayananKb() {
+    if (realtimeLayananChannel) return;
+    try {
+      realtimeLayananChannel = db.channel('public:pendaftaran_layanan_kb')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pendaftaran_layanan_kb' }, () => {
+          updateDashboardBadgeLayanan();
+          const modal = document.getElementById("modalPelayananKb");
+          const bMulai = document.getElementById("filterLayananBulanMulai")?.value;
+          const bSampai = document.getElementById("filterLayananBulanSampai")?.value;
+          if (modal && modal.style.display === "block" && bMulai && bSampai) {
+            loadAntreanLayananTable();
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.error("Realtime error:", err);
+    }
+  }
+
+  // Pencarian PUS Calon Akseptor
+  async function cariPusUntukLayanan() {
+    const keywordInput = document.getElementById("cariPusLayananInput").value.trim();
+    const keyword = keywordInput.toUpperCase();
+    const resultBox = document.getElementById("hasilPencarianPusLayanan");
+    
+    if (!keyword) {
+      Swal.fire("Perhatian", "Ketik nama istri, NIK, atau ID PUS untuk mencari!", "warning");
+      return;
+    }
+
+    resultBox.style.display = "block";
+    resultBox.innerHTML = "<div style='padding:12px; font-size:12px; color:#64748b; text-align:center;'>Mencari data PUS...</div>";
+
+    let currentYear = new Date().getFullYear();
+    let query = db.from('data_pus').select('*').eq('tahun', currentYear)
+      .or(`id_pus.ilike.%${keyword}%,nama_istri.ilike.%${keyword}%,nik_istri.ilike.%${keyword}%,nama_suami.ilike.%${keyword}%`);
+
+    if (isDesaRole()) {
+      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
+    } else if (isKecRole()) {
+      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec);
+    } else if (isKabRole()) {
+      query = query.eq('kode_kab', userKodeKab);
+    }
+
+    let { data, error } = await query.limit(15);
+    resultBox.innerHTML = "";
+
+    if (error || !data || data.length === 0) {
+      resultBox.innerHTML = `<div style='padding:15px; font-size:12.5px; color:#ef4444; text-align:center;'>Data PUS tidak ditemukan.</div>`;
+      return;
+    }
+
+    data.forEach(item => {
+      const hlId = highlightText(item.id_pus, keywordInput);
+      const hlIstri = highlightText(item.nama_istri, keywordInput);
+      const hlNikIstri = highlightText(item.nik_istri, keywordInput);
+      const hlSuami = highlightText(item.nama_suami, keywordInput);
+
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "search-result-item";
+      itemDiv.style.cssText = "padding: 10px 12px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s; background: #ffffff;";
+      itemDiv.onmouseover = () => itemDiv.style.backgroundColor = "#f1f5f9";
+      itemDiv.onmouseout = () => itemDiv.style.backgroundColor = "#ffffff";
+
+      itemDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-weight: bold; color: #1f4e78; font-size: 13px;">${hlId} (${item.tahun})</span>
+          <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 4px; font-weight: bold;">
+            RT ${item.kode_rt || '-'} / DSN ${item.dusun_nama || '-'}
+          </span>
+        </div>
+        <div style="font-size: 12.5px; color: #334155;">
+          🧕 <b>Istri:</b> ${hlIstri} (${hlNikIstri})<br>
+          👱 <b>Suami:</b> ${hlSuami}
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">
+          📍 Kab. ${item.kabupaten_nama || '-'} | Kec. ${item.kecamatan_nama || '-'} | Desa ${item.desa_nama || '-'}
+        </div>
+      `;
+      itemDiv.onclick = () => pilihPusUntukLayanan(item);
+      resultBox.appendChild(itemDiv);
+    });
+  }
+
+  function pilihPusUntukLayanan(item) {
+    pusTerpilihDataLayanan = item;
+    const resultBox = document.getElementById("hasilPencarianPusLayanan");
+    if (resultBox) resultBox.style.display = "none";
+    
+    document.getElementById("cariPusLayananInput").value = item.nama_istri || "";
+    document.getElementById("reg_id_pus").value = item.id_pus || "";
+    document.getElementById("reg_tahun").value = item.tahun || "";
+    document.getElementById("reg_kode_prov").value = item.kode_prov || userKodeProv || "52";
+    document.getElementById("reg_kode_kab").value = item.kode_kab || "";
+    document.getElementById("reg_kode_kec").value = item.kode_kec || "";
+    document.getElementById("reg_kode_desa").value = item.kode_desa || "";
+    document.getElementById("reg_kode_dusun").value = item.kode_dusun || "";
+    document.getElementById("reg_kode_rt").value = item.kode_rt || "";
+    document.getElementById("reg_nik_suami").value = item.nik_suami || "";
+
+    document.getElementById("reg_nama_istri").value = item.nama_istri || "";
+    document.getElementById("reg_nik_istri").value = item.nik_istri || "";
+    document.getElementById("reg_nama_suami").value = item.nama_suami || "";
+    document.getElementById("reg_info_wilayah").value = `Kab. ${item.kabupaten_nama || '-'}, Kec. ${item.kecamatan_nama || '-'}, Desa ${item.desa_nama || '-'}, Dsn. ${item.dusun_nama || '-'} (RT ${item.kode_rt || '-'})`;
+
+    document.getElementById("reg_rencana_metode").value = "";
+    document.getElementById("reg_jenis_akseptor").value = "";
+    const infoText = document.getElementById("infoRiwayatKb");
+    if (infoText) infoText.innerText = "Silakan tentukan jenis pelayanan & metode di bawah...";
+  }
+
+  function onJenisPelayananChange() {
+    const jenisLayanan = document.getElementById("reg_jenis_pelayanan").value;
+    const selMetode = document.getElementById("reg_rencana_metode");
+    selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
+
+    if (!jenisLayanan) {
+      selMetode.disabled = true;
+      selMetode.style.backgroundColor = "#e9ecef";
+      selMetode.innerHTML = '<option value="">-- PILIH JENIS PELAYANAN DAHULU --</option>';
+      evaluasiOtomatisJenisAkseptor();
+      return;
+    }
+
+    selMetode.disabled = false;
+    selMetode.style.backgroundColor = "#ffffff";
+
+    let opsiMetode = (jenisLayanan === "CABUT/LEPAS" || jenisLayanan === "BONGKAR PASANG")
+      ? ["IMPLAN", "IUD", "MOW", "MOP"]
+      : ["IMPLAN", "IUD", "SUNTIK", "PIL", "KONDOM", "MOW", "MOP"];
+
+    opsiMetode.forEach(m => selMetode.add(new Option(m, m)));
+    evaluasiOtomatisJenisAkseptor();
+  }
+
+  function evaluasiOtomatisJenisAkseptor() {
+    const jenisLayanan = (document.getElementById("reg_jenis_pelayanan")?.value || "").trim();
+    const metodeBaru = (document.getElementById("reg_rencana_metode")?.value || "").trim().toUpperCase();
+    const jenisInput = document.getElementById("reg_jenis_akseptor");
+    const badgeDisplay = document.getElementById("badgeJenisAkseptorDisplay");
+    const infoText = document.getElementById("infoRiwayatKb");
+
+    if (!jenisLayanan || !metodeBaru) {
+      if (jenisInput) jenisInput.value = "";
+      if (badgeDisplay) {
+        badgeDisplay.innerText = "Menunggu pemilihan pelayanan & metode...";
+        badgeDisplay.style.background = "#f1f5f9";
+        badgeDisplay.style.color = "#64748b";
+        badgeDisplay.style.borderColor = "#cbd5e1";
+      }
+      if (infoText) infoText.innerText = "";
+      return;
+    }
+
+    if (!pusTerpilihDataLayanan) {
+      if (jenisInput) jenisInput.value = "";
+      if (badgeDisplay) {
+        badgeDisplay.innerText = "Pilih Calon PUS terlebih dahulu";
+        badgeDisplay.style.background = "#fef2f2";
+        badgeDisplay.style.color = "#dc2626";
+      }
+      return;
+    }
+
+    const bulanRencana = parseInt(document.getElementById("reg_bulan_rencana")?.value || (new Date().getMonth() + 1), 10);
+    const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+
+    let statusTerakhirRaw = "";
+    for (let i = bulanRencana - 2; i >= 0; i--) {
+      let val = String(pusTerpilihDataLayanan[mKeys[i]] || "").trim().toUpperCase();
+      if (val && val !== "-" && val !== "--KOSONG--") {
+        statusTerakhirRaw = val;
+        break;
+      }
+    }
+
+    const parsed = evaluateKbStatus(statusTerakhirRaw);
+    let hasilDeteksi = "KB BARU (MURNI)";
+    let keterangan = statusTerakhirRaw ? `Alkon sebelumnya: ${statusTerakhirRaw}` : "Belum ada riwayat KB tercatat";
+
+    if (jenisLayanan === "CABUT/LEPAS") {
+      hasilDeteksi = "CABUT/LEPAS";
+      keterangan = `Pencabutan alkon ${metodeBaru}`;
+    } else if (jenisLayanan === "BONGKAR PASANG") {
+      if (parsed.type === "PESERTA_KB" && parsed.method === metodeBaru) {
+        hasilDeteksi = "KB ULANGAN";
+        keterangan = `Bongkar pasang alkon yang sama (${metodeBaru})`;
+      } else {
+        hasilDeteksi = "GANTI CARA";
+        keterangan = `Bongkar pasang ganti alkon (sebelumnya: ${parsed.method || statusTerakhirRaw || 'Non-KB'})`;
+      }
+    } else {
+      let pernahKbSebelumnya = false;
+      for (let i = 0; i < 12; i++) {
+        let val = String(pusTerpilihDataLayanan[mKeys[i]] || "").trim().toUpperCase();
+        if (evaluateKbStatus(val).type === "PESERTA_KB") { pernahKbSebelumnya = true; break; }
+      }
+
+      if (statusTerakhirRaw) {
+        if (parsed.type === "PESERTA_KB") {
+          hasilDeteksi = (metodeBaru === parsed.method) ? "KB ULANGAN" : "GANTI CARA";
+        } else if (parsed.type === "BUKAN_PESERTA") {
+          if (parsed.reason === "HAMIL") hasilDeteksi = "KB BARU (KBPP)";
+          else if (pernahKbSebelumnya) hasilDeteksi = "KB BARU (PASCA DO)";
+          else hasilDeteksi = "KB BARU (MURNI)";
+        }
+      }
+    }
+
+    if (jenisInput) jenisInput.value = hasilDeteksi;
+    if (badgeDisplay) {
+      badgeDisplay.innerText = hasilDeteksi;
+      badgeDisplay.style.background = "#f0fdf4";
+      badgeDisplay.style.color = "#166534";
+      badgeDisplay.style.borderColor = "#86efac";
+    }
+    if (infoText) infoText.innerText = `💡 Terdeteksi: ${hasilDeteksi} (${keterangan})`;
+  }
+
+  function resetFormPendaftaranLayanan() {
+    document.getElementById("formPendaftaranLayanan").reset();
+    document.getElementById("reg_id_pus").value = "";
+    document.getElementById("reg_tahun").value = "";
+    document.getElementById("reg_kode_prov").value = "";
+    document.getElementById("reg_kode_kab").value = "";
+    document.getElementById("reg_kode_kec").value = "";
+    document.getElementById("reg_kode_desa").value = "";
+    document.getElementById("reg_kode_dusun").value = "";
+    document.getElementById("reg_kode_rt").value = "";
+    document.getElementById("reg_nik_suami").value = "";
+    document.getElementById("reg_info_wilayah").value = "";
+    document.getElementById("cariPusLayananInput").value = "";
+    document.getElementById("hasilPencarianPusLayanan").style.display = "none";
+    document.getElementById("hasilPencarianPusLayanan").innerHTML = "";
+
+    const jenisLayananEl = document.getElementById("reg_jenis_pelayanan");
+    if (jenisLayananEl) jenisLayananEl.value = "";
+
+    const selMetode = document.getElementById("reg_rencana_metode");
+    if (selMetode) {
+      selMetode.innerHTML = '<option value="">-- PILIH JENIS PELAYANAN DAHULU --</option>';
+      selMetode.disabled = true;
+      selMetode.style.backgroundColor = "#e9ecef";
+    }
+
+    const currentMonth = new Date().getMonth() + 1;
+    const blnEl = document.getElementById("reg_bulan_rencana");
+    if (blnEl) blnEl.value = String(currentMonth);
+
+    const kaderInput = document.getElementById("reg_nama_kader");
+    if (kaderInput) kaderInput.value = (userNamaLengkap || currentUser || "").toUpperCase();
+
+    pusTerpilihDataLayanan = null;
+    const infoText = document.getElementById("infoRiwayatKb");
+    if (infoText) infoText.innerText = "";
+    const jenisInput = document.getElementById("reg_jenis_akseptor");
+    if (jenisInput) jenisInput.value = "";
+
+    const badgeDisplay = document.getElementById("badgeJenisAkseptorDisplay");
+    if (badgeDisplay) {
+      badgeDisplay.innerText = "Menunggu pemilihan pelayanan & metode...";
+      badgeDisplay.style.background = "#f1f5f9";
+      badgeDisplay.style.color = "#64748b";
+      badgeDisplay.style.borderColor = "#cbd5e1";
+    }
+  }
+
+  async function handleSimpanPendaftaranLayanan(event) {
+    event.preventDefault();
+    const errors = [];
+
+    const idPus = (document.getElementById("reg_id_pus")?.value || "").trim();
+    const namaIstri = (document.getElementById("reg_nama_istri")?.value || "").trim();
+    const nikIstri = (document.getElementById("reg_nik_istri")?.value || "").trim();
+
+    if (!idPus || !namaIstri || !nikIstri) errors.push("Calon Akseptor belum dipilih");
+    const jenisPelayanan = (document.getElementById("reg_jenis_pelayanan")?.value || "").trim();
+    if (!jenisPelayanan) errors.push("Jenis Pelayanan belum dipilih");
+    const rencanaMetode = (document.getElementById("reg_rencana_metode")?.value || "").trim();
+    const bulanRencana = (document.getElementById("reg_bulan_rencana")?.value || "").trim();
+    const namaKader = (document.getElementById("reg_nama_kader")?.value || "").trim();
+
+    if (!rencanaMetode) errors.push("Metode Kontrasepsi belum dipilih");
+    if (!bulanRencana) errors.push("Bulan Pelayanan belum dipilih");
+    if (!namaKader) errors.push("Nama Kader / Petugas Pendamping wajib diisi");
+
+    if (errors.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Form Belum Lengkap!',
+        html: `<ul style="text-align:left; color:#dc2626;">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`
+      });
+      return;
+    }
+
+    const btn = document.getElementById("btnSimpanPendaftaranLayanan");
+    btn.disabled = true;
+    btn.innerText = "Mendaftarkan...";
+    
+    const payload = {
+      id_pus: idPus,
+      tahun: parseInt(document.getElementById("reg_tahun").value, 10),
+      bulan_rencana: parseInt(bulanRencana, 10),
+      tgl_rencana_layanan: document.getElementById("reg_tgl_rencana").value || null,
+      nama_istri: namaIstri,
+      nik_istri: nikIstri,
+      nama_suami: document.getElementById("reg_nama_suami").value,
+      nik_suami: document.getElementById("reg_nik_suami").value || null,
+      kode_prov: document.getElementById("reg_kode_prov").value || userKodeProv || "52",
+      kode_kab: document.getElementById("reg_kode_kab").value,
+      kode_kec: document.getElementById("reg_kode_kec").value,
+      kode_desa: document.getElementById("reg_kode_desa").value,
+      kode_dusun: document.getElementById("reg_kode_dusun").value,
+      kode_rt: document.getElementById("reg_kode_rt").value || null,
+      jenis_pelayanan: jenisPelayanan,
+      rencana_metode: rencanaMetode,
+      jenis_akseptor: document.getElementById("reg_jenis_akseptor").value,
+      faskes_tujuan: document.getElementById("reg_faskes_tujuan").value.trim() || null,
+      nama_kader: namaKader.toUpperCase(),
+      catatan: document.getElementById("reg_catatan").value.trim() || null,
+      status: 'TERDAFTAR',
+      created_by: currentUser || "Kader"
+    };
+
+    try {
+      const { error } = await db.from('pendaftaran_layanan_kb').insert([payload]);
+      if (error) throw error;
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Calon Akseptor Terdaftar!',
+        text: `PUS [${payload.nama_istri}] berhasil didaftarkan oleh Kader ${payload.nama_kader}.`,
+        timer: 1600,
+        showConfirmButton: false
+      });
+
+      resetFormPendaftaranLayanan();
+      switchLayananTab('antrean');
+      updateDashboardBadgeLayanan();
+    } catch (err) {
+      Swal.fire("Gagal Mendaftar", err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
+    }
+  }
+
+  function promptSelesaikanPelayanan(tiketId, idPus, tahun, bulanRencana, rencanaMetode, namaIstri) {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    Swal.fire({
+      title: 'Konfirmasi Pelayanan KB',
+      html: `
+        <div style="text-align:left; font-size:13px; color:#333;">
+          <p>Calon Akseptor: <b>${namaIstri}</b> (ID: ${idPus})</p>
+          <div style="margin-bottom:10px;">
+            <label style="font-weight:bold; font-size:12px;">Metode Kontrasepsi yang Diberikan:</label>
+            <select id="swalMetodeRealisasi" class="swal2-input" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
+              <option value="IMPLAN" ${rencanaMetode === 'IMPLAN' ? 'selected' : ''}>IMPLAN</option>
+              <option value="IUD" ${rencanaMetode === 'IUD' ? 'selected' : ''}>IUD</option>
+              <option value="SUNTIK" ${rencanaMetode === 'SUNTIK' ? 'selected' : ''}>SUNTIK</option>
+              <option value="PIL" ${rencanaMetode === 'PIL' ? 'selected' : ''}>PIL</option>
+              <option value="KONDOM" ${rencanaMetode === 'KONDOM' ? 'selected' : ''}>KONDOM</option>
+              <option value="MOW" ${rencanaMetode === 'MOW' ? 'selected' : ''}>MOW</option>
+              <option value="MOP" ${rencanaMetode === 'MOP' ? 'selected' : ''}>MOP</option>
+            </select>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label style="font-weight:bold; font-size:12px;">Bulan Efektif Ber-KB:</label>
+            <select id="swalBulanRealisasi" class="swal2-input" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
+              ${monthNames.map((m, idx) => `<option value="${idx+1}" ${idx+1 === bulanRencana ? 'selected' : ''}>${m.toUpperCase()}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-weight:bold; font-size:12px;">Tanggal Realisasi Tindakan:</label>
+            <input type="date" id="swalTglRealisasi" class="swal2-input" value="${todayStr}" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '✅ Simpan & Update Database',
+      cancelButtonText: 'Batal',
+      preConfirm: () => ({
+        metode: document.getElementById("swalMetodeRealisasi").value,
+        bulan: parseInt(document.getElementById("swalBulanRealisasi").value, 10),
+        tgl: document.getElementById("swalTglRealisasi").value
+      })
+    }).then(async (res) => {
+      if (res.isConfirmed && res.value) {
+        await eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, res.value.bulan, res.value.metode, res.value.tgl);
+      }
+    });
+  }
+
+  async function eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, bulan, metode, tgl) {
+    const monthColumns = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+    const targetCol = monthColumns[bulan - 1];
+
+    Swal.fire({ title: 'Memproses...', text: 'Menyimpan realisasi & memperbarui data PUS...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+      const { error: errTiket } = await db.from('pendaftaran_layanan_kb')
+        .update({ status: 'SELESAI', metode_realisasi: metode, tgl_layanan_realisasi: tgl, updated_at: new Date().toISOString() })
+        .eq('id', tiketId);
+
+      if (errTiket) throw errTiket;
+
+      const updateDataPus = {};
+      updateDataPus[targetCol] = metode;
+      updateDataPus['timestamp'] = new Date().toISOString();
+
+      const { error: errPus } = await db.from('data_pus')
+        .update(updateDataPus)
+        .eq('id_pus', idPus)
+        .eq('tahun', tahun);
+
+      if (errPus) throw errPus;
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Pelayanan Berhasil Dicatat!',
+        text: `Status PUS ${idPus} otomatis diperbarui menjadi "${metode}" pada bulan ${monthColumns[bulan-1].replace('kb_', '').toUpperCase()}.`
+      });
+
+      loadAntreanLayananTable();
+      updateDashboardBadgeLayanan();
+    } catch (err) {
+      console.error("Gagal realisasi layanan:", err);
+      Swal.fire("Gagal", "Terjadi kesalahan: " + err.message, "error");
+    }
+  }
+
+  function batalkanAntreanLayanan(tiketId, namaIstri) {
+    Swal.fire({
+      title: 'Batalkan Pendaftaran?',
+      text: `Yakin ingin membatalkan antrean pelayanan untuk ${namaIstri}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Batalkan'
+    }).then(async (res) => {
+      if (res.isConfirmed) {
+        const { error } = await db.from('pendaftaran_layanan_kb')
+          .update({ status: 'BATAL', updated_at: new Date().toISOString() })
+          .eq('id', tiketId);
+
+        if (!error) {
+          Swal.fire("Dibatalkan", "Pendaftaran telah dibatalkan.", "success");
+          loadAntreanLayananTable();
+          updateDashboardBadgeLayanan();
+        }
+      }
+    });
+  }
+
+  // Ekspor Excel dan PDF Pelayanan KB dengan Kolom Tambahan Kabupaten
+  function getCleanLayananExportData() {
+    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) return null;
+
+    const currentFilter = document.getElementById("filterStatusLayanan").value;
+    const isPelayananKb = (currentFilter === "SELESAI");
+    let judulTabel = isPelayananKb ? "TABEL PELAYANAN KB" : "TABEL CALON AKSEPTOR";
+    let filePrefix = isPelayananKb ? "TABEL_PELAYANAN_KB" : "TABEL_CALON_AKSEPTOR";
+    if (currentFilter === "BATAL") {
+      judulTabel = "TABEL CALON AKSEPTOR (BATAL)";
+      filePrefix = "TABEL_AKSEPTOR_BATAL";
+    }
+
+    const getNmKab = (kd) => (dataKabupaten[userKodeProv || "52"] && dataKabupaten[userKodeProv || "52"][kd]) ? dataKabupaten[userKodeProv || "52"][kd] : kd || "-";
+    const getNmKec = (kdKab, kdKec) => (dataKecamatan[kdKab] && dataKecamatan[kdKab][kdKec]) ? dataKecamatan[kdKab][kdKec] : kdKec || "-";
+    const getNmDesa = (kdKab, kdKec, kdDesa) => {
+      let k = (kdKab || "") + "_" + (kdKec || "");
+      return (dataDesa[k] && dataDesa[k][kdDesa]) ? dataDesa[k][kdDesa] : (dataDesa[kdKec] && dataDesa[kdKec][kdDesa] ? dataDesa[kdKec][kdDesa] : kdDesa || "-");
+    };
+    const getNmDsn = (kdKab, kdKec, kdDesa, kdDsn) => {
+      const dsnMap = getDusunList(kdKec, kdDesa, kdKab);
+      return (dsnMap && dsnMap[kdDsn]) ? dsnMap[kdDsn].nama : kdDsn || "-";
+    };
+
+    const headers = [
+      "NO.", "KABUPATEN/KOTA", "KECAMATAN", "DESA", "DUSUN", "RT",
+      "NAMA SUAMI", "NIK SUAMI", "NAMA ISTRI", "NIK ISTRI",
+      "JENIS ALKON", "JENIS AKSEPTOR",
+      isPelayananKb ? "TANGGAL PELAYANAN" : "TANGGAL RENCANA PELAYANAN"
+    ];
+
+    const rows = cachedAntreanLayanan.map((item, idx) => {
+      const alkon = isPelayananKb ? (item.metode_realisasi || item.rencana_metode || "-") : (item.rencana_metode || "-");
+      const tgl = isPelayananKb ? (item.tgl_layanan_realisasi || item.tgl_rencana_layanan || "-") : (item.tgl_rencana_layanan || "-");
+
+      return [
+        idx + 1,
+        getNmKab(item.kode_kab),
+        getNmKec(item.kode_kab, item.kode_kec),
+        getNmDesa(item.kode_kab, item.kode_kec, item.kode_desa),
+        getNmDsn(item.kode_kab, item.kode_kec, item.kode_desa, item.kode_dusun),
+        item.kode_rt || "-",
+        item.nama_suami || "-",
+        String(item.nik_suami || "-"),
+        item.nama_istri || "-",
+        String(item.nik_istri || "-"),
+        alkon,
+        item.jenis_akseptor || "-",
+        tgl
+      ];
+    });
+
+    return { judulTabel, filePrefix, headers, rows };
+  }
+
+  function exportLayananToExcel() {
+    const data = getCleanLayananExportData();
+    if (!data) {
+      Swal.fire("Data Kosong", "Tidak ada data antrean/pelayanan untuk diunduh.", "warning");
+      return;
+    }
+
+    try {
+      const wb = XLSX.utils.book_new();
+      const sheetContent = [
+        [data.judulTabel],
+        [`Tanggal Unduh: ${new Date().toLocaleDateString('id-ID')}`],
+        [],
+        data.headers,
+        ...data.rows
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(sheetContent);
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = 3; R <= range.e.r; ++R) {
+        for (let C of [7, 9]) {
+          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+          if (ws[cellRef]) ws[cellRef].t = 's';
+        }
+      }
+      ws['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 8 }, { wch: 22 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 22 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, ws, data.filePrefix.substring(0, 31));
+      XLSX.writeFile(wb, `${data.filePrefix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) {
+      Swal.fire("Gagal Ekspor", err.message, "error");
+    }
+  }
+
+  function exportLayananToPDF() {
+    const data = getCleanLayananExportData();
+    if (!data) {
+      Swal.fire("Data Kosong", "Tidak ada data antrean/pelayanan untuk diunduh.", "warning");
+      return;
+    }
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'pt', 'a3');
+      doc.setFontSize(14);
+      doc.text(data.judulTabel, 40, 30);
+      doc.autoTable({
+        head: [data.headers],
+        body: data.rows,
+        startY: 45,
+        styles: { fontSize: 8, cellPadding: 3, halign: 'center' },
+        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+        theme: 'grid'
+      });
+      doc.save(`${data.filePrefix}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (err) {
+      Swal.fire("Gagal Ekspor", err.message, "error");
     }
   }
 
