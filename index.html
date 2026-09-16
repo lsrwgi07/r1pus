@@ -8683,7 +8683,7 @@ function onUserKecChange() {
     btn.disabled = true;
     btn.innerText = "Mendaftarkan...";
     
-    const payload = {
+    const payloadLayanan = {
       id_pus: idPus,
       tahun: parseInt(document.getElementById("reg_tahun").value, 10),
       bulan_rencana: parseInt(bulanRencana, 10),
@@ -8709,13 +8709,13 @@ function onUserKecChange() {
     };
 
     try {
-      const { error } = await db.from('pendaftaran_layanan_kb').insert([payload]);
+      const { error } = await db.from('pendaftaran_layanan_kb').insert([payloadLayanan]);
       if (error) throw error;
 
       Swal.fire({
         icon: 'success',
         title: 'Calon Akseptor Terdaftar!',
-        text: `PUS [${payload.nama_istri}] berhasil didaftarkan oleh Kader ${payload.nama_kader}.`,
+        text: `PUS [${payloadLayanan.nama_istri}] berhasil didaftarkan oleh Kader ${payloadLayanan.nama_kader}.`,
         timer: 1600,
         showConfirmButton: false
       });
@@ -8843,7 +8843,6 @@ function onUserKecChange() {
     });
   }
 
-  // Ekspor Excel dan PDF Pelayanan KB dengan Kolom Tambahan Kabupaten
   function getCleanLayananExportData() {
     if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) return null;
 
