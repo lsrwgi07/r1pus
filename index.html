@@ -3796,9 +3796,9 @@
   }
 
   async function handleFormSubmit(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  const errors = [];
+    const errors = [];
 
     // 1. Validasi Wilayah
     if (!document.getElementById("provinsi").value) errors.push("Provinsi belum dipilih");
@@ -3839,7 +3839,6 @@
       errors.push("Umur Anak Terkecil wajib diisi (karena anak > 0)");
     }
 
-    // Jika ada kolom yang belum lengkap, munculkan pop-up daftar kolomnya
     if (errors.length > 0) {
       const errorListHtml = errors.map(err => `<li style="margin-bottom: 4px;">${err}</li>`).join("");
       Swal.fire({
@@ -3855,300 +3854,228 @@
         `,
         confirmButtonColor: '#0284c7'
       });
-      return; // Batalkan proses simpan
+      return;
     }
 
-  const submitBtn = document.getElementById("submitBtn");
-  submitBtn.disabled = true;
-  submitBtn.innerText = "Menyimpan...";
+    const submitBtn = document.getElementById("submitBtn");
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Menyimpan...";
 
-  try {
-    const isEditMode = (document.getElementById("id_pus").value.trim() !== "");
-    let idPus = document.getElementById("id_pus").value.trim();
-    const thn = parseInt(document.getElementById("tahun_input").value, 10);
-    const nikIstriVal = document.getElementById("nik_istri").value.trim();
-
-    // Pengecualian NIK Dummy
-    const isDummyNik = (nikIstriVal === "9999999999999999");
-
-    if (!isEditMode && !isDummyNik) {
-      const { data: existingRows } = await db
-        .from('data_pus')
-        .select('*')
-        .eq('nik_istri', nikIstriVal)
-        .eq('tahun', thn);
-
-      if (existingRows && existingRows.length > 0) {
-        let isAllowedDuplicate = false;
-        for (let oldData of existingRows) {
-          let lastStatus = "";
-          const mKeys = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
-          for (let mk of mKeys) {
-            if (oldData[mk] && oldData[mk] !== "--KOSONG--" && oldData[mk] !== "-") {
-              lastStatus = oldData[mk].toUpperCase();
-              break;
-            }
-          }
-          if (lastStatus.includes("CERAI") || lastStatus.includes("MENINGGAL") || lastStatus.includes("PINDAH")) {
-            isAllowedDuplicate = true;
-            break;
-          }
-        }
-
-        if (!isAllowedDuplicate) {
-          submitBtn.disabled = false;
-          submitBtn.innerText = "SIMPAN DATA";
-          Swal.fire({
-            icon: 'warning',
-            title: 'NIK Istri Duplikat!',
-            html: `NIK Istri <b>${nikIstriVal}</b> sudah terdaftar aktif atas nama <b>${existingRows[0].nama_istri}</b> (Desa ${existingRows[0].desa_nama}) dengan ID PUS: <b>${existingRows[0].id_pus}</b>.`
-          });
-          return;
-        }
-      }
-    }
-
-    const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
-    const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
-    const kdKec  = document.getElementById("kode_kec").value.padStart(2, '0');
-    const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
-    const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
-    const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
-
-    // 1. Cek mode form dan deteksi jika ada perpindahan Dusun / RT saat edit (Mendukung old_id_pus maupun original_id_pus)
-    const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
     try {
-    const elOld = document.getElementById("original_id_pus") || document.getElementById("old_id_pus");
-    const originalIdPus = elOld ? elOld.value.trim() : "";
+      const originalIdPus = document.getElementById("old_id_pus")?.value.trim() || "";
+      let isEditMode = (document.getElementById("id_pus").value.trim() !== "");
+      let idPus = isEditMode ? document.getElementById("id_pus").value.trim() : null;
+      const thn = parseInt(document.getElementById("tahun_input").value, 10);
+      const nikIstriVal = nikIstri;
+      const isDummyNik = (nikIstriVal === "9999999999999999");
 
-    let isEditMode = (document.getElementById("id_pus").value.trim() !== "");
-    let idPus = isEditMode ? document.getElementById("id_pus").value.trim() : null;
-    const thn = parseInt(document.getElementById("tahun_input").value, 10);
-    const nikIstriVal = document.getElementById("nik_istri").value.trim();
+      if (!isEditMode && !isDummyNik) {
+        const { data: existingRows } = await db
+          .from('data_pus')
+          .select('*')
+          .eq('nik_istri', nikIstriVal)
+          .eq('tahun', thn);
 
-    // Pengecualian NIK Dummy
-    const isDummyNik = (nikIstriVal === "9999999999999999");
-
-    if (!isEditMode && !isDummyNik) {
-      const { data: existingRows } = await db
-        .from('data_pus')
-        .select('*')
-        .eq('nik_istri', nikIstriVal)
-        .eq('tahun', thn);
-
-      if (existingRows && existingRows.length > 0) {
-        let isAllowedDuplicate = false;
-        for (let oldData of existingRows) {
-          let lastStatus = "";
-          const mKeys = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
-          for (let mk of mKeys) {
-            if (oldData[mk] && oldData[mk] !== "--KOSONG--" && oldData[mk] !== "-") {
-              lastStatus = oldData[mk].toUpperCase();
+        if (existingRows && existingRows.length > 0) {
+          let isAllowedDuplicate = false;
+          for (let oldData of existingRows) {
+            let lastStatus = "";
+            const mKeys = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
+            for (let mk of mKeys) {
+              if (oldData[mk] && oldData[mk] !== "--KOSONG--" && oldData[mk] !== "-") {
+                lastStatus = oldData[mk].toUpperCase();
+                break;
+              }
+            }
+            if (lastStatus.includes("CERAI") || lastStatus.includes("MENINGGAL") || lastStatus.includes("PINDAH")) {
+              isAllowedDuplicate = true;
               break;
             }
           }
-          if (lastStatus.includes("CERAI") || lastStatus.includes("MENINGGAL") || lastStatus.includes("PINDAH")) {
-            isAllowedDuplicate = true;
-            break;
+
+          if (!isAllowedDuplicate) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "SIMPAN DATA";
+            Swal.fire({
+              icon: 'warning',
+              title: 'NIK Istri Duplikat!',
+              html: `NIK Istri <b>${nikIstriVal}</b> sudah terdaftar aktif atas nama <b>${existingRows[0].nama_istri}</b> (Desa ${existingRows[0].desa_nama}) dengan ID PUS: <b>${existingRows[0].id_pus}</b>.`
+            });
+            return;
           }
         }
+      }
 
-        if (!isAllowedDuplicate) {
-          submitBtn.disabled = false;
-          submitBtn.innerText = "SIMPAN DATA";
-          Swal.fire({
-            icon: 'warning',
-            title: 'NIK Istri Duplikat!',
-            html: `NIK Istri <b>${nikIstriVal}</b> sudah terdaftar aktif atas nama <b>${existingRows[0].nama_istri}</b> (Desa ${existingRows[0].desa_nama}) dengan ID PUS: <b>${existingRows[0].id_pus}</b>.`
-          });
-          return;
+      const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
+      const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
+      const kdKec  = document.getElementById("kode_kec").value.padStart(2, '0');
+      const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
+      const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
+      const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
+
+      const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+      let isRelocatedInSameVillage = false;
+
+      if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
+        isRelocatedInSameVillage = true;
+        isEditMode = false;
+        idPus = null;
+      }
+
+      const payload = {
+        tahun: thn,
+        timestamp: new Date().toISOString(),
+        provinsi_nama: document.getElementById("provinsi").options[document.getElementById("provinsi").selectedIndex].text,
+        kode_prov: kdProv,
+        kabupaten_nama: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex].text,
+        kode_kab: kdKab,
+        kecamatan_nama: document.getElementById("kecamatan").options[document.getElementById("kecamatan").selectedIndex].text,
+        kode_kec: kdKec,
+        desa_nama: document.getElementById("desa").options[document.getElementById("desa").selectedIndex].text,
+        kode_desa: kdDesa,
+        dusun_nama: document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex].text,
+        kode_dusun: kdDsn,
+        rt_nama: document.getElementById("rt").options[document.getElementById("rt").selectedIndex].text,
+        kode_rt: kdRt,
+        nama_suami: namaSuami.toUpperCase(),
+        nik_suami: nikSuami,
+        nama_istri: namaIstri.toUpperCase(),
+        nik_istri: nikIstriVal,
+        tgl_lahir_istri: tglLahir || null,
+        umur_istri: parseInt(document.getElementById("umur_istri").value || 0, 10),
+        jumlah_anak: jmlAnak,
+        umur_anak_terkecil: parseInt(umurAnakTerkecil || 0, 10),
+        peserta_jkn: jkn,
+        kb_jan: document.getElementById("kb_1").value,
+        kb_feb: document.getElementById("kb_2").value,
+        kb_mar: document.getElementById("kb_3").value,
+        kb_apr: document.getElementById("kb_4").value,
+        kb_mei: document.getElementById("kb_5").value,
+        kb_jun: document.getElementById("kb_6").value,
+        kb_jul: document.getElementById("kb_7").value,
+        kb_agu: document.getElementById("kb_8").value,
+        kb_sep: document.getElementById("kb_9").value,
+        kb_okt: document.getElementById("kb_10").value,
+        kb_nov: document.getElementById("kb_11").value,
+        kb_des: document.getElementById("kb_12").value
+      };
+
+      if (!isEditMode) {
+        delete payload.id_pus;
+        const { data: insertedData, error: insertErr } = await db
+          .from('data_pus')
+          .insert([payload])
+          .select('id_pus')
+          .single();
+
+        if (insertErr) throw insertErr;
+        idPus = insertedData.id_pus;
+        document.getElementById("id_pus").value = idPus;
+        document.getElementById("old_id_pus").value = idPus;
+      } else {
+        payload.id_pus = idPus;
+        const { error: updateErr } = await db
+          .from('data_pus')
+          .update(payload)
+          .eq('id_pus', idPus)
+          .eq('tahun', thn);
+
+        if (updateErr) throw updateErr;
+      }
+
+      if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
+        const { error: errDelOld } = await db
+          .from('data_pus')
+          .delete()
+          .eq('id_pus', originalIdPus)
+          .eq('tahun', thn);
+
+        if (errDelOld) console.warn("Gagal menghapus ID PUS lama:", errDelOld);
+      }
+
+      const isPindahDalamProv = document.getElementById("is_pindah_dalam_prov").value === "true";
+      let detectedBulanPindah = 0;
+      for (let m = 1; m <= 12; m++) {
+        const kbVal = (document.getElementById("kb_" + m).value || "").toUpperCase();
+        if (kbVal === "PINDAH") {
+          detectedBulanPindah = m;
+          break;
         }
       }
-    }
 
-    const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
-    const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
-    const kdKec  = document.getElementById("kode_kec").value.padStart(2, '0');
-    const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
-    const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
-    const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
+      if (isPindahDalamProv && detectedBulanPindah > 0) {
+        const kdKabTujuan = document.getElementById("pindah_kab_tujuan").value.padStart(2, '0');
+        const kdKecTujuan = document.getElementById("pindah_kec_tujuan").value.padStart(2, '0');
+        const kdDesaTujuan = document.getElementById("pindah_desa_tujuan").value.padStart(4, '0');
 
-    // 1. Cek perpindahan Dusun / RT saat edit
-    const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
-    let isRelocatedInSameVillage = false;
+        const mutasiPayload = {
+          tahun: thn,
+          bulan_pindah: detectedBulanPindah,
+          id_pus_asal: idPus,
+          kode_prov_asal: kdProv,
+          kode_kab_asal: kdKab,
+          kabupaten_asal: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex]?.text || "",
+          kode_kec_asal: kdKec,
+          kode_desa_asal: kdDesa,
+          desa_asal: document.getElementById("desa").options[document.getElementById("desa").selectedIndex]?.text || "",
+          kode_prov_tujuan: kdProv,
+          kode_kab_tujuan: kdKabTujuan,
+          kabupaten_tujuan: document.getElementById("pindah_kab_nama").value,
+          kode_kec_tujuan: kdKecTujuan,
+          kecamatan_tujuan: document.getElementById("pindah_kec_nama").value,
+          kode_desa_tujuan: kdDesaTujuan,
+          desa_tujuan: document.getElementById("pindah_desa_nama").value,
+          kode_dusun_tujuan: document.getElementById("pindah_dusun_tujuan").value || null,
+          dusun_tujuan: document.getElementById("pindah_dusun_nama").value || null,
+          nama_suami: namaSuami.toUpperCase(),
+          nik_suami: nikSuami,
+          nama_istri: namaIstri.toUpperCase(),
+          nik_istri: nikIstriVal,
+          payload: JSON.stringify(payload),
+          status: 'PENDING',
+          created_at: new Date().toISOString()
+        };
 
-    if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
-      isRelocatedInSameVillage = true;
-      isEditMode = false;
-      idPus = null; // Dikosongkan agar trigger database membuat nomor baru di RT tujuan
-    }
+        const { error: errMutasi } = await db.from('mutasi_pus').insert([mutasiPayload]);
+        if (errMutasi) {
+          console.error("Gagal simpan tiket mutasi:", errMutasi);
+          Swal.fire('Peringatan', 'Data PUS tersimpan, namun tiket mutasi gagal terkirim: ' + errMutasi.message, 'warning');
+        } else {
+          document.getElementById("is_pindah_dalam_prov").value = "false";
+        }
+      }
 
-    // 2. Susun Payload Data
-    const payload = {
-      tahun: thn,
-      timestamp: new Date().toISOString(),
-      provinsi_nama: document.getElementById("provinsi").options[document.getElementById("provinsi").selectedIndex].text,
-      kode_prov: kdProv,
-      kabupaten_nama: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex].text,
-      kode_kab: kdKab,
-      kecamatan_nama: document.getElementById("kecamatan").options[document.getElementById("kecamatan").selectedIndex].text,
-      kode_kec: kdKec,
-      desa_nama: document.getElementById("desa").options[document.getElementById("desa").selectedIndex].text,
-      kode_desa: kdDesa,
-      dusun_nama: document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex].text,
-      kode_dusun: kdDsn,
-      rt_nama: document.getElementById("rt").options[document.getElementById("rt").selectedIndex].text,
-      kode_rt: kdRt,
-      nama_suami: document.getElementById("nama_suami").value.trim().toUpperCase(),
-      nik_suami: document.getElementById("nik_suami").value.trim(),
-      nama_istri: document.getElementById("nama_istri").value.trim().toUpperCase(),
-      nik_istri: nikIstriVal,
-      tgl_lahir_istri: document.getElementById("tgl_lahir_istri").value || null,
-      umur_istri: parseInt(document.getElementById("umur_istri").value || 0, 10),
-      jumlah_anak: parseInt(document.getElementById("jumlah_anak").value || 0, 10),
-      umur_anak_terkecil: parseInt(document.getElementById("umur_anak_terkecil").value || 0, 10),
-      peserta_jkn: document.getElementById("peserta_jkn").value,
-      kb_jan: document.getElementById("kb_1").value,
-      kb_feb: document.getElementById("kb_2").value,
-      kb_mar: document.getElementById("kb_3").value,
-      kb_apr: document.getElementById("kb_4").value,
-      kb_mei: document.getElementById("kb_5").value,
-      kb_jun: document.getElementById("kb_6").value,
-      kb_jul: document.getElementById("kb_7").value,
-      kb_agu: document.getElementById("kb_8").value,
-      kb_sep: document.getElementById("kb_9").value,
-      kb_okt: document.getElementById("kb_10").value,
-      kb_nov: document.getElementById("kb_11").value,
-      kb_des: document.getElementById("kb_12").value
-    };
+      const tiketId = document.getElementById("id_mutasi_tiket").value;
+      if (tiketId) {
+        await db.from('mutasi_pus').update({ status: 'PROCESSED' }).eq('id', tiketId);
+        document.getElementById("id_mutasi_tiket").value = "";
+        if (typeof checkPendingMutasiNotifications === "function") {
+          checkPendingMutasiNotifications();
+        }
+      }
 
-    // 3. Eksekusi Simpan: Insert (Trigger Aktif) vs Update
-    if (!isEditMode) {
-      delete payload.id_pus; 
-      
-      const { data: insertedData, error: insertErr } = await db
-        .from('data_pus')
-        .insert([payload])
-        .select('id_pus')
-        .single();
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: `Data PUS ${idPus} berhasil ${isEditMode ? 'diperbarui' : 'disimpan'}!`,
+        timer: 1500,
+        showConfirmButton: false
+      });
 
-      if (insertErr) throw insertErr;
-
-      idPus = insertedData.id_pus;
       document.getElementById("id_pus").value = idPus;
-      if (document.getElementById("old_id_pus")) document.getElementById("old_id_pus").value = idPus;
-      if (document.getElementById("original_id_pus")) document.getElementById("original_id_pus").value = idPus;
+      document.getElementById("old_id_pus").value = idPus;
 
-    } else {
-      payload.id_pus = idPus;
-      const { error: updateErr } = await db
-        .from('data_pus')
-        .update(payload)
-        .eq('id_pus', idPus)
-        .eq('tahun', thn);
+      const namaDsnText = document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex]?.text || "";
+      initNavigationRT(kdKec, kdDesa, kdDsn, kdRt, thn, idPus, namaDsnText);
 
-      if (updateErr) throw updateErr;
+    } catch (err) {
+      console.error("Submit Error:", err);
+      Swal.fire('Gagal Menyimpan', err.message || 'Terjadi kesalahan sistem.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "SIMPAN DATA";
     }
-
-    // 4. Hapus ID PUS lama jika data dipindahkan Dusun/RT saat edit
-    if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
-      const { error: errDelOld } = await db
-        .from('data_pus')
-        .delete()
-        .eq('id_pus', originalIdPus)
-        .eq('tahun', thn);
-
-      if (errDelOld) {
-        console.warn("Gagal menghapus ID PUS lama:", errDelOld);
-      }
-    }
-    
-    const isPindahDalamProv = document.getElementById("is_pindah_dalam_prov").value === "true";
-    let detectedBulanPindah = 0;
-    
-    for (let m = 1; m <= 12; m++) {
-      const kbVal = (document.getElementById("kb_" + m).value || "").toUpperCase();
-      if (kbVal === "PINDAH") {
-        detectedBulanPindah = m;
-        break;
-      }
-    }
-
-    if (isPindahDalamProv && detectedBulanPindah > 0) {
-      const kdKabTujuan = document.getElementById("pindah_kab_tujuan").value.padStart(2, '0');
-      const kdKecTujuan = document.getElementById("pindah_kec_tujuan").value.padStart(2, '0');
-      const kdDesaTujuan = document.getElementById("pindah_desa_tujuan").value.padStart(4, '0');
-
-      const mutasiPayload = {
-        tahun: thn,
-        bulan_pindah: detectedBulanPindah,
-        id_pus_asal: idPus,
-        kode_prov_asal: String(kdProv).padStart(2, '0'),
-        kode_kab_asal: String(kdKab).padStart(2, '0'),
-        kabupaten_asal: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex]?.text || "",
-        kode_kec_asal: String(kdKec).padStart(2, '0'),
-        kode_desa_asal: String(kdDesa).padStart(4, '0'),
-        desa_asal: document.getElementById("desa").options[document.getElementById("desa").selectedIndex]?.text || "",
-        kode_prov_tujuan: String(kdProv).padStart(2, '0'),
-        kode_kab_tujuan: kdKabTujuan,
-        kabupaten_tujuan: document.getElementById("pindah_kab_nama").value,
-        kode_kec_tujuan: kdKecTujuan,
-        kecamatan_tujuan: document.getElementById("pindah_kec_nama").value,
-        kode_desa_tujuan: kdDesaTujuan,
-        desa_tujuan: document.getElementById("pindah_desa_nama").value,
-        kode_dusun_tujuan: document.getElementById("pindah_dusun_tujuan").value || null,
-        dusun_tujuan: document.getElementById("pindah_dusun_nama").value || null,
-        nama_suami: document.getElementById("nama_suami").value.trim().toUpperCase(),
-        nik_suami: document.getElementById("nik_suami").value.trim(),
-        nama_istri: document.getElementById("nama_istri").value.trim().toUpperCase(),
-        nik_istri: nikIstriVal,
-        payload: JSON.stringify(payload),
-        status: 'PENDING',
-        created_at: new Date().toISOString()
-      };
-      
-      const { error: errMutasi } = await db.from('mutasi_pus').insert([mutasiPayload]);
-      if (errMutasi) {
-        console.error("Gagal simpan tiket mutasi:", errMutasi);
-        Swal.fire('Peringatan', 'Data PUS tersimpan, namun tiket mutasi gagal terkirim: ' + errMutasi.message, 'warning');
-      } else {
-        document.getElementById("is_pindah_dalam_prov").value = "false";
-      }
-    }
-
-    const tiketId = document.getElementById("id_mutasi_tiket").value;
-    if (tiketId) {
-      await db.from('mutasi_pus').update({ status: 'PROCESSED' }).eq('id', tiketId);      
-      document.getElementById("id_mutasi_tiket").value = "";      
-      if (typeof checkPendingMutasiNotifications === "function") {
-        checkPendingMutasiNotifications();
-      }
-    }
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Berhasil',
-      text: `Data PUS ${idPus} berhasil ${isEditMode ? 'diperbarui' : 'disimpan'}!`,
-      timer: 1500,
-      showConfirmButton: false
-    });
-
-    // 1. Pastikan id_pus dan old_id_pus di form terisi dengan idPus yang baru dibuat/disimpan
-    document.getElementById("id_pus").value = idPus;
-    document.getElementById("old_id_pus").value = idPus;
-
-    // 2. JANGAN resetInputForm(), aktifkan Navigasi RT (Back/Next) untuk RT dan Dusun wilayah tersebut
-    const namaDsnText = document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex]?.text || "";
-    initNavigationRT(kdKec, kdDesa, kdDsn, kdRt, thn, idPus, namaDsnText);
-
-  } catch (err) {
-    console.error("Submit Error:", err);
-    Swal.fire('Gagal Menyimpan', err.message || 'Terjadi kesalahan sistem.', 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerText = "SIMPAN DATA";
-  }
-}    
+  }   
 
   // --- REKAPITULASI DENGAN FILTER TINGKAT ---
   async function fetchAllPusDataChunked(tahun, filterKab, filterKec, filterDesa, filterDusun) {
@@ -6430,27 +6357,6 @@ function onUserKabChange() {
   }
 }
 
-function onUserKecChange() {
-  const selKab = document.getElementById("user_kab_select");
-  const selKec = document.getElementById("user_kec_select");
-  const selDesa = document.getElementById("user_desa_select");
-  const roleVal = document.getElementById("user_role_select").value;
-
-  if (roleVal !== "User Desa") return;
-
-  const kdKab = isProvRole() ? (selKab ? selKab.value : "") : userKodeKab;
-  const kdKec = selKec ? selKec.value : "";
-
-  if (selDesa) {
-    if (!kdKec) {
-      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
-    } else {
-      selDesa.disabled = false;
-      populateDesaByKec(kdKec, "user_desa_select", kdKab);
-    }
-  }
-}
-
   function resetUserForm() {
     document.getElementById("formUserAccount").reset();
     document.getElementById("user_id").value = "";
@@ -8653,7 +8559,9 @@ function onUserKecChange() {
   }
 
   function resetFormPendaftaranLayanan() {
-    document.getElementById("formPendaftaranLayanan").reset();
+    const f = document.getElementById("formPendaftaranLayanan");
+    if (f) f.reset();
+
     document.getElementById("reg_id_pus").value = "";
     document.getElementById("reg_tahun").value = "";
     document.getElementById("reg_kode_prov").value = "";
@@ -8663,13 +8571,11 @@ function onUserKecChange() {
     document.getElementById("reg_kode_dusun").value = "";
     document.getElementById("reg_kode_rt").value = "";
     document.getElementById("reg_nik_suami").value = "";
-    document.getElementById("reg_info_wilayah").value = "";
-    document.getElementById("cariPusLayananInput").value = "";
-    document.getElementById("hasilPencarianPusLayanan").style.display = "none";
-    document.getElementById("hasilPencarianPusLayanan").innerHTML = "";
 
-    const jenisLayananEl = document.getElementById("reg_jenis_pelayanan");
-    if (jenisLayananEl) jenisLayananEl.value = "";
+    document.getElementById("reg_nama_istri").value = "";
+    document.getElementById("reg_nik_istri").value = "";
+    document.getElementById("reg_nama_suami").value = "";
+    document.getElementById("reg_info_wilayah").value = "";
 
     const selMetode = document.getElementById("reg_rencana_metode");
     if (selMetode) {
@@ -8678,213 +8584,192 @@ function onUserKecChange() {
       selMetode.style.backgroundColor = "#e9ecef";
     }
 
-    const currentMonth = new Date().getMonth() + 1;
-    const blnEl = document.getElementById("reg_bulan_rencana");
-    if (blnEl) blnEl.value = String(currentMonth);
+    const jenisAkseptor = document.getElementById("reg_jenis_akseptor");
+    if (jenisAkseptor) jenisAkseptor.value = "";
 
-    const kaderInput = document.getElementById("reg_nama_kader");
-    if (kaderInput) kaderInput.value = (userNamaLengkap || currentUser || "").toUpperCase();
+    const badge = document.getElementById("badgeJenisAkseptorDisplay");
+    if (badge) {
+      badge.innerText = "Menunggu pemilihan metode...";
+      badge.style.background = "#f8fafc";
+      badge.style.color = "#94a3b8";
+      badge.style.borderColor = "#e2e8f0";
+    }
+
+    const info = document.getElementById("infoRiwayatKb");
+    if (info) info.innerText = "";
+
+    const hasilBox = document.getElementById("hasilPencarianPusLayanan");
+    if (hasilBox) hasilBox.style.display = "none";
 
     pusTerpilihDataLayanan = null;
-    const infoText = document.getElementById("infoRiwayatKb");
-    if (infoText) infoText.innerText = "";
-    const jenisInput = document.getElementById("reg_jenis_akseptor");
-    if (jenisInput) jenisInput.value = "";
-
-    const badgeDisplay = document.getElementById("badgeJenisAkseptorDisplay");
-    if (badgeDisplay) {
-      badgeDisplay.innerText = "Menunggu pemilihan pelayanan & metode...";
-      badgeDisplay.style.background = "#f1f5f9";
-      badgeDisplay.style.color = "#64748b";
-      badgeDisplay.style.borderColor = "#cbd5e1";
-    }
   }
 
   async function handleSimpanPendaftaranLayanan(event) {
     event.preventDefault();
-    const errors = [];
 
-    const idPus = (document.getElementById("reg_id_pus")?.value || "").trim();
-    const namaIstri = (document.getElementById("reg_nama_istri")?.value || "").trim();
-    const nikIstri = (document.getElementById("reg_nik_istri")?.value || "").trim();
-
-    if (!idPus || !namaIstri || !nikIstri) errors.push("Calon Akseptor belum dipilih");
-    const jenisPelayanan = (document.getElementById("reg_jenis_pelayanan")?.value || "").trim();
-    if (!jenisPelayanan) errors.push("Jenis Pelayanan belum dipilih");
-    const rencanaMetode = (document.getElementById("reg_rencana_metode")?.value || "").trim();
-    const bulanRencana = (document.getElementById("reg_bulan_rencana")?.value || "").trim();
-    const namaKader = (document.getElementById("reg_nama_kader")?.value || "").trim();
-
-    if (!rencanaMetode) errors.push("Metode Kontrasepsi belum dipilih");
-    if (!bulanRencana) errors.push("Bulan Pelayanan belum dipilih");
-    if (!namaKader) errors.push("Nama Kader / Petugas Pendamping wajib diisi");
-
-    if (errors.length > 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Form Belum Lengkap!',
-        html: `<ul style="text-align:left; color:#dc2626;">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`
-      });
+    const idPus = document.getElementById("reg_id_pus").value;
+    if (!idPus) {
+      Swal.fire("Perhatian", "Silakan cari dan pilih data Calon Akseptor dari database terlebih dahulu!", "warning");
       return;
     }
 
     const btn = document.getElementById("btnSimpanPendaftaranLayanan");
     btn.disabled = true;
     btn.innerText = "Mendaftarkan...";
-    
-    const payloadLayanan = {
+
+    const payload = {
       id_pus: idPus,
       tahun: parseInt(document.getElementById("reg_tahun").value, 10),
-      bulan_rencana: parseInt(bulanRencana, 10),
-      tgl_rencana_layanan: document.getElementById("reg_tgl_rencana").value || null,
-      nama_istri: namaIstri,
-      nik_istri: nikIstri,
-      nama_suami: document.getElementById("reg_nama_suami").value,
-      nik_suami: document.getElementById("reg_nik_suami").value || null,
-      kode_prov: document.getElementById("reg_kode_prov").value || userKodeProv || "52",
+      kode_prov: document.getElementById("reg_kode_prov").value,
       kode_kab: document.getElementById("reg_kode_kab").value,
       kode_kec: document.getElementById("reg_kode_kec").value,
       kode_desa: document.getElementById("reg_kode_desa").value,
       kode_dusun: document.getElementById("reg_kode_dusun").value,
-      kode_rt: document.getElementById("reg_kode_rt").value || null,
-      jenis_pelayanan: jenisPelayanan,
-      rencana_metode: rencanaMetode,
+      kode_rt: document.getElementById("reg_kode_rt").value,
+      nama_istri: document.getElementById("reg_nama_istri").value,
+      nik_istri: document.getElementById("reg_nik_istri").value,
+      nama_suami: document.getElementById("reg_nama_suami").value,
+      nik_suami: document.getElementById("reg_nik_suami").value,
+      jenis_pelayanan: document.getElementById("reg_jenis_pelayanan").value,
+      rencana_metode: document.getElementById("reg_rencana_metode").value,
       jenis_akseptor: document.getElementById("reg_jenis_akseptor").value,
-      faskes_tujuan: document.getElementById("reg_faskes_tujuan").value.trim() || null,
-      nama_kader: namaKader.toUpperCase(),
+      bulan_rencana: parseInt(document.getElementById("reg_bulan_rencana").value, 10),
+      tgl_rencana_layanan: document.getElementById("reg_tgl_rencana").value || null,
+      faskes_tujuan: document.getElementById("reg_faskes_tujuan").value.trim().toUpperCase() || null,
+      nama_kader: document.getElementById("reg_nama_kader").value.trim().toUpperCase(),
       catatan: document.getElementById("reg_catatan").value.trim() || null,
       status: 'TERDAFTAR',
-      created_by: currentUser || "Kader"
+      created_at: new Date().toISOString()
     };
 
     try {
-      const { error } = await db.from('pendaftaran_layanan_kb').insert([payloadLayanan]);
+      const { error } = await db.from('pendaftaran_layanan_kb').insert([payload]);
       if (error) throw error;
 
       Swal.fire({
         icon: 'success',
-        title: 'Calon Akseptor Terdaftar!',
-        text: `PUS [${payloadLayanan.nama_istri}] berhasil didaftarkan oleh Kader ${payloadLayanan.nama_kader}.`,
-        timer: 1600,
+        title: 'Berhasil Didaftarkan!',
+        text: `Calon akseptor [${payload.nama_istri}] berhasil masuk ke antrean.`,
+        timer: 1500,
         showConfirmButton: false
       });
 
       resetFormPendaftaranLayanan();
       switchLayananTab('antrean');
       updateDashboardBadgeLayanan();
+
     } catch (err) {
-      Swal.fire("Gagal Mendaftar", err.message, "error");
+      console.error("Gagal mendaftarkan layanan:", err);
+      Swal.fire("Gagal", err.message || "Terjadi kesalahan saat menyimpan pendaftaran.", "error");
     } finally {
       btn.disabled = false;
       btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
     }
   }
 
-  function promptSelesaikanPelayanan(tiketId, idPus, tahun, bulanRencana, rencanaMetode, namaIstri) {
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    Swal.fire({
-      title: 'Konfirmasi Pelayanan KB',
+  async function promptSelesaikanPelayanan(idLayanan, idPus, tahun, bulanRencana, alkonRencana, namaIstri) {
+    const { value: formValues } = await Swal.fire({
+      title: 'Konfirmasi Realisasi Pelayanan',
       html: `
-        <div style="text-align:left; font-size:13px; color:#333;">
-          <p>Calon Akseptor: <b>${namaIstri}</b> (ID: ${idPus})</p>
-          <div style="margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:12px;">Metode Kontrasepsi yang Diberikan:</label>
-            <select id="swalMetodeRealisasi" class="swal2-input" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
-              <option value="IMPLAN" ${rencanaMetode === 'IMPLAN' ? 'selected' : ''}>IMPLAN</option>
-              <option value="IUD" ${rencanaMetode === 'IUD' ? 'selected' : ''}>IUD</option>
-              <option value="SUNTIK" ${rencanaMetode === 'SUNTIK' ? 'selected' : ''}>SUNTIK</option>
-              <option value="PIL" ${rencanaMetode === 'PIL' ? 'selected' : ''}>PIL</option>
-              <option value="KONDOM" ${rencanaMetode === 'KONDOM' ? 'selected' : ''}>KONDOM</option>
-              <option value="MOW" ${rencanaMetode === 'MOW' ? 'selected' : ''}>MOW</option>
-              <option value="MOP" ${rencanaMetode === 'MOP' ? 'selected' : ''}>MOP</option>
-            </select>
-          </div>
-          <div style="margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:12px;">Bulan Efektif Ber-KB:</label>
-            <select id="swalBulanRealisasi" class="swal2-input" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
-              ${monthNames.map((m, idx) => `<option value="${idx+1}" ${idx+1 === bulanRencana ? 'selected' : ''}>${m.toUpperCase()}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label style="font-weight:bold; font-size:12px;">Tanggal Realisasi Tindakan:</label>
-            <input type="date" id="swalTglRealisasi" class="swal2-input" value="${todayStr}" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
-          </div>
+        <div style="text-align:left; font-size:13px; color:#334155; margin-bottom:8px;">
+          Akseptor: <b>${namaIstri}</b> (ID: ${idPus})
         </div>
+        <div style="text-align:left; font-size:12px; margin-bottom:4px; font-weight:bold;">Metode yang Direalisasikan:</div>
+        <select id="swalMetodeRealisasi" class="swal2-input" style="margin:0 0 12px 0; width:100%; font-size:13px;">
+          <option value="IMPLAN" ${alkonRencana === 'IMPLAN' ? 'selected' : ''}>IMPLAN</option>
+          <option value="IUD" ${alkonRencana === 'IUD' ? 'selected' : ''}>IUD</option>
+          <option value="SUNTIK" ${alkonRencana === 'SUNTIK' ? 'selected' : ''}>SUNTIK</option>
+          <option value="PIL" ${alkonRencana === 'PIL' ? 'selected' : ''}>PIL</option>
+          <option value="KONDOM" ${alkonRencana === 'KONDOM' ? 'selected' : ''}>KONDOM</option>
+          <option value="MOW" ${alkonRencana === 'MOW' ? 'selected' : ''}>MOW</option>
+          <option value="MOP" ${alkonRencana === 'MOP' ? 'selected' : ''}>MOP</option>
+        </select>
+        <div style="text-align:left; font-size:12px; margin-bottom:4px; font-weight:bold;">Bulan Realisasi Pada Register PUS:</div>
+        <select id="swalBulanRealisasi" class="swal2-input" style="margin:0 0 12px 0; width:100%; font-size:13px;">
+          <option value="1" ${bulanRencana === 1 ? 'selected' : ''}>JANUARI</option>
+          <option value="2" ${bulanRencana === 2 ? 'selected' : ''}>FEBRUARI</option>
+          <option value="3" ${bulanRencana === 3 ? 'selected' : ''}>MARET</option>
+          <option value="4" ${bulanRencana === 4 ? 'selected' : ''}>APRIL</option>
+          <option value="5" ${bulanRencana === 5 ? 'selected' : ''}>MEI</option>
+          <option value="6" ${bulanRencana === 6 ? 'selected' : ''}>JUNI</option>
+          <option value="7" ${bulanRencana === 7 ? 'selected' : ''}>JULI</option>
+          <option value="8" ${bulanRencana === 8 ? 'selected' : ''}>AGUSTUS</option>
+          <option value="9" ${bulanRencana === 9 ? 'selected' : ''}>SEPTEMBER</option>
+          <option value="10" ${bulanRencana === 10 ? 'selected' : ''}>OKTOBER</option>
+          <option value="11" ${bulanRencana === 11 ? 'selected' : ''}>NOVEMBER</option>
+          <option value="12" ${bulanRencana === 12 ? 'selected' : ''}>DESEMBER</option>
+        </select>
+        <div style="text-align:left; font-size:12px; margin-bottom:4px; font-weight:bold;">Tanggal Tindakan:</div>
+        <input type="date" id="swalTglTindakan" class="swal2-input" style="margin:0; width:100%; font-size:13px;" value="${new Date().toISOString().split('T')[0]}">
       `,
       showCancelButton: true,
-      confirmButtonColor: '#16a34a',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: '✅ Simpan & Update Database',
+      confirmButtonText: '✅ Simpan & Sinkronkan',
       cancelButtonText: 'Batal',
-      preConfirm: () => ({
-        metode: document.getElementById("swalMetodeRealisasi").value,
-        bulan: parseInt(document.getElementById("swalBulanRealisasi").value, 10),
-        tgl: document.getElementById("swalTglRealisasi").value
-      })
-    }).then(async (res) => {
-      if (res.isConfirmed && res.value) {
-        await eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, res.value.bulan, res.value.metode, res.value.tgl);
+      confirmButtonColor: '#16a34a',
+      preConfirm: () => {
+        return {
+          metode: document.getElementById('swalMetodeRealisasi').value,
+          bulan: parseInt(document.getElementById('swalBulanRealisasi').value, 10),
+          tgl: document.getElementById('swalTglTindakan').value
+        };
       }
     });
-  }
 
-  async function eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, bulan, metode, tgl) {
-    const monthColumns = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
-    const targetCol = monthColumns[bulan - 1];
+    if (!formValues) return;
 
-    Swal.fire({ title: 'Memproses...', text: 'Menyimpan realisasi & memperbarui data PUS...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'Menyinkronkan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     try {
-      const { error: errTiket } = await db.from('pendaftaran_layanan_kb')
-        .update({ status: 'SELESAI', metode_realisasi: metode, tgl_layanan_realisasi: tgl, updated_at: new Date().toISOString() })
-        .eq('id', tiketId);
-
-      if (errTiket) throw errTiket;
-
-      const updateDataPus = {};
-      updateDataPus[targetCol] = metode;
-      updateDataPus['timestamp'] = new Date().toISOString();
-
+      const mCol = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"][formValues.bulan - 1];
+      
       const { error: errPus } = await db.from('data_pus')
-        .update(updateDataPus)
+        .update({ [mCol]: formValues.metode })
         .eq('id_pus', idPus)
         .eq('tahun', tahun);
 
       if (errPus) throw errPus;
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Pelayanan Berhasil Dicatat!',
-        text: `Status PUS ${idPus} otomatis diperbarui menjadi "${metode}" pada bulan ${monthColumns[bulan-1].replace('kb_', '').toUpperCase()}.`
-      });
+      const { error: errLayanan } = await db.from('pendaftaran_layanan_kb')
+        .update({
+          status: 'SELESAI',
+          metode_realisasi: formValues.metode,
+          tgl_tindakan: formValues.tgl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', idLayanan);
 
+      if (errLayanan) throw errLayanan;
+
+      Swal.fire('Selesai!', `Tindakan ${formValues.metode} berhasil dicatat dan disinkronkan ke register PUS bulan ke-${formValues.bulan}.`, 'success');
       loadAntreanLayananTable();
       updateDashboardBadgeLayanan();
+
     } catch (err) {
-      console.error("Gagal realisasi layanan:", err);
-      Swal.fire("Gagal", "Terjadi kesalahan: " + err.message, "error");
+      console.error("Gagal menyelesaikan layanan:", err);
+      Swal.fire('Gagal', err.message || 'Gagal menyinkronkan realisasi.', 'error');
     }
   }
 
-  function batalkanAntreanLayanan(tiketId, namaIstri) {
+  async function batalkanAntreanLayanan(idLayanan, namaIstri) {
     Swal.fire({
       title: 'Batalkan Pendaftaran?',
-      text: `Yakin ingin membatalkan antrean pelayanan untuk ${namaIstri}?`,
+      text: `Yakin ingin membatalkan pendaftaran layanan untuk ${namaIstri}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#64748b',
-      confirmButtonText: 'Ya, Batalkan'
+      confirmButtonText: 'Ya, Batalkan',
+      cancelButtonText: 'Tutup'
     }).then(async (res) => {
       if (res.isConfirmed) {
         const { error } = await db.from('pendaftaran_layanan_kb')
           .update({ status: 'BATAL', updated_at: new Date().toISOString() })
-          .eq('id', tiketId);
+          .eq('id', idLayanan);
 
-        if (!error) {
-          Swal.fire("Dibatalkan", "Pendaftaran telah dibatalkan.", "success");
+        if (error) {
+          Swal.fire('Gagal', error.message, 'error');
+        } else {
+          Swal.fire('Dibatalkan', 'Pendaftaran layanan telah dibatalkan.', 'success');
           loadAntreanLayananTable();
           updateDashboardBadgeLayanan();
         }
@@ -8892,136 +8777,95 @@ function onUserKecChange() {
     });
   }
 
-  function getCleanLayananExportData() {
-    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) return null;
-
-    const currentFilter = document.getElementById("filterStatusLayanan").value;
-    const isPelayananKb = (currentFilter === "SELESAI");
-    let judulTabel = isPelayananKb ? "TABEL PELAYANAN KB" : "TABEL CALON AKSEPTOR";
-    let filePrefix = isPelayananKb ? "TABEL_PELAYANAN_KB" : "TABEL_CALON_AKSEPTOR";
-    if (currentFilter === "BATAL") {
-      judulTabel = "TABEL CALON AKSEPTOR (BATAL)";
-      filePrefix = "TABEL_AKSEPTOR_BATAL";
-    }
-
-    const getNmKab = (kd) => (dataKabupaten[userKodeProv || "52"] && dataKabupaten[userKodeProv || "52"][kd]) ? dataKabupaten[userKodeProv || "52"][kd] : kd || "-";
-    const getNmKec = (kdKab, kdKec) => (dataKecamatan[kdKab] && dataKecamatan[kdKab][kdKec]) ? dataKecamatan[kdKab][kdKec] : kdKec || "-";
-    const getNmDesa = (kdKab, kdKec, kdDesa) => {
-      let k = (kdKab || "") + "_" + (kdKec || "");
-      return (dataDesa[k] && dataDesa[k][kdDesa]) ? dataDesa[k][kdDesa] : (dataDesa[kdKec] && dataDesa[kdKec][kdDesa] ? dataDesa[kdKec][kdDesa] : kdDesa || "-");
-    };
-    const getNmDsn = (kdKab, kdKec, kdDesa, kdDsn) => {
-      const dsnMap = getDusunList(kdKec, kdDesa, kdKab);
-      return (dsnMap && dsnMap[kdDsn]) ? dsnMap[kdDsn].nama : kdDsn || "-";
-    };
-
-    const headers = [
-      "NO.", "KABUPATEN/KOTA", "KECAMATAN", "DESA", "DUSUN", "RT",
-      "NAMA SUAMI", "NIK SUAMI", "NAMA ISTRI", "NIK ISTRI",
-      "JENIS ALKON", "JENIS AKSEPTOR",
-      isPelayananKb ? "TANGGAL PELAYANAN" : "TANGGAL RENCANA PELAYANAN"
-    ];
-
-    const rows = cachedAntreanLayanan.map((item, idx) => {
-      const alkon = isPelayananKb ? (item.metode_realisasi || item.rencana_metode || "-") : (item.rencana_metode || "-");
-      const tgl = isPelayananKb ? (item.tgl_layanan_realisasi || item.tgl_rencana_layanan || "-") : (item.tgl_rencana_layanan || "-");
-
-      return [
-        idx + 1,
-        getNmKab(item.kode_kab),
-        getNmKec(item.kode_kab, item.kode_kec),
-        getNmDesa(item.kode_kab, item.kode_kec, item.kode_desa),
-        getNmDsn(item.kode_kab, item.kode_kec, item.kode_desa, item.kode_dusun),
-        item.kode_rt || "-",
-        item.nama_suami || "-",
-        String(item.nik_suami || "-"),
-        item.nama_istri || "-",
-        String(item.nik_istri || "-"),
-        alkon,
-        item.jenis_akseptor || "-",
-        tgl
-      ];
-    });
-
-    return { judulTabel, filePrefix, headers, rows };
-  }
-
   function exportLayananToExcel() {
-    const data = getCleanLayananExportData();
-    if (!data) {
-      Swal.fire("Data Kosong", "Tidak ada data antrean/pelayanan untuk diunduh.", "warning");
+    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
+      Swal.fire("Perhatian", "Tidak ada data antrean layanan untuk diekspor!", "warning");
       return;
     }
 
-    try {
-      const wb = XLSX.utils.book_new();
-      const sheetContent = [
-        [data.judulTabel],
-        [`Tanggal Unduh: ${new Date().toLocaleDateString('id-ID')}`],
-        [],
-        data.headers,
-        ...data.rows
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(sheetContent);
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      for (let R = 3; R <= range.e.r; ++R) {
-        for (let C of [7, 9]) {
-          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-          if (ws[cellRef]) ws[cellRef].t = 's';
-        }
-      }
-      ws['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 8 }, { wch: 22 }, { wch: 20 }, { wch: 22 }, { wch: 20 }, { wch: 16 }, { wch: 22 }, { wch: 22 }];
-      XLSX.utils.book_append_sheet(wb, ws, data.filePrefix.substring(0, 31));
-      XLSX.writeFile(wb, `${data.filePrefix}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    } catch (err) {
-      Swal.fire("Gagal Ekspor", err.message, "error");
-    }
+    const headers = [
+      "No", "ID PUS", "Nama Istri", "NIK Istri", "Nama Suami", "NIK Suami",
+      "Kecamatan", "Desa", "Dusun", "RT", "Jenis Pelayanan", "Rencana Metode",
+      "Jenis Akseptor", "Tahun", "Bulan Rencana", "Tanggal Rencana",
+      "Tempat Layanan", "Nama Kader", "Catatan", "Status", "Metode Realisasi"
+    ];
+
+    const rows = cachedAntreanLayanan.map((item, idx) => [
+      idx + 1,
+      item.id_pus || "",
+      item.nama_istri || "",
+      String(item.nik_istri || ""),
+      item.nama_suami || "",
+      String(item.nik_suami || ""),
+      item.kode_kec || "",
+      item.kode_desa || "",
+      item.kode_dusun || "",
+      item.kode_rt || "",
+      item.jenis_pelayanan || "",
+      item.rencana_metode || "",
+      item.jenis_akseptor || "",
+      item.tahun || "",
+      item.bulan_rencana || "",
+      item.tgl_rencana_layanan || "",
+      item.faskes_tujuan || "",
+      item.nama_kader || "",
+      item.catatan || "",
+      item.status || "",
+      item.metode_realisasi || ""
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "LAYANAN_KB");
+    XLSX.writeFile(wb, `DATA_PELAYANAN_KB_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
   function exportLayananToPDF() {
-    const data = getCleanLayananExportData();
-    if (!data) {
-      Swal.fire("Data Kosong", "Tidak ada data antrean/pelayanan untuk diunduh.", "warning");
+    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
+      Swal.fire("Perhatian", "Tidak ada data antrean layanan untuk diekspor!", "warning");
       return;
     }
 
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a3');
-      doc.setFontSize(14);
-      doc.text(data.judulTabel, 40, 30);
-      doc.autoTable({
-        head: [data.headers],
-        body: data.rows,
-        startY: 45,
-        styles: { fontSize: 8, cellPadding: 3, halign: 'center' },
-        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
-        theme: 'grid'
-      });
-      doc.save(`${data.filePrefix}_${new Date().toISOString().slice(0, 10)}.pdf`);
-    } catch (err) {
-      Swal.fire("Gagal Ekspor", err.message, "error");
-    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape', 'pt', 'a4');
+    doc.setFontSize(14);
+    doc.text("LAPORAN PENDAFTARAN & PELAYANAN KB", 40, 35);
+
+    const bodyData = cachedAntreanLayanan.map((item, idx) => [
+      idx + 1,
+      `${item.nama_istri}\n(${item.id_pus})`,
+      item.rencana_metode,
+      `Bln ${item.bulan_rencana || 1} / ${item.tahun}`,
+      item.faskes_tujuan || "-",
+      item.nama_kader || "-",
+      item.status,
+      item.metode_realisasi || "-"
+    ]);
+
+    doc.autoTable({
+      head: [["NO", "CALON AKSEPTOR", "RENCANA METODE", "PERIODE", "FASKES", "KADER", "STATUS", "REALISASI"]],
+      body: bodyData,
+      startY: 50,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+      theme: 'grid'
+    });
+
+    doc.save(`PELAYANAN_KB_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   function exitApp() {
     Swal.fire({
-      title: 'Konfirmasi Tutup Aplikasi',
-      text: 'Apakah Anda yakin ingin menutup dan keluar dari Aplikasi Register PUS?',
+      title: 'Tutup Aplikasi?',
+      text: 'Anda akan keluar dari aplikasi ini.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Ya, Keluar Aplikasi',
-      cancelButtonText: 'Batal',
-      reverseButtons: true,
-      focusCancel: true
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Ya, Keluar'
     }).then((result) => {
       if (result.isConfirmed) {
         window.close();
-        setTimeout(() => {
-          window.location.href = "https://lsrwgi07.github.io/r1pus/?status=out";
-        }, 300);
       }
     });
   }
