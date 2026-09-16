@@ -3917,18 +3917,70 @@
 
     // 1. Cek mode form dan deteksi jika ada perpindahan Dusun / RT saat edit (Mendukung old_id_pus maupun original_id_pus)
     const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+    try {
     const elOld = document.getElementById("original_id_pus") || document.getElementById("old_id_pus");
     const originalIdPus = elOld ? elOld.value.trim() : "";
-    
-    let isRelocatedInSameVillage = false;
+
     let isEditMode = (document.getElementById("id_pus").value.trim() !== "");
     let idPus = isEditMode ? document.getElementById("id_pus").value.trim() : null;
+    const thn = parseInt(document.getElementById("tahun_input").value, 10);
+    const nikIstriVal = document.getElementById("nik_istri").value.trim();
 
-    // Jika sedang edit data TETAPI Dusun/RT diganti, anggap sebagai data baru di RT tujuan
+    // Pengecualian NIK Dummy
+    const isDummyNik = (nikIstriVal === "9999999999999999");
+
+    if (!isEditMode && !isDummyNik) {
+      const { data: existingRows } = await db
+        .from('data_pus')
+        .select('*')
+        .eq('nik_istri', nikIstriVal)
+        .eq('tahun', thn);
+
+      if (existingRows && existingRows.length > 0) {
+        let isAllowedDuplicate = false;
+        for (let oldData of existingRows) {
+          let lastStatus = "";
+          const mKeys = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
+          for (let mk of mKeys) {
+            if (oldData[mk] && oldData[mk] !== "--KOSONG--" && oldData[mk] !== "-") {
+              lastStatus = oldData[mk].toUpperCase();
+              break;
+            }
+          }
+          if (lastStatus.includes("CERAI") || lastStatus.includes("MENINGGAL") || lastStatus.includes("PINDAH")) {
+            isAllowedDuplicate = true;
+            break;
+          }
+        }
+
+        if (!isAllowedDuplicate) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "SIMPAN DATA";
+          Swal.fire({
+            icon: 'warning',
+            title: 'NIK Istri Duplikat!',
+            html: `NIK Istri <b>${nikIstriVal}</b> sudah terdaftar aktif atas nama <b>${existingRows[0].nama_istri}</b> (Desa ${existingRows[0].desa_nama}) dengan ID PUS: <b>${existingRows[0].id_pus}</b>.`
+          });
+          return;
+        }
+      }
+    }
+
+    const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
+    const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
+    const kdKec  = document.getElementById("kode_kec").value.padStart(2, '0');
+    const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
+    const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
+    const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
+
+    // 1. Cek perpindahan Dusun / RT saat edit
+    const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+    let isRelocatedInSameVillage = false;
+
     if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
       isRelocatedInSameVillage = true;
       isEditMode = false;
-      idPus = null; // Biarkan trigger database membuatkan nomor urut baru di RT tujuan
+      idPus = null; // Dikosongkan agar trigger database membuat nomor baru di RT tujuan
     }
 
     // 2. Susun Payload Data
@@ -3972,7 +4024,6 @@
 
     // 3. Eksekusi Simpan: Insert (Trigger Aktif) vs Update
     if (!isEditMode) {
-      // DATA BARU: id_pus tidak dikirim agar trigger database membuatkan nomor urut anti-bentrok
       delete payload.id_pus; 
       
       const { data: insertedData, error: insertErr } = await db
@@ -3983,14 +4034,12 @@
 
       if (insertErr) throw insertErr;
 
-      // Ambil ID PUS yang baru saja dibuatkan oleh trigger database
       idPus = insertedData.id_pus;
       document.getElementById("id_pus").value = idPus;
       if (document.getElementById("old_id_pus")) document.getElementById("old_id_pus").value = idPus;
       if (document.getElementById("original_id_pus")) document.getElementById("original_id_pus").value = idPus;
 
     } else {
-      // MODE EDIT: id_pus sudah ada, lakukan pembaruan data
       payload.id_pus = idPus;
       const { error: updateErr } = await db
         .from('data_pus')
@@ -8976,7 +9025,6 @@ function onUserKecChange() {
       }
     });
   }
-  
 </script>
 </body>
 </html>
