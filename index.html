@@ -3928,7 +3928,10 @@
       idPus = ""; 
     }
 
-    // Penomoran ID PUS Baru (jika data baru ATAU pindah RT/Dusun)
+    // 1. Tentukan prefix lengkap sampai tingkat RT
+    const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+
+    // 2. Generate nomor urut baru khusus RT tersebut (mulai 001)
     if (!idPus) {
       const { data: matchedRows } = await db
         .from('data_pus')
@@ -3940,9 +3943,10 @@
       if (matchedRows && matchedRows.length > 0) {
         matchedRows.forEach(row => {
           const cleanId = String(row.id_pus || "").trim();
-          const matches = cleanId.match(/\d+$/);
-          if (matches) {
-            const seqPart = parseInt(matches[0], 10);
+          // Ambil 3 digit terakhir khusus data di RT ini
+          if (cleanId.length >= 3) {
+            const lastThree = cleanId.slice(-3);
+            const seqPart = parseInt(lastThree, 10);
             if (!isNaN(seqPart) && seqPart > maxSeq) {
               maxSeq = seqPart;
             }
@@ -3950,6 +3954,7 @@
         });
       }
 
+      // Jika RT baru / belum ada data, maxSeq = 0 -> nextNum = 1 -> '001'
       const nextNum = maxSeq + 1;
       idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
       document.getElementById("id_pus").value = idPus;
