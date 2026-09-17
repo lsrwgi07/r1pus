@@ -4008,12 +4008,17 @@
         idPus = ""; // Kosongkan agar membentuk ID baru di RT tujuan
       }
 
-      // Generate nomor urut baru jika data baru atau RT/Dusun berubah
+      // Generate nomor urut baru mulai 001 di RT tujuan jika idPus kosong
       if (!idPus) {
         const { data: matchedRows, error: errSearchSeq } = await db
           .from('data_pus')
           .select('id_pus')
-          .ilike('id_pus', `${expectedPrefix}%`)
+          .eq('kode_prov', kdProv)
+          .eq('kode_kab', kdKab)
+          .eq('kode_kec', kdKec)
+          .eq('kode_desa', kdDesa)
+          .eq('kode_dusun', kdDsn)
+          .eq('kode_rt', kdRt)
           .eq('tahun', thn);
 
         if (errSearchSeq) throw errSearchSeq;
@@ -4022,9 +4027,9 @@
         if (matchedRows && matchedRows.length > 0) {
           matchedRows.forEach(row => {
             const cleanId = String(row.id_pus || "").trim();
-            if (cleanId.length >= 3) {
-              const lastThree = cleanId.slice(-3);
-              const seqPart = parseInt(lastThree, 10);
+            if (cleanId.startsWith(expectedPrefix)) {
+              const seqStr = cleanId.slice(expectedPrefix.length).trim();
+              const seqPart = parseInt(seqStr, 10);
               if (!isNaN(seqPart) && seqPart > maxSeq) {
                 maxSeq = seqPart;
               }
@@ -7480,7 +7485,7 @@ function onUserKabChange() {
     XLSX.writeFile(wb, `DAFTAR_NIK_GANDA_DILEWATI_${new Date().getTime()}.xlsx`);
   }
 
-  // Logika upload Excel dengan pencatatan identitas NIK ganda
+  // Logika upload Excel dengan pencatatan identitas NIK ganda  
   async function handleUploadExcelFile(event) {
     event.preventDefault();
 
@@ -7488,7 +7493,7 @@ function onUserKabChange() {
     if (detailsEl) detailsEl.removeAttribute("open");
 
     const fileInput = document.getElementById("excelFileInput");
-    const file = fileInput.files[0];
+    const file = fileInput ? fileInput.files[0] : null;
     const targetTahun = parseInt(document.getElementById("import_tahun_select").value, 10);
     const btn = document.getElementById("btnProsesUpload");
 
@@ -7500,16 +7505,28 @@ function onUserKabChange() {
     btn.disabled = true;
     btn.innerText = "Membaca Database & File...";
 
-    // 1. Ambil NIK Istri yang SUDAH ADA di Supabase untuk tahun ini
-    const { data: dbExistingRows } = await db
+    // 1. Ambil data NIK Istri dan ID PUS yang sudah ada di Supabase untuk tahun ini
+    const { data: dbExistingRows, error: errFetchExisting } = await db
       .from('data_pus')
-      .select('nik_istri, nama_istri, kb_jan, kb_feb, kb_mar, kb_apr, kb_mei, kb_jun, kb_jul, kb_agu, kb_sep, kb_okt, kb_nov, kb_des')
+      .select('id_pus, nik_istri, nama_istri, kode_prov, kode_kab, kode_kec, kode_desa, kode_dusun, kode_rt, kb_jan, kb_feb, kb_mar, kb_apr, kb_mei, kb_jun, kb_jul, kb_agu, kb_sep, kb_okt, kb_nov, kb_des')
       .eq('tahun', targetTahun);
 
+    if (errFetchExisting) {
+      btn.disabled = false;
+      btn.innerText = "🚀 UPLOAD KE DATABASE";
+      Swal.fire("Error Database", "Gagal membaca data existing: " + errFetchExisting.message, "error");
+      return;
+    }
+
     const dbActiveIstriNiks = new Map();
-    if (dbExistingRows) {
+    const rtSequenceTracker = new Map();
+
+    // Petakan data existing di database: NIK aktif & sequence tertinggi per RT
+    if (dbExistingRows && dbExistingRows.length > 0) {
       const mKeys = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
+      
       dbExistingRows.forEach(row => {
+        // A. Cek NIK Istri Aktif
         let nik = String(row.nik_istri || "").trim();
         if (nik && nik !== "9999999999999999") {
           let isMutasi = false;
@@ -7524,6 +7541,26 @@ function onUserKabChange() {
           }
           if (!isMutasi) {
             dbActiveIstriNiks.set(nik, row.nama_istri || "");
+          }
+        }
+
+        // B. Ambil nomor urut tertinggi yang sudah ada di database per RT
+        const kdProv = String(row.kode_prov || "").padStart(2, '0');
+        const kdKab  = String(row.kode_kab || "").padStart(2, '0');
+        const kdKec  = String(row.kode_kec || "").padStart(2, '0');
+        const kdDesa = String(row.kode_desa || "").padStart(4, '0');
+        const kdDsn  = String(row.kode_dusun || "").padStart(4, '0');
+        const kdRt   = String(row.kode_rt || "").padStart(3, '0');
+        const rtKey  = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+
+        const cleanId = String(row.id_pus || "").trim();
+        if (cleanId.startsWith(rtKey) && cleanId.length >= 3) {
+          const seqNum = parseInt(cleanId.slice(-3), 10);
+          if (!isNaN(seqNum)) {
+            const currentMax = rtSequenceTracker.get(rtKey) || 0;
+            if (seqNum > currentMax) {
+              rtSequenceTracker.set(rtKey, seqNum);
+            }
           }
         }
       });
@@ -7550,10 +7587,11 @@ function onUserKabChange() {
 
         const payloadList = [];
         const seenIstriNiksInExcel = new Map();
-        lastSkippedRowsData = []; // Reset penampung data duplikat
+        lastSkippedRowsData = [];
 
         dataRows.forEach((r, idx) => {
-          if (!r[15] && !r[17]) return; // Lewati jika nama suami & istri kosong
+          // Lewati jika nama suami & nama istri dua-duanya kosong
+          if (!r[15] && !r[17]) return;
 
           let rawNikIstri = String(r[18] || "").replace(/[^0-9]/g, "").trim();
           let nikIstri = (rawNikIstri.length === 16) ? rawNikIstri : "9999999999999999";
@@ -7561,6 +7599,7 @@ function onUserKabChange() {
           let rawNikSuami = String(r[16] || "").replace(/[^0-9]/g, "").trim();
           let nikSuami = (rawNikSuami.length === 16) ? rawNikSuami : "9999999999999999";
 
+          // Cek mutasi pada data file Excel
           let isMutasi = false;
           for (let col = 24; col <= 35; col++) {
             let val = String(r[col] || "").toUpperCase();
@@ -7578,14 +7617,14 @@ function onUserKabChange() {
           let namaIstriVal = String(r[17] || "").toUpperCase().trim();
           let namaSuamiVal = String(r[15] || "").toUpperCase().trim();
 
-          // Evaluasi Duplikat jika bukan mode edit (ID_PUS kosong)
+          // Evaluasi Duplikat NIK Istri
           if (!idPus && !isDummy && !isMutasi && nikIstri) {
             // Cek apakah sudah terdaftar aktif di database
             if (dbActiveIstriNiks.has(nikIstri)) {
               lastSkippedRowsData.push({
                 alasan: "Sudah Terdaftar Aktif di Database",
                 barisKe: idx + 2,
-                idPus: r[0],
+                idPus: r[0] || "-",
                 nikIstri: nikIstri,
                 namaIstri: namaIstriVal,
                 nikSuami: nikSuami,
@@ -7603,7 +7642,7 @@ function onUserKabChange() {
               lastSkippedRowsData.push({
                 alasan: "NIK Ganda di Dalam File Excel",
                 barisKe: idx + 2,
-                idPus: r[0],
+                idPus: r[0] || "-",
                 nikIstri: nikIstri,
                 namaIstri: namaIstriVal,
                 nikSuami: nikSuami,
@@ -7618,34 +7657,38 @@ function onUserKabChange() {
             seenIstriNiksInExcel.set(nikIstri, namaIstriVal);
           }
 
-          let kdProv = String(r[4] || "").trim().padStart(2, '0');
-          let kdKab  = String(r[6] || "").trim().padStart(2, '0');
+          // Format Kode Wilayah Baku
+          let kdProv = String(r[4] || userKodeProv || "52").trim().padStart(2, '0');
+          let kdKab  = String(r[6] || userKodeKab || "").trim().padStart(2, '0');
           let kdKec  = String(r[8] || "").trim().padStart(2, '0');
           let kdDesa = String(r[10] || "").trim().padStart(4, '0');
           let kdDsn  = String(r[12] || "").trim().padStart(4, '0');
           let kdRt   = String(r[14] || "").trim().padStart(3, '0');
           
+          const rtKey = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+
+          // GENERATE ID PUS: Selalu mulai dari urutan 001 di setiap RT
           if (!idPus) {
-            idPus = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}${String(idx + 1).padStart(3, '0')}`;
+            let curSeq = rtSequenceTracker.get(rtKey) || 0;
+            curSeq += 1;
+            rtSequenceTracker.set(rtKey, curSeq);
+            idPus = `${rtKey}${String(curSeq).padStart(3, '0')}`;
           }
 
-          // Gantikan blok pembacaan kb_jan s.d kb_des pada baris dataRows.forEach:
+          // Sanitasi status KB bulanan (hanya muncul 1 kali mutasi, bulan setelahnya dikosongkan)
           let firstMutationIndex = -1;
           const rawMonths = [];
-
-          // 1. Ambil mentah data 12 bulan (kolom 24 s.d 35)
           for (let col = 24; col <= 35; col++) {
             rawMonths.push(String(r[col] || "").trim().toUpperCase());
           }
 
-          // 2. Sanitasi: Ambil kemunculan mutasi pertama saja, sisanya kosongkan
           const cleanMonths = rawMonths.map((val, mIdx) => {
             if (firstMutationIndex !== -1) {
-              return ""; // Kosongkan bulan-bulan setelah bulan pertama mutasi
+              return "";
             }
             if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
               firstMutationIndex = mIdx;
-              return val; // Pertahankan hanya pada bulan kejadian
+              return val;
             }
             return val;
           });
@@ -7653,7 +7696,28 @@ function onUserKabChange() {
           payloadList.push({
             id_pus: idPus,
             tahun: parseInt(r[1] || targetTahun, 10),
-            // ... kolom lainnya tetap ...
+            timestamp: new Date().toISOString(),
+            provinsi_nama: String(r[3] || "NUSA TENGGARA BARAT").toUpperCase().trim(),
+            kode_prov: kdProv,
+            kabupaten_nama: String(r[5] || "").toUpperCase().trim(),
+            kode_kab: kdKab,
+            kecamatan_nama: String(r[7] || "").toUpperCase().trim(),
+            kode_kec: kdKec,
+            desa_nama: String(r[9] || "").toUpperCase().trim(),
+            kode_desa: kdDesa,
+            dusun_nama: String(r[11] || "").toUpperCase().trim(),
+            kode_dusun: kdDsn,
+            rt_nama: String(r[13] || ("RT " + kdRt)).toUpperCase().trim(),
+            kode_rt: kdRt,
+            nama_suami: namaSuamiVal,
+            nik_suami: nikSuami,
+            nama_istri: namaIstriVal,
+            nik_istri: nikIstri,
+            tgl_lahir_istri: formatExcelDate(r[19]),
+            umur_istri: parseInt(r[20] || 0, 10),
+            jumlah_anak: parseInt(r[21] || 0, 10),
+            umur_anak_terkecil: parseInt(r[22] || 0, 10),
+            peserta_jkn: String(r[23] || "TIDAK MEMILIKI").toUpperCase().trim(),
             kb_jan: cleanMonths[0],
             kb_feb: cleanMonths[1],
             kb_mar: cleanMonths[2],
@@ -7669,7 +7733,7 @@ function onUserKabChange() {
           });
         });
 
-        // Tampilkan Modal Hasil jika ada data yang dilewati
+        // Template HTML pesan jika ada data yang dilewati
         const buildSkippedHtml = () => {
           if (lastSkippedRowsData.length === 0) return "";
 
@@ -7704,13 +7768,21 @@ function onUserKabChange() {
           return;
         }
 
-        const { error: upsertError } = await db.from('data_pus').upsert(payloadList, { onConflict: 'id_pus,tahun' });
-        if (upsertError) throw upsertError;
+        // Upload massal bertahap per 500 baris agar tidak membebani koneksi Supabase
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < payloadList.length; i += CHUNK_SIZE) {
+          const chunk = payloadList.slice(i, i + CHUNK_SIZE);
+          const { error: upsertError } = await db
+            .from('data_pus')
+            .upsert(chunk, { onConflict: 'id_pus,tahun' });
+
+          if (upsertError) throw upsertError;
+        }
 
         Swal.fire({
           icon: 'success',
           title: 'Upload Berhasil!',
-          html: `Sebanyak <b>${payloadList.length}</b> data PUS berhasil disinkronkan ke Supabase.<br>
+          html: `Sebanyak <b>${payloadList.length}</b> data PUS berhasil disinkronkan ke database.<br>
                  ${lastSkippedRowsData.length > 0 ? `<span style="color:#e11d48; font-weight:bold;">(Dilewati: ${lastSkippedRowsData.length} data duplikat)</span>` : ''}
                  ${buildSkippedHtml()}`,
           showConfirmButton: true
@@ -7718,6 +7790,7 @@ function onUserKabChange() {
         closeImportExcelModal();
 
       } catch (err) {
+        console.error("Upload Excel Error:", err);
         Swal.fire("Format Error", "Gagal memproses file Excel: " + err.message, "error");
       } finally {
         btn.disabled = false;
