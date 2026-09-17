@@ -3991,6 +3991,53 @@
         }
       }
 
+      // 1. Ambil ID lama dari hidden input
+      const originalIdPus = (document.getElementById("original_id_pus")?.value || document.getElementById("old_id_pus")?.value || "").trim();
+      let idPus = document.getElementById("id_pus").value.trim();
+      const isEditMode = (idPus !== "");
+
+      // 2. Susun Prefix Wilayah Baku
+      const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
+      const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
+      const kdKec  = document.getElementById("kode_kec").value.padStart(2, '0');
+      const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
+      const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
+      const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
+
+      const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
+      let isRelocatedInSameVillage = false;
+
+      // 3. Deteksi relokasi Dusun/RT pada mode edit
+      if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
+        isRelocatedInSameVillage = true;
+        idPus = ""; // Kosongkan agar membentuk ID baru di RT tujuan
+      }
+
+      // 4. Generate Nomor Urut Otomatis jika idPus kosong
+      if (!idPus) {
+        const { data: matchedRows } = await db
+          .from('data_pus')
+          .select('id_pus')
+          .ilike('id_pus', `${expectedPrefix}%`)
+          .eq('tahun', thn);
+
+        let maxSeq = 0;
+        if (matchedRows && matchedRows.length > 0) {
+          matchedRows.forEach(row => {
+            const cleanId = String(row.id_pus || "").trim();
+            if (cleanId.length >= 3) {
+              const lastThree = cleanId.slice(-3);
+              const seqPart = parseInt(lastThree, 10);
+              if (!isNaN(seqPart) && seqPart > maxSeq) maxSeq = seqPart;
+            }
+          });
+        }
+
+        const nextNum = maxSeq + 1;
+        idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
+        document.getElementById("id_pus").value = idPus;
+      }
+
       // Format komponen wilayah
       const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
       const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
@@ -4077,6 +4124,13 @@
 
       const { error: upsertErr } = await db.from('data_pus').upsert([payload], { onConflict: 'id_pus,tahun' });
       if (upsertErr) throw upsertErr;
+
+      if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
+        await db.from('data_pus')
+          .delete()
+          .eq('id_pus', originalIdPus)
+          .eq('tahun', thn);
+      }
 
       // Hapus data ID lama jika nomor PUS berubah akibat pindah RT/Dusun
       if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
