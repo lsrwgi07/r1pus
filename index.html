@@ -4132,16 +4132,6 @@
           .eq('tahun', thn);
       }
 
-      // Hapus data ID lama jika nomor PUS berubah akibat pindah RT/Dusun
-      if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
-        const { error: errDelOld } = await db.from('data_pus')
-          .delete()
-          .eq('id_pus', originalIdPus)
-          .eq('tahun', thn);
-        
-        if (errDelOld) console.warn("Gagal menghapus ID PUS lama:", errDelOld);
-      }
-
       // Mutasi Pindah (Skala Kabupaten)
       const isPindahDalamKab = document.getElementById("is_pindah_dalam_kab").value === "true";
       let detectedBulanPindah = 0;
