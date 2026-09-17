@@ -3946,7 +3946,7 @@
     submitBtn.innerText = "Menyimpan...";
 
     try {
-      const originalIdPus = (document.getElementById("original_id_pus")?.value || document.getElementById("id_pus")?.value || "").trim();
+      const originalIdPus = (document.getElementById("original_id_pus")?.value || document.getElementById("old_id_pus")?.value || document.getElementById("id_pus")?.value || "").trim();
       let idPus = document.getElementById("id_pus").value.trim();
       const isEditMode = (idPus !== "");
       const thn = parseInt(document.getElementById("tahun_input").value, 10);
@@ -3991,53 +3991,6 @@
         }
       }
 
-      // 1. Ambil ID lama dari hidden input
-      const originalIdPus = (document.getElementById("original_id_pus")?.value || document.getElementById("old_id_pus")?.value || "").trim();
-      let idPus = document.getElementById("id_pus").value.trim();
-      const isEditMode = (idPus !== "");
-
-      // 2. Susun Prefix Wilayah Baku
-      const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
-      const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
-      const kdKec  = document.getElementById("kode_kec").value.padStart(2, '0');
-      const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
-      const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
-      const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
-
-      const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
-      let isRelocatedInSameVillage = false;
-
-      // 3. Deteksi relokasi Dusun/RT pada mode edit
-      if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
-        isRelocatedInSameVillage = true;
-        idPus = ""; // Kosongkan agar membentuk ID baru di RT tujuan
-      }
-
-      // 4. Generate Nomor Urut Otomatis jika idPus kosong
-      if (!idPus) {
-        const { data: matchedRows } = await db
-          .from('data_pus')
-          .select('id_pus')
-          .ilike('id_pus', `${expectedPrefix}%`)
-          .eq('tahun', thn);
-
-        let maxSeq = 0;
-        if (matchedRows && matchedRows.length > 0) {
-          matchedRows.forEach(row => {
-            const cleanId = String(row.id_pus || "").trim();
-            if (cleanId.length >= 3) {
-              const lastThree = cleanId.slice(-3);
-              const seqPart = parseInt(lastThree, 10);
-              if (!isNaN(seqPart) && seqPart > maxSeq) maxSeq = seqPart;
-            }
-          });
-        }
-
-        const nextNum = maxSeq + 1;
-        idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
-        document.getElementById("id_pus").value = idPus;
-      }
-
       // Format komponen wilayah
       const kdProv = document.getElementById("kode_prov").value.padStart(2, '0');
       const kdKab  = document.getElementById("kode_kab").value.padStart(2, '0');
@@ -4045,14 +3998,14 @@
       const kdDesa = document.getElementById("kode_desa").value.padStart(4, '0');
       const kdDsn  = document.getElementById("kode_dusun").value.padStart(4, '0');
       const kdRt   = document.getElementById("kode_rt").value.padStart(3, '0');
-      
+
       const expectedPrefix = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
       let isRelocatedInSameVillage = false;
 
-      // Cek apakah data lama dipindah RT/Dusun
+      // Cek apakah data lama dipindah RT/Dusun pada mode edit
       if (isEditMode && originalIdPus && !originalIdPus.startsWith(expectedPrefix)) {
         isRelocatedInSameVillage = true;
-        idPus = ""; // Kosongkan agar membentuk ID baru sesuai RT tujuan
+        idPus = ""; // Kosongkan agar membentuk ID baru di RT tujuan
       }
 
       // Generate nomor urut baru jika data baru atau RT/Dusun berubah
@@ -4081,6 +4034,7 @@
 
         const nextNum = maxSeq + 1;
         idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
+        document.getElementById("id_pus").value = idPus;
       }
 
       const payload = {
@@ -4125,6 +4079,7 @@
       const { error: upsertErr } = await db.from('data_pus').upsert([payload], { onConflict: 'id_pus,tahun' });
       if (upsertErr) throw upsertErr;
 
+      // Hapus ID PUS lama jika akseptor dipindahkan ke RT/Dusun lain
       if (isRelocatedInSameVillage && originalIdPus && originalIdPus !== idPus) {
         await db.from('data_pus')
           .delete()
@@ -4132,8 +4087,8 @@
           .eq('tahun', thn);
       }
 
-      // Mutasi Pindah (Skala Kabupaten)
-      const isPindahDalamKab = document.getElementById("is_pindah_dalam_kab").value === "true";
+      // Mutasi Pindah (Skala Provinsi)
+      const isPindahDalamProv = document.getElementById("is_pindah_dalam_prov").value === "true";
       let detectedBulanPindah = 0;
       
       for (let m = 1; m <= 12; m++) {
@@ -4144,7 +4099,8 @@
         }
       }
 
-      if (isPindahDalamKab && detectedBulanPindah > 0) {
+      if (isPindahDalamProv && detectedBulanPindah > 0) {
+        const kdKabTujuan = document.getElementById("pindah_kab_tujuan").value.padStart(2, '0');
         const kdKecTujuan = document.getElementById("pindah_kec_tujuan").value.padStart(2, '0');
         const kdDesaTujuan = document.getElementById("pindah_desa_tujuan").value.padStart(4, '0');
 
@@ -4152,10 +4108,17 @@
           tahun: thn,
           bulan_pindah: detectedBulanPindah,
           id_pus_asal: idPus,
+          kode_prov_asal: kdProv,
+          kode_kab_asal: kdKab,
+          kabupaten_asal: document.getElementById("kabupaten").options[document.getElementById("kabupaten").selectedIndex]?.text || "",
           kode_kec_asal: kdKec,
           kode_desa_asal: kdDesa,
           desa_asal: document.getElementById("desa").options[document.getElementById("desa").selectedIndex]?.text || "",
+          kode_prov_tujuan: kdProv,
+          kode_kab_tujuan: kdKabTujuan,
+          kabupaten_tujuan: document.getElementById("pindah_kab_nama").value,
           kode_kec_tujuan: kdKecTujuan,
+          kecamatan_tujuan: document.getElementById("pindah_kec_nama").value,
           kode_desa_tujuan: kdDesaTujuan,
           desa_tujuan: document.getElementById("pindah_desa_nama").value,        
           kode_dusun_tujuan: document.getElementById("pindah_dusun_tujuan").value || null,
@@ -4174,7 +4137,7 @@
           console.error("Gagal simpan tiket mutasi:", errMutasi);
           Swal.fire('Peringatan', 'Data PUS tersimpan, namun tiket mutasi gagal terkirim: ' + errMutasi.message, 'warning');
         } else {
-          document.getElementById("is_pindah_dalam_kab").value = "false";
+          document.getElementById("is_pindah_dalam_prov").value = "false";
         }
       }
 
@@ -4197,11 +4160,11 @@
 
       // Update state field input form
       document.getElementById("id_pus").value = idPus;
-      document.getElementById("original_id_pus").value = idPus;
+      document.getElementById("old_id_pus").value = idPus;
 
       // Tampilkan tombol Hapus Data
       const btnDel = document.getElementById("btnDeletePus");
-      if (btnDel) btnDel.style.display = "flex";
+      if (delBtn = document.getElementById("btnDeletePus")) delBtn.style.display = "block";
 
       // Aktifkan navigasi RT
       const namaDsnText = document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex]?.text || "";
