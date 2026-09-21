@@ -3280,18 +3280,27 @@
 
   // --- LOGIC SEARCH BERTINGKAT ---
   function onSearchKecamatanChange() {
+    // Ambil kode kabupaten aktif (dari dropdown jika Admin Prov, atau dari session login)
+    const kab = isProvRole() ? document.getElementById("searchKabupaten").value : userKodeKab;
     const kec = document.getElementById("searchKecamatan").value;
-    populateDesaByKec(kec, "searchDesa");
+
+    // Teruskan 'kab' sebagai parameter ke-3 agar cocok dengan composite key dataDesa
+    populateDesaByKec(kec, "searchDesa", kab);
+
     document.getElementById("searchDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
     document.getElementById("searchRt").innerHTML = '<option value="">-- PILIH RT --</option>';
   }
 
   function onSearchDesaChange() {
+    const kab = isProvRole() ? document.getElementById("searchKabupaten").value : userKodeKab;
     const kec = document.getElementById("searchKecamatan").value;
     const desa = document.getElementById("searchDesa").value;
     const sel = document.getElementById("searchDusun");
+    
     sel.innerHTML = '<option value="">-- PILIH DUSUN --</option>';
-    const dsn = getDusunList(kec, desa);
+
+    // Sertakan 'kab' pada getDusunList agar dusun juga muncul dengan tepat
+    const dsn = getDusunList(kec, desa, kab);
     if (dsn) {
       for (let kd in dsn) {
         // Kunci dropdown pencarian jika user desa dibatasi
