@@ -15,6 +15,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px; background-color: #f0f2f5; color: #333; margin: 0; }
@@ -8439,6 +8440,10 @@ function onUserKabChange() {
           <button type="button" class="btn-nav btn-action" style="padding: 4px 8px; font-size: 11px; background-color:#16a34a;" onclick="promptSelesaikanPelayanan('${item.id}', '${item.id_pus}', ${item.tahun || new Date().getFullYear()}, ${item.bulan_rencana || 1}, '${cleanMetode}', '${cleanNamaIstri}')" title="Catat Tindakan Selesai">
             💉 Layani
           </button>
+          <!-- TOMBOL CETAK DOKUMEN KB: -->
+          <button type="button" class="btn-nav btn-secondary" style="padding: 4px 8px; font-size: 11px; background-color:#475569;" onclick="bukaPilihanCetakDokumen(${idx})" title="Cetak Formulir Pelayanan KB">
+            🖨️ Cetak
+          </button>
           <button type="button" class="btn-nav btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="batalkanAntreanLayanan('${item.id}', '${cleanNamaIstri}')" title="Batalkan Pendaftaran">
             ❌
           </button>
@@ -8466,6 +8471,265 @@ function onUserKabChange() {
       `;
       tbody.appendChild(tr);
     });
+  }
+
+  // =========================================================================
+  // FUNGSI POPUP & EKSPOR DOKUMEN KB: K/IV/KB, K/I/KB & INFORMED CONSENT
+  // =========================================================================
+  function bukaPilihanCetakDokumen(index) {
+    const item = cachedAntreanLayanan[index];
+    if (!item) return;
+
+    Swal.fire({
+      title: 'Cetak Dokumen Pelayanan KB',
+      html: `
+        <div style="text-align: left; font-size: 13px; color: #334155; margin-bottom: 12px;">
+          Akseptor: <b>${item.nama_istri}</b> (ID: ${item.id_pus})<br>
+          Rencana Alkon: <span style="color:#0284c7; font-weight:bold;">${item.rencana_metode}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px;" onclick="eksporDokumenKbKePDF('KIV', ${index})">
+            📄 Cetak Form K/IV/KB/15
+          </button>
+          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #0d9488;" onclick="eksporDokumenKbKePDF('KI', ${index})">
+            📋 Cetak Kartu K/I/KB/13
+          </button>
+          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #d97706;" onclick="eksporDokumenKbKePDF('CONSENT', ${index})">
+            ✍️ Cetak Informed Consent
+          </button>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCancelButton: true,
+      cancelButtonText: 'Tutup'
+    });
+  }
+
+  async function eksporDokumenKbKePDF(jenisDoc, index) {
+    if (typeof Swal !== "undefined") Swal.close();
+    const item = cachedAntreanLayanan[index];
+    if (!item) {
+      Swal.fire("Peringatan", "Data antrean tidak ditemukan!", "warning");
+      return;
+    }
+
+    Swal.fire({
+      title: 'Menyiapkan Dokumen PDF...',
+      text: 'Mengambil detail data dan menyusun format formulir...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    // Ambil data detail PUS dari tabel data_pus
+    let pusDetail = { ...item };
+    if (item.id_pus) {
+      try {
+        const { data: dPus } = await db.from('data_pus')
+          .select('*')
+          .eq('id_pus', item.id_pus)
+          .eq('tahun', item.tahun || new Date().getFullYear())
+          .maybeSingle();
+        if (dPus) pusDetail = { ...item, ...dPus };
+      } catch (err) {
+        console.warn("Gagal sinkron data_pus:", err);
+      }
+    }
+
+    // Format tanggal pelayanan
+    const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
+    const pTgl = tglFormatted.split('-');
+    const dLayanan = pTgl[2] || "01";
+    const mLayanan = pTgl[1] || "01";
+    const yLayanan = pTgl[0] || String(new Date().getFullYear());
+
+    // Tanggal lahir & umur istri
+    const tglLahirVal = pusDetail.tgl_lahir_istri || item.tgl_lahir_istri || "-";
+    const umurIstriVal = (pusDetail.umur_istri !== undefined && pusDetail.umur_istri !== null) 
+      ? pusDetail.umur_istri 
+      : (item.umur_istri || "-");
+
+    // Alamat & Wilayah (Disesuaikan dengan scope Provinsi)
+    const kdKabItem = item.kode_kab || pusDetail.kode_kab || userKodeKab || "";
+    const nmKab = (dataKabupaten[userKodeProv || "52"] && dataKabupaten[userKodeProv || "52"][kdKabItem])
+      ? dataKabupaten[userKodeProv || "52"][kdKabItem]
+      : (pusDetail.kabupaten_nama || kdKabItem || "-");
+      
+    const nmKec = (dataKecamatan[kdKabItem] && dataKecamatan[kdKabItem][item.kode_kec]) 
+      ? dataKecamatan[kdKabItem][item.kode_kec] 
+      : (pusDetail.kecamatan_nama || item.kode_kec || "-");
+      
+    const dsnMap = (typeof getDusunList === "function") 
+      ? getDusunList(item.kode_kec, item.kode_desa, kdKabItem) 
+      : null;
+    const nmDsn = (dsnMap && dsnMap[item.kode_dusun]) 
+      ? dsnMap[item.kode_dusun].nama 
+      : (pusDetail.dusun_nama || item.kode_dusun || "-");
+      
+    const desaKey = kdKabItem + "_" + item.kode_kec;
+    const nmDesa = (dataDesa[desaKey] && dataDesa[desaKey][item.kode_desa])
+      ? dataDesa[desaKey][item.kode_desa]
+      : (pusDetail.desa_nama || item.kode_desa || "-");
+
+    const alamatLengkap = `RT ${item.kode_rt || pusDetail.kode_rt || '-'}, DUSUN ${nmDsn}, DESA ${nmDesa}, KEC. ${nmKec}, KAB. ${nmKab}`;
+
+    // Alkon & Kode Metode
+    const alkon = String(item.rencana_metode || item.metode_realisasi || "").toUpperCase();
+
+    // Perhitungan otomatis tanggal pencabutan (Implan +3 Tahun, IUD +8 Tahun)
+    let tglCabutFormatted = "-";
+    if (alkon.includes("IMPLAN")) {
+      const yCabut = parseInt(yLayanan, 10) + 3;
+      tglCabutFormatted = `${dLayanan}/${mLayanan}/${yCabut}`;
+    } else if (alkon.includes("IUD")) {
+      const yCabut = parseInt(yLayanan, 10) + 8;
+      tglCabutFormatted = `${dLayanan}/${mLayanan}/${yCabut}`;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('portrait', 'pt', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    try {
+      if (jenisDoc === 'KIV') {
+        // --- 1. FORMULIR K/IV/KB/15 ---
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.text("FORMULIR PELAYANAN KB (K/IV/KB/15)", pageWidth / 2, 40, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Fasilitas Kesehatan / Tempat Pelayanan: ${item.faskes_tujuan || '-'}`, pageWidth / 2, 55, { align: 'center' });
+
+        doc.autoTable({
+          startY: 70,
+          theme: 'grid',
+          styles: { fontSize: 9, cellPadding: 5 },
+          head: [['DATA IDENTITAS AKSEPTOR', 'KETERANGAN']],
+          body: [
+            ['Nomor Registrasi / ID PUS', item.id_pus || '-'],
+            ['Nama Istri', item.nama_istri || '-'],
+            ['NIK Istri', item.nik_istri || '-'],
+            ['Tanggal Lahir / Umur Istri', `${tglLahirVal} (${umurIstriVal} Tahun)`],
+            ['Nama Suami', item.nama_suami || '-'],
+            ['NIK Suami', item.nik_suami || pusDetail.nik_suami || '-'],
+            ['Jumlah Anak Hidup', String(pusDetail.jumlah_anak ?? '-')],
+            ['Umur Anak Terkecil', `${pusDetail.umur_anak_terkecil ?? '-'} Tahun`],
+            ['Jaminan Kesehatan (JKN)', pusDetail.peserta_jkn || '-'],
+            ['Alamat Domisili', alamatLengkap],
+            ['Jenis Pelayanan', item.jenis_pelayanan || 'PEMASANGAN/PEMAKAIAN'],
+            ['Metode Kontrasepsi (Alkon)', alkon],
+            ['Jenis Akseptor', item.jenis_akseptor || 'KB BARU (MURNI)'],
+            ['Rencana / Tanggal Tindakan', tglFormatted],
+            ['Perkiraan Tanggal Cabut (MKJP)', tglCabutFormatted],
+            ['Kader Pendamping', item.nama_kader || '-'],
+            ['Catatan Tambahan', item.catatan || '-']
+          ]
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 30;
+        doc.setFontSize(9);
+        doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID')}`, 40, finalY);
+        doc.text("Petugas / Bidan Pelaksana,", pageWidth - 180, finalY);
+        doc.text("( .................................................... )", pageWidth - 180, finalY + 50);
+
+        doc.save(`K_IV_KB_${(item.nama_istri || 'Akseptor').replace(/\s+/g, '_')}.pdf`);
+
+      } else if (jenisDoc === 'KI') {
+        // --- 2. KARTU STATUS PESERTA KB (K/I/KB/13) ---
+        doc.setFontSize(13);
+        doc.setFont(undefined, 'bold');
+        doc.text("KARTU STATUS PESERTA KB (K/I/KB/13)", pageWidth / 2, 40, { align: 'center' });
+
+        doc.autoTable({
+          startY: 60,
+          theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 3 },
+          body: [
+            ['No. Seri Kartu / ID PUS', ':', item.id_pus || '-'],
+            ['Nama Lengkap Akseptor', ':', `${item.nama_istri} (Suami: ${item.nama_suami})`],
+            ['NIK Akseptor', ':', item.nik_istri || '-'],
+            ['Alamat Lengkap', ':', alamatLengkap],
+            ['Metode Kontrasepsi', ':', alkon],
+            ['Tanggal Pelayanan', ':', tglFormatted],
+            ['Tanggal Lepas / Ganti Alkon', ':', tglCabutFormatted]
+          ]
+        });
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.text("CATATAN PEMERIKSAAN DAN KUNJUNGAN ULANG", 40, doc.lastAutoTable.finalY + 20);
+
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 28,
+          theme: 'grid',
+          headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+          styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
+          head: [['Tgl Datang', 'Keluhan / Efek Samping', 'Tekanan Darah', 'Berat Badan', 'Tindakan / Pengobatan', 'Tgl Kembali', 'Paraf']],
+          body: [
+            [tglFormatted, 'Pemasangan awal ' + alkon, '-', '-', 'Tindakan selesai diberikan', tglCabutFormatted !== '-' ? tglCabutFormatted : '1 Bulan', ''],
+            ['', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '']
+          ]
+        });
+
+        doc.save(`K_I_KB_${(item.nama_istri || 'Akseptor').replace(/\s+/g, '_')}.pdf`);
+
+      } else if (jenisDoc === 'CONSENT') {
+        // --- 3. INFORMED CONSENT ---
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text("SURAT PERSETUJUAN TINDAKAN MEDIS (INFORMED CONSENT)", pageWidth / 2, 40, { align: 'center' });
+        doc.text("PELAYANAN KONTRASEPSI", pageWidth / 2, 54, { align: 'center' });
+
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text("Yang bertanda tangan di bawah ini, saya:", 40, 80);
+
+        doc.autoTable({
+          startY: 88,
+          theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 2 },
+          body: [
+            ['Nama Lengkap Istri', ':', item.nama_istri || '-'],
+            ['NIK Istri', ':', item.nik_istri || '-'],
+            ['Umur', ':', `${umurIstriVal} Tahun`],
+            ['Nama Suami', ':', item.nama_suami || '-'],
+            ['Alamat', ':', alamatLengkap]
+          ]
+        });
+
+        const consentY = doc.lastAutoTable.finalY + 15;
+        doc.text(
+          `Menyatakan dengan sesungguhnya bahwa saya telah mendapatkan penjelasan lengkap mengenai prosedur, ` +
+          `manfaat, risiko, efek samping, dan alternatif dari metode kontrasepsi: ${alkon}.\n\n` +
+          `Dengan ini saya memberikan PERSETUJUAN untuk dilakukan tindakan pelayanan medis kontrasepsi ` +
+          `tersebut secara sadar tanpa adanya paksaan dari pihak manapun.`,
+          40, consentY, { maxWidth: pageWidth - 80, lineHeightFactor: 1.4 }
+        );
+
+        const signY = consentY + 75;
+        doc.text(`...................., ${tglFormatted}`, pageWidth - 190, signY);
+        doc.text("Yang Memberi Persetujuan,", pageWidth - 190, signY + 15);
+        doc.text("Petugas / Konselor,", 40, signY + 15);
+
+        doc.text(`( ${item.nama_istri} )`, pageWidth - 190, signY + 65);
+        doc.text(`( ${item.nama_kader || '................................'} )`, 40, signY + 65);
+
+        doc.save(`Consent_KB_${(item.nama_istri || 'Akseptor').replace(/\s+/g, '_')}.pdf`);
+      }
+
+      Swal.close();
+      Swal.fire({
+        icon: 'success',
+        title: 'Dokumen Berhasil Diunduh!',
+        timer: 1300,
+        showConfirmButton: false
+      });
+
+    } catch (pdfErr) {
+      console.error("Export PDF Error:", pdfErr);
+      Swal.fire("Gagal", "Terjadi kesalahan saat memproses file PDF: " + pdfErr.message, "error");
+    }
   }
 
   async function updateDashboardBadgeLayanan() {
