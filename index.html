@@ -1656,31 +1656,52 @@
         <input type="hidden" id="reg_nik_suami" value="">
 
         <!-- KARTU 1: IDENTITAS CALON AKSEPTOR -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 18px;">
-          <div style="font-size: 12px; font-weight: 800; color: #1e293b; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-            <span style="background: #0284c7; color: white; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px;">1</span>
-            Data Identitas Calon Akseptor
+        <div class="card-layanan-plan">
+          
+          <!-- Header Sub-Bagian -->
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="background: #0284c7; color: #ffffff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;">1</span>
+              <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; letter-spacing: 0.3px; text-transform: uppercase;">
+                Data Identitas Calon Akseptor
+              </span>
+            </div>
+            <span style="font-size: 11px; color: #64748b; font-weight: 600;">(Terisi Otomatis)</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
-            <div>
-              <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nama Istri:</label>
-              <input type="text" id="reg_nama_istri" readonly placeholder="PILIH PUS TERLEBIH DAHULU" style="background: #e2e8f0; font-weight: bold; color: #0f172a; border-color: #cbd5e1; cursor: not-allowed;">
+          <!-- Baris 1: Nama Istri & NIK Istri (Grid 2 Kolom Simetris) -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 18px;">
+            
+            <div class="form-col-kb">
+              <label for="reg_nama_istri" class="label-field-kb">
+                Nama Istri:
+              </label>
+              <input type="text" id="reg_nama_istri" class="input-control-kb" readonly placeholder="PILIH PUS TERLEBIH DAHULU" style="background: #f1f5f9; font-weight: 700; color: #0f172a; cursor: not-allowed;">
             </div>
-            <div>
-              <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">NIK Istri:</label>
-              <input type="text" id="reg_nik_istri" readonly placeholder="-" style="background: #e2e8f0; font-family: monospace; color: #334155; border-color: #cbd5e1; cursor: not-allowed;">
+
+            <div class="form-col-kb">
+              <label for="reg_nik_istri" class="label-field-kb">
+                NIK Istri:
+              </label>
+              <input type="text" id="reg_nik_istri" class="input-control-kb" readonly placeholder="-" style="background: #f1f5f9; font-family: monospace; font-weight: 600; color: #334155; cursor: not-allowed;">
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-            <div>
-              <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Nama Suami:</label>
-              <input type="text" id="reg_nama_suami" readonly placeholder="-" style="background: #e2e8f0; color: #334155; border-color: #cbd5e1; cursor: not-allowed;">
+          <!-- Baris 2: Nama Suami & Wilayah Domisili (Grid 2 Kolom Simetris) -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 6px;">
+            
+            <div class="form-col-kb">
+              <label for="reg_nama_suami" class="label-field-kb">
+                Nama Suami:
+              </label>
+              <input type="text" id="reg_nama_suami" class="input-control-kb" readonly placeholder="-" style="background: #f1f5f9; color: #334155; font-weight: 600; cursor: not-allowed;">
             </div>
-            <div>
-              <label style="display: block; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Wilayah Domisili:</label>
-              <input type="text" id="reg_info_wilayah" readonly placeholder="-" style="background: #e2e8f0; font-size: 12px; color: #334155; border-color: #cbd5e1; cursor: not-allowed;">
+
+            <div class="form-col-kb">
+              <label for="reg_info_wilayah" class="label-field-kb">
+                Wilayah Domisili:
+              </label>
+              <input type="text" id="reg_info_wilayah" class="input-control-kb" readonly placeholder="-" style="background: #f1f5f9; font-size: 12.5px; color: #334155; cursor: not-allowed;" title="Wilayah Domisili Calon Akseptor">
             </div>
           </div>
         </div>
@@ -1761,8 +1782,10 @@
 
             <!-- Tanggal Rencana Tindakan -->
             <div class="form-col-kb">
-              <label for="reg_tgl_rencana" class="label-field-kb">
-                Tanggal Rencana Tindakan <span style="color: #ef4444; margin-left: 3px;">*</span>
+              <label for="reg_tgl_rencana" class="label-field-kb" style="width: auto !important;">
+                <span style="display: inline-flex; align-items: center; white-space: nowrap;">
+                  Tanggal Rencana Tindakan<span style="color: #ef4444; margin-left: 2px;">*</span>:
+                </span>
               </label>
               <input type="date" id="reg_tgl_rencana" class="input-control-kb" required>
             </div>
@@ -1774,8 +1797,10 @@
             
             <!-- Tempat / Fasilitas Pelayanan -->
             <div class="form-col-kb">
-              <label for="reg_faskes_tujuan" class="label-field-kb">
-                Tempat / Fasilitas Pelayanan <span style="color: #ef4444; margin-left: 3px;">*</span>
+              <label for="reg_faskes_tujuan" class="label-field-kb" style="width: auto !important;">
+                <span style="display: inline-flex; align-items: center; white-space: nowrap;">
+                  Tempat / Fasilitas Pelayanan<span style="color: #ef4444; margin-left: 2px;">*</span>:
+                </span>
               </label>
               <input type="text" id="reg_faskes_tujuan" class="input-control-kb" required placeholder="CONTOH: RSUD / PUSKESMAS / PMB" oninput="this.value = this.value.toUpperCase()">
             </div>
@@ -1793,7 +1818,7 @@
           <!-- Baris 4: Catatan Tambahan (Full Width Simetris) -->
           <div class="form-col-kb" style="margin-bottom: 6px;">
             <label for="reg_catatan" class="label-field-kb" style="min-height: auto; margin-bottom: 2px;">
-              Catatan Tambahan (Opsional):
+              Catatan Tambahan:
             </label>
             <input type="text" id="reg_catatan" class="input-control-kb" placeholder="Contoh: Riwayat tensi tinggi, ganti dari suntik 3 bulanan, dll." style="text-transform: none;">
           </div>
