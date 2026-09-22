@@ -1721,7 +1721,7 @@
                 Metode Kontrasepsi <span style="color: #ef4444; margin-left: 3px;">*</span>
               </label>
               <select id="reg_rencana_metode" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" disabled required style="font-weight: 700; color: #0369a1; background-color: #f1f5f9;">
-                <option value="">-- PILIH METODE KB --</option>
+                <option value=""></option>
               </select>
             </div>
 
@@ -10060,18 +10060,19 @@ function onUserKabChange() {
   function onJenisPelayananChange() {
     const jenisLayanan = document.getElementById("reg_jenis_pelayanan").value;
     const selMetode = document.getElementById("reg_rencana_metode");
-    selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
 
     if (!jenisLayanan) {
       selMetode.disabled = true;
-      selMetode.style.backgroundColor = "#e9ecef";      
-      selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
+      selMetode.style.backgroundColor = "#e9ecef";
+      selMetode.innerHTML = '<option value=""></option>'; // Benar-benar kosong tanpa teks
       evaluasiOtomatisJenisAkseptor();
       return;
     }
 
+    // Ketika jenis pelayanan dipilih, buka kunci dan tampilkan opsi pilihan
     selMetode.disabled = false;
     selMetode.style.backgroundColor = "#ffffff";
+    selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
 
     let opsiMetode = (jenisLayanan === "CABUT/LEPAS" || jenisLayanan === "BONGKAR PASANG")
       ? ["IMPLAN", "IUD", "MOW", "MOP"]
@@ -10185,8 +10186,8 @@ function onUserKabChange() {
     document.getElementById("reg_info_wilayah").value = "";
 
     const selMetode = document.getElementById("reg_rencana_metode");
-    if (selMetode) {      
-      selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
+    if (selMetode) {
+      selMetode.innerHTML = '<option value=""></option>';
       selMetode.disabled = true;
       selMetode.style.backgroundColor = "#e9ecef";
     }
