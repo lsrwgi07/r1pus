@@ -1721,7 +1721,7 @@
                 Metode Kontrasepsi <span style="color: #ef4444; margin-left: 3px;">*</span>
               </label>
               <select id="reg_rencana_metode" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" disabled required style="font-weight: 700; color: #0369a1; background-color: #f1f5f9;">
-                <option value="">-- PILIH JENIS PELAYANAN DAHULU --</option>
+                <option value="">-- PILIH METODE KB --</option>
               </select>
             </div>
 
@@ -10064,8 +10064,8 @@ function onUserKabChange() {
 
     if (!jenisLayanan) {
       selMetode.disabled = true;
-      selMetode.style.backgroundColor = "#e9ecef";
-      selMetode.innerHTML = '<option value="">-- PILIH JENIS PELAYANAN DAHULU --</option>';
+      selMetode.style.backgroundColor = "#e9ecef";      
+      selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
       evaluasiOtomatisJenisAkseptor();
       return;
     }
@@ -10091,7 +10091,7 @@ function onUserKabChange() {
     if (!jenisLayanan || !metodeBaru) {
       if (jenisInput) jenisInput.value = "";
       if (badgeDisplay) {
-        badgeDisplay.innerText = "Menunggu pemilihan pelayanan & metode...";
+        badgeDisplay.innerText = "";
         badgeDisplay.style.background = "#f1f5f9";
         badgeDisplay.style.color = "#64748b";
         badgeDisplay.style.borderColor = "#cbd5e1";
@@ -10185,8 +10185,8 @@ function onUserKabChange() {
     document.getElementById("reg_info_wilayah").value = "";
 
     const selMetode = document.getElementById("reg_rencana_metode");
-    if (selMetode) {
-      selMetode.innerHTML = '<option value="">-- PILIH JENIS PELAYANAN DAHULU --</option>';
+    if (selMetode) {      
+      selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
       selMetode.disabled = true;
       selMetode.style.backgroundColor = "#e9ecef";
     }
@@ -10196,7 +10196,7 @@ function onUserKabChange() {
 
     const badge = document.getElementById("badgeJenisAkseptorDisplay");
     if (badge) {
-      badge.innerText = "Menunggu pemilihan metode...";
+      badge.innerText = "";
       badge.style.background = "#f8fafc";
       badge.style.color = "#94a3b8";
       badge.style.borderColor = "#e2e8f0";
