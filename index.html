@@ -3950,6 +3950,54 @@
     
     applyMutationAndAgeLocks();
   }
+
+  function hitungUmurPresisi(tglLahirInput, tahunPelaporan) {
+    if (!tglLahirInput) return 0;
+
+    let birthYear, birthMonth, birthDay;
+
+    // Mendukung YYYY-MM-DD maupun DD/MM/YYYY
+    if (typeof tglLahirInput === "string") {
+      if (tglLahirInput.includes("-")) {
+        const p = tglLahirInput.split("-");
+        if (p[0].length === 4) {
+          birthYear = parseInt(p[0], 10);
+          birthMonth = parseInt(p[1], 10);
+          birthDay = parseInt(p[2], 10);
+        } else {
+          birthYear = parseInt(p[2], 10);
+          birthMonth = parseInt(p[1], 10);
+          birthDay = parseInt(p[0], 10);
+        }
+      } else if (tglLahirInput.includes("/")) {
+        const p = tglLahirInput.split("/");
+        if (p[2].length === 4) {
+          birthYear = parseInt(p[2], 10);
+          birthMonth = parseInt(p[1], 10);
+          birthDay = parseInt(p[0], 10);
+        } else {
+          birthYear = parseInt(p[0], 10);
+          birthMonth = parseInt(p[1], 10);
+          birthDay = parseInt(p[2], 10);
+        }
+      }
+    }
+
+    if (!birthYear || isNaN(birthYear)) return 0;
+    
+    const today = new Date();
+    const targetYear = tahunPelaporan ? parseInt(tahunPelaporan, 10) : today.getFullYear();
+    let refYear = targetYear;
+    let refMonth = (targetYear === today.getFullYear()) ? (today.getMonth() + 1) : 12;
+    let refDay = (targetYear === today.getFullYear()) ? today.getDate() : 31;
+
+    let age = refYear - birthYear;
+    if (refMonth < birthMonth || (refMonth === birthMonth && refDay < birthDay)) {
+      age--;
+    }
+
+    return Math.max(0, age);
+  }
   
   function checkJumlahAnak() {
     const val = parseInt(document.getElementById("jumlah_anak").value, 10);
@@ -7553,26 +7601,55 @@ function onUserKabChange() {
   }
   
   function parseExcelDate(val) {
-    if (!val) return null;
-    if (typeof val === 'string' && val.includes('-')) {
-      let parts = val.split('-');
-      if (parts.length === 3) {
-        if (parts[0].length === 2 && parts[2].length === 4) {
-          return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
+    if (val === undefined || val === null || val === "") return null;
+    
+    if (!isNaN(val) && typeof val !== 'boolean') {
+      const serial = parseFloat(val);
+      if (serial <= 0) return null;
+      
+      const utcDays = Math.floor(serial - 25569);
+      const dateObj = new Date(utcDays * 86400 * 1000);
+
+      if (!isNaN(dateObj.getTime())) {
+        const year = dateObj.getUTCFullYear();
+        const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       }
     }
-    let parsed = new Date(val);
-    if (!isNaN(parsed.getTime())) {
-      return parsed.toISOString().split('T')[0];
+    
+    const strVal = String(val).trim();
+    const dmyMatch = strVal.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmyMatch) {
+      const day = dmyMatch[1].padStart(2, '0');
+      const month = dmyMatch[2].padStart(2, '0');
+      const year = dmyMatch[3];
+      return `${year}-${month}-${day}`;
     }
+    
+    const ymdMatch = strVal.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (ymdMatch) {
+      const year = ymdMatch[1];
+      const month = ymdMatch[2].padStart(2, '0');
+      const day = ymdMatch[3].padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     return null;
   }
-
-  // Variabel global sementara untuk menyimpan data baris yang dilewati/duplikat
+  
+  const formatExcelDate = parseExcelDate;
+  
   let lastSkippedRowsData = [];
-
-  // Fungsi mengunduh daftar baris duplikat yang dilewati ke file Excel
+  
   function downloadSkippedDuplicatesExcel() {
     if (!lastSkippedRowsData || lastSkippedRowsData.length === 0) {
       Swal.fire("Info", "Tidak ada data duplikat untuk diunduh.", "info");
@@ -7824,6 +7901,13 @@ function onUserKabChange() {
             }
             return val;
           });
+          
+          let parsedTglLahir = parseExcelDate(r[19]);
+          let umurFromExcel = hitungUmurPresisi(parsedTglLahir, targetTahun);
+          
+          if (umurFromExcel === 0 && r[20]) {
+            umurFromExcel = parseInt(r[20] || 0, 10);
+          }
 
           payloadList.push({
             id_pus: idPus,
@@ -7845,8 +7929,8 @@ function onUserKabChange() {
             nik_suami: nikSuami,
             nama_istri: namaIstriVal,
             nik_istri: nikIstri,
-            tgl_lahir_istri: formatExcelDate(r[19]),
-            umur_istri: parseInt(r[20] || 0, 10),
+            tgl_lahir_istri: parsedTglLahir,
+            umur_istri: umurFromExcel,
             jumlah_anak: parseInt(r[21] || 0, 10),
             umur_anak_terkecil: parseInt(r[22] || 0, 10),
             peserta_jkn: String(r[23] || "TIDAK MEMILIKI").toUpperCase().trim(),
