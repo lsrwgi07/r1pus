@@ -1685,7 +1685,7 @@
             📄 Ekspor PDF (.pdf)
           </button>
           <!-- TAMBAHKAN TOMBOL INI: -->
-          <button type="button" class="btn-nav btn-action" style="flex: 1; justify-content: center; padding: 8px 12px; font-size: 12px; font-weight: bold; background-color: #0284c7;" onclick="bukaModalCetakMassal()">
+          <button type="button" id="btnCetakMassal" class="btn-nav btn-action" style="flex: 1; justify-content: center; padding: 8px 12px; font-size: 12px; font-weight: bold; background-color: #0284c7;" onclick="bukaModalCetakMassal()">
             🖨️ Cetak Form
           </button>
         </div>
@@ -8680,8 +8680,28 @@ function onUserKabChange() {
     }
   }
 
+  function updateStatusTombolCetak() {
+    const statusFilter = document.getElementById("filterStatusLayanan")?.value;
+    const btnCetak = document.getElementById("btnCetakMassal");
+    
+    if (!btnCetak) return;
+
+    if (statusFilter === "TERDAFTAR") {
+      btnCetak.disabled = false;
+      btnCetak.style.opacity = "1";
+      btnCetak.style.cursor = "pointer";
+      btnCetak.title = "Cetak formulir pelayanan KB";
+    } else {
+      btnCetak.disabled = true;
+      btnCetak.style.opacity = "0.45";
+      btnCetak.style.cursor = "not-allowed";
+      btnCetak.title = "Tombol cetak hanya aktif untuk status Calon Akseptor";
+    }
+  }
+
   // Load Data Antrean dengan batasan wilayah Provinsi
   async function loadAntreanLayananTable() {
+    updateStatusTombolCetak();
     const tbody = document.getElementById("antreanLayananTbody");
     const bMulai = document.getElementById("filterLayananBulanMulai")?.value;
     const bSampai = document.getElementById("filterLayananBulanSampai")?.value;
