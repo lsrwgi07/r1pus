@@ -313,6 +313,52 @@
     }
 
     .chart-container { position: relative; height: 250px; width: 100%; }
+
+    .sheet-a4 {
+  width: 210mm;
+  height: 297mm;
+  box-sizing: border-box;
+  padding: 23.5mm 15mm;
+  display: grid;
+  grid-template-columns: 90mm 90mm;
+  grid-template-rows: 125mm 125mm;
+  gap: 0;
+  margin: 0 auto;
+  background: #ffffff;
+  page-break-after: always;
+  break-after: page;
+}
+
+.ki-page-card {
+  width: 90mm !important;
+  height: 125mm !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  border: 0.2mm dashed #cbd5e1;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff;
+  }
+  .sheet-a4 {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+  .ki-page-card {
+    border: 0.2mm dashed #ccc;
+  }
+}
   </style>
 </head>
 <body>
@@ -3669,7 +3715,7 @@
     }
     await checkPendingMutasiNotifications();
     renderInboxMutasiTable();
-  }
+  }  
 
   function renderInboxMutasiTable() {
     const tbody = document.getElementById("inboxMutasiTbody");
@@ -3698,7 +3744,7 @@
       }
 
       let infoTujuanHtml = "";
-      if (cleanTargetDsn && cleanTargetDsn !== "0000") {
+      if (cleanTargetDusunValid(cleanTargetDsn)) {
         infoTujuanHtml = `<br><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:10.5px; font-weight:bold;">Tujuan: Dusun ${item.dusun_tujuan || cleanTargetDsn}</span>`;
       } else {
         infoTujuanHtml = `<br><span style="color:#64748b; font-size:10.5px;">(Tujuan: Desa ${item.desa_tujuan || '-'})</span>`;
@@ -3730,13 +3776,17 @@
     });
   }
 
+  function cleanTargetDusunValid(kd) {
+    return kd && kd !== "0000" && kd !== "null" && kd !== "undefined" && String(kd).trim() !== "";
+  }
+
   function acceptAndAutoFillMutasi(index) {
     const item = cachedPendingMutasiList[index];
     if (!item || !item.payload) return;
 
     const payloadData = typeof item.payload === "string" ? JSON.parse(item.payload) : item.payload;
 
-    // Bersihkan status mutasi dari riwayat bulan KB
+    // Bersihkan status mutasi dari riwayat bulan KB agar tidak terbawa ke wilayah baru
     const monthPayloadKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
     monthPayloadKeys.forEach(mKey => {
       let val = String(payloadData[mKey] || "").toUpperCase();
@@ -3749,10 +3799,11 @@
     showFormView();
     resetInputForm();
 
-    // Isi ID Tiket Mutasi (agar saat form disimpan, tiket ini di-set PROCESSED)
+    // Reset ID PUS lama agar dibuatkan nomor urut baru di wilayah baru
     document.getElementById("id_mutasi_tiket").value = item.id;
     document.getElementById("id_pus").value = "";
-    document.getElementById("old_id_pus").value = "";
+    if (document.getElementById("old_id_pus")) document.getElementById("old_id_pus").value = "";
+    if (document.getElementById("original_id_pus")) document.getElementById("original_id_pus").value = "";
 
     if (document.getElementById("tahun_input")) {
       document.getElementById("tahun_input").value = payloadData.tahun || item.tahun;
@@ -3780,9 +3831,9 @@
       }
     }
 
-    // Set dusun otomatis jika tiket mutasi mencantumkan kode dusun tujuan
+    // Set dusun otomatis menggunakan validasi aman cleanTargetDusunValid
     const targetDsn = String(item.kode_dusun_tujuan || "").trim().padStart(4, '0');
-    if (targetDsn && targetDsn !== "0000") {
+    if (cleanTargetDusunValid(targetDsn)) {
       setSelectValueCaseInsensitive("dusun", targetDsn);
       updateRT();
     }
@@ -3792,7 +3843,7 @@
     Swal.fire({
       icon: 'info',
       title: 'Data Mutasi Dimuat!',
-      text: `Data PUS [${item.nama_istri}] berhasil dimuat. Silakan periksa atau lengkapi DUSUN dan RT di wilayah Anda, lalu klik SIMPAN DATA.`
+      text: `Data PUS [${item.nama_istri}] berhasil disalin (riwayat mutasi lama telah dibersihkan). Silakan periksa atau lengkapi DUSUN dan RT di wilayah Anda, lalu klik SIMPAN DATA.`
     });
   }
 
