@@ -8826,8 +8826,107 @@ function onUserKabChange() {
     });
   }
 
+  function promptSelesaikanPelayanan(tiketId, idPus, tahun, bulanRencana, rencanaMetode, namaIstri) {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    Swal.fire({
+      title: 'Konfirmasi Pelayanan KB',
+      html: `
+        <div style="text-align:left; font-size:13px; color:#334155; margin-bottom:8px;">
+          Akseptor: <b>${namaIstri}</b> (ID: <code>${idPus}</code>)<br>
+          Rencana Alkon: <b>${rencanaMetode}</b> (${monthNames[bulanRencana - 1]} ${tahun})
+        </div>
+        <div style="text-align:left; font-size:12px; font-weight:bold; margin-bottom:4px;">Metode Realisasi Tindakan:</div>
+        <select id="swalRealMetode" class="swal2-input" style="width:100%; margin:0 0 10px 0; font-size:13px;">
+          <option value="${rencanaMetode}" selected>${rencanaMetode} (Sesuai Rencana)</option>
+          <option value="IMPLAN">IMPLAN</option>
+          <option value="IUD">IUD</option>
+          <option value="SUNTIK">SUNTIK</option>
+          <option value="PIL">PIL</option>
+          <option value="KONDOM">KONDOM</option>
+          <option value="MOW">MOW</option>
+          <option value="MOP">MOP</option>
+        </select>
+        <div style="text-align:left; font-size:12px; font-weight:bold; margin-bottom:4px;">Tanggal Tindakan:</div>
+        <input type="date" id="swalRealTgl" class="swal2-input" value="${todayStr}" style="width:100%; margin:0; font-size:13px;">
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '✅ Selesai Dilayani',
+      confirmButtonColor: '#16a34a',
+      cancelButtonText: 'Batal',
+      preConfirm: () => {
+        const met = document.getElementById("swalRealMetode").value;
+        const tgl = document.getElementById("swalRealTgl").value;
+        if (!met || !tgl) {
+          Swal.showValidationMessage("Metode dan tanggal tindakan wajib diisi!");
+          return false;
+        }
+        return { metode: met, tanggal: tgl };
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+          const { error: errLayanan } = await db.from('pendaftaran_layanan_kb')
+            .update({
+              status: 'SELESAI',
+              metode_realisasi: result.value.metode,
+              tgl_realisasi_layanan: result.value.tanggal,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', tiketId);
+
+          if (errLayanan) throw errLayanan;
+
+          const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+          const targetField = mKeys[bulanRencana - 1];
+
+          await db.from('data_pus')
+            .update({ [targetField]: result.value.metode })
+            .eq('id_pus', idPus)
+            .eq('tahun', tahun);
+
+          Swal.fire('Berhasil!', `Pelayanan [${namaIstri}] telah selesai dicatat.`, 'success');
+          loadAntreanLayananTable();
+          if (typeof updateDashboardBadgeLayanan === "function") updateDashboardBadgeLayanan();
+
+        } catch (err) {
+          Swal.fire('Gagal', err.message, 'error');
+        }
+      }
+    });
+  }
+
+  function batalkanAntreanLayanan(tiketId, namaIstri) {
+    Swal.fire({
+      title: 'Batalkan Pendaftaran?',
+      text: `Batalkan antrean pelayanan untuk [${namaIstri}]?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Batalkan',
+      confirmButtonColor: '#dc2626',
+      cancelButtonText: 'Batal'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const { error } = await db.from('pendaftaran_layanan_kb')
+          .update({ status: 'BATAL', updated_at: new Date().toISOString() })
+          .eq('id', tiketId);
+
+        if (error) {
+          Swal.fire('Gagal', error.message, 'error');
+        } else {
+          Swal.fire('Dibatalkan', 'Antrean berhasil dibatalkan.', 'success');
+          loadAntreanLayananTable();
+          if (typeof updateDashboardBadgeLayanan === "function") updateDashboardBadgeLayanan();
+        }
+      }
+    });
+  }
+
   // =========================================================================
-  // FUNGSI POPUP & EKSPOR DOKUMEN KB: K/IV/KB, K/I/KB & INFORMED CONSENT
+  // MODUL CETAK DOKUMEN MEDIS KB (K/IV, K/I, INFORMED CONSENT & CETAK MASSAL)
   // =========================================================================
   function bukaPilihanCetakDokumen(index) {
     const item = cachedAntreanLayanan[index];
@@ -8837,17 +8936,17 @@ function onUserKabChange() {
       title: 'Cetak Dokumen Pelayanan KB',
       html: `
         <div style="text-align: left; font-size: 13px; color: #334155; margin-bottom: 12px;">
-          Akseptor: <b>${item.nama_istri}</b> (ID: ${item.id_pus})<br>
+          Akseptor: <b>${item.nama_istri}</b> (ID: <code>${item.id_pus}</code>)<br>
           Rencana Alkon: <span style="color:#0284c7; font-weight:bold;">${item.rencana_metode}</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px;" onclick="eksporDokumenKbKePDF('KIV', ${index})">
+          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px;" onclick="eksporDokumenKbKePDF('KIV', [${index}])">
             📄 Cetak Form K/IV/KB/15
           </button>
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #0d9488;" onclick="eksporDokumenKbKePDF('KI', ${index})">
+          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #0d9488;" onclick="eksporDokumenKbKePDF('KI', [${index}])">
             📋 Cetak Kartu K/I/KB/13
           </button>
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #d97706;" onclick="eksporDokumenKbKePDF('CONSENT', ${index})">
+          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #d97706;" onclick="eksporDokumenKbKePDF('CONSENT', [${index}])">
             ✍️ Cetak Informed Consent
           </button>
         </div>
@@ -8857,6 +8956,97 @@ function onUserKabChange() {
       cancelButtonText: 'Tutup'
     });
   }
+
+  function bukaModalCetakMassal() {
+    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
+      Swal.fire("Perhatian", "Tidak ada antrean pelayanan yang ditampilkan pada tabel!", "warning");
+      return;
+    }
+
+    const container = document.getElementById("cetakMassalListContainer");
+    container.innerHTML = "";
+
+    cachedAntreanLayanan.forEach((item, idx) => {
+      const label = document.createElement("label");
+      label.style.cssText = "display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: #334155; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;";
+      label.innerHTML = `
+        <input type="checkbox" name="cb_cetak_massal" value="${idx}" checked style="accent-color: #0284c7;">
+        <span><b>${item.nama_istri}</b> (${item.id_pus}) - <i>${item.rencana_metode}</i> [Desa ${item.desa_nama || '-'}]</span>
+      `;
+      container.appendChild(label);
+    });
+
+    document.getElementById("modalCetakMassalLayanan").style.display = "block";
+  }
+
+  function tutupModalCetakMassal() {
+    document.getElementById("modalCetakMassalLayanan").style.display = "none";
+  }
+
+  function toggleAllCetakMassal(status) {
+    const boxes = document.querySelectorAll('input[name="cb_cetak_massal"]');
+    boxes.forEach(cb => cb.checked = status);
+  }
+
+  function prosesCetakMassal() {
+    const checked = Array.from(document.querySelectorAll('input[name="cb_cetak_massal"]:checked')).map(cb => parseInt(cb.value, 10));
+    if (checked.length === 0) {
+      Swal.fire("Peringatan", "Pilih minimal 1 akseptor untuk dicetak!", "warning");
+      return;
+    }
+
+    const jenis = document.getElementById("cetakMassalJenisDokumen").value;
+    tutupModalCetakMassal();
+    eksporDokumenKbKePDF(jenis, checked);
+  }
+
+  async function eksporDokumenKbKePDF(tipe, indexArray) {
+    if (!indexArray || indexArray.length === 0) return;
+
+    Swal.fire({
+      title: 'Menyiapkan Dokumen PDF...',
+      text: `Memproses ${indexArray.length} data dokumen...`,
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const { jsPDF } = window.jspdf;
+      let doc;
+
+      if (tipe === 'KIV') {
+        doc = new jsPDF('landscape', 'pt', 'a4');
+        indexArray.forEach((idx, i) => {
+          if (i > 0) doc.addPage('a4', 'landscape');
+          renderFormKIV(doc, cachedAntreanLayanan[idx]);
+        });
+        doc.save(`FORM_KIV_KB_${new Date().getTime()}.pdf`);
+
+      } else if (tipe === 'KI') {
+        doc = new jsPDF('portrait', 'pt', 'a4');
+        indexArray.forEach((idx, i) => {
+          if (i > 0) doc.addPage('a4', 'portrait');
+          renderKartuKI(doc, cachedAntreanLayanan[idx]);
+        });
+        doc.save(`KARTU_KI_KB_${new Date().getTime()}.pdf`);
+
+      } else if (tipe === 'CONSENT') {
+        doc = new jsPDF('portrait', 'pt', 'a4');
+        indexArray.forEach((idx, i) => {
+          if (i > 0) doc.addPage('a4', 'portrait');
+          renderInformedConsent(doc, cachedAntreanLayanan[idx]);
+        });
+        doc.save(`INFORMED_CONSENT_${new Date().getTime()}.pdf`);
+      }
+
+      Swal.close();
+      Swal.fire("Berhasil", "Dokumen PDF berhasil diunduh.", "success");
+
+    } catch (err) {
+      console.error("PDF Export Error:", err);
+      Swal.fire("Gagal", "Terjadi kesalahan pembuatan dokumen: " + err.message, "error");
+    }
+  } 
 
   function renderSatuKartuDepan(item) {
     const isPbi = String(item.peserta_jkn || '').toUpperCase().includes('PBI') && !String(item.peserta_jkn || '').toUpperCase().includes('BUKAN');
@@ -8943,10 +9133,7 @@ function onUserKabChange() {
       </div>
     `;
   }
-
-  // =========================================================================
-  // FUNGSI RENDER SATU KARTU K/I/KB/13 (BELAKANG)
-  // =========================================================================
+  
   function renderSatuKartuBelakang(item) {
     const alkon = String(item.rencana_metode || item.metode_realisasi || '-').toUpperCase();
     const tglRef = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
@@ -9022,10 +9209,7 @@ function onUserKabChange() {
       </div>
     `;
   }
-
-  // =========================================================================
-  // FUNGSI RENDER SATU FORM K/IV/KB/15
-  // =========================================================================
+  
   function renderSatuFormKIV(item) {
     const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
     const pTgl = tglFormatted.split('-');
@@ -9318,10 +9502,7 @@ function onUserKabChange() {
       </div>
     `;
   }
-
-  // =========================================================================
-  // FUNGSI RENDER SATU INFORMED CONSENT
-  // =========================================================================
+  
   function renderSatuConsent(item) {
     const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
     const pTgl = tglFormatted.split('-');
@@ -9576,10 +9757,7 @@ function onUserKabChange() {
       </div>
     `;
   }
-
-  // =========================================================================
-  // FUNGSI CETAK BATCH K/I/KB/13 (4 KARTU A4 DUA SISI)
-  // =========================================================================
+  
   function generateBatchKiKbPrint(listAkseptor) {
     let fullHtml = '';
     for (let i = 0; i < listAkseptor.length; i += 4) {
@@ -9703,10 +9881,7 @@ function onUserKabChange() {
       iframe.contentWindow.print();
     }, 600);
   }
-
-  // =========================================================================
-  // FUNGSI CETAK BATCH FORM K/IV/KB/15 & CONSENT DENGAN IFRAME
-  // =========================================================================
+  
   function cetakBatchDokumenA4(daftarAkseptor, jenisDoc) {
     const list = daftarAkseptor || cachedAntreanLayanan;
     if (!list || list.length === 0) {
@@ -9915,45 +10090,7 @@ function onUserKabChange() {
     });
 
     return Array.from(selectedIndices).sort((a, b) => a - b);
-  }
-
-  // =========================================================================
-  // MODAL CETAK MASSAL & EKSEKUSI
-  // =========================================================================
-  function bukaModalCetakMassal() {
-    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
-      Swal.fire("Perhatian", "Tidak ada data akseptor di tabel untuk dicetak!", "warning");
-      return;
-    }
-
-    const total = cachedAntreanLayanan.length;
-
-    Swal.fire({
-      title: 'Cetak Dokumen Pelayanan KB',
-      html: `
-        <div style="text-align: left; font-size: 12.5px; color: #334155; margin-bottom: 12px;">
-          Total data akseptor saat ini: <b>${total} orang</b>.<br>
-          Tentukan nomor urut yang akan dicetak (kosongkan jika ingin mencetak <b>SEMUA</b>):
-        </div>
-        <input type="text" id="inputRangeCetak" class="swal2-input" placeholder="Contoh: 1-10 atau 1,3,5,7" style="font-size: 13px; margin: 0 0 15px 0; width: 100%; box-sizing: border-box;">
-
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #0284c7;" onclick="eksekusiCetakPilihan('KI')">
-            📋 Cetak K/I/KB/13 (Batch 4 Kartu/A4 Bolak-Balik)
-          </button>
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #0d9488;" onclick="eksekusiCetakPilihan('KIV')">
-            📄 Cetak Form K/IV/KB/15 (1 Lembar A4)
-          </button>
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #d97706;" onclick="eksekusiCetakPilihan('CONSENT')">
-            ✍️ Cetak Informed Consent (1 Lembar A4)
-          </button>
-        </div>
-      `,
-      showConfirmButton: false,
-      showCancelButton: true,
-      cancelButtonText: 'Tutup'
-    });
-  }
+  }  
 
   function eksekusiCetakPilihan(jenisDoc) {
     const rangeStr = document.getElementById("inputRangeCetak")?.value || "";
@@ -10549,59 +10686,7 @@ function onUserKabChange() {
         btn.disabled = false;
         btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
       }
-    }
-  
-  function promptSelesaikanPelayanan(tiketId, idPus, tahun, bulanRencana, rencanaMetode, namaIstri) {
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    Swal.fire({
-      title: 'Konfirmasi Pelayanan KB',
-      html: `
-        <div style="text-align:left; font-size:13px; color:#333;">
-          <p style="margin-bottom:8px;">Calon Akseptor: <b>${namaIstri}</b> (ID: ${idPus})</p>
-          <div style="margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:12px;">Metode Kontrasepsi yang Diberikan:</label>
-            <select id="swalMetodeRealisasi" class="swal2-input" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
-              <option value="IMPLAN" ${rencanaMetode === 'IMPLAN' ? 'selected' : ''}>IMPLAN</option>
-              <option value="IUD" ${rencanaMetode === 'IUD' ? 'selected' : ''}>IUD</option>
-              <option value="SUNTIK" ${rencanaMetode === 'SUNTIK' ? 'selected' : ''}>SUNTIK</option>
-              <option value="PIL" ${rencanaMetode === 'PIL' ? 'selected' : ''}>PIL</option>
-              <option value="KONDOM" ${rencanaMetode === 'KONDOM' ? 'selected' : ''}>KONDOM</option>
-              <option value="MOW" ${rencanaMetode === 'MOW' ? 'selected' : ''}>MOW</option>
-              <option value="MOP" ${rencanaMetode === 'MOP' ? 'selected' : ''}>MOP</option>
-            </select>
-          </div>
-          <div style="margin-bottom:10px;">
-            <label style="font-weight:bold; font-size:12px;">Bulan Efektif Ber-KB:</label>
-            <select id="swalBulanRealisasi" class="swal2-input" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
-              ${monthNames.map((m, idx) => `<option value="${idx+1}" ${idx+1 === bulanRencana ? 'selected' : ''}>${m.toUpperCase()}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label style="font-weight:bold; font-size:12px;">Tanggal Realisasi Tindakan:</label>
-            <input type="date" id="swalTglRealisasi" class="swal2-input" value="${todayStr}" style="width:100%; margin:4px 0 0 0; font-size:13px; padding:8px;">
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonColor: '#16a34a',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: '✅ Simpan & Update Database',
-      cancelButtonText: 'Batal',
-      preConfirm: () => {
-        return {
-          metode: document.getElementById("swalMetodeRealisasi").value,
-          bulan: parseInt(document.getElementById("swalBulanRealisasi").value, 10),
-          tgl: document.getElementById("swalTglRealisasi").value
-        };
-      }
-    }).then(async (res) => {
-      if (res.isConfirmed && res.value) {
-        await eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, res.value.bulan, res.value.metode, res.value.tgl);
-      }
-    });
-  }
+    }  
 
   async function eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, bulan, metode, tgl) {
     const monthColumns = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
@@ -10652,33 +10737,7 @@ function onUserKabChange() {
       console.error("Gagal realisasi layanan:", err);
       Swal.fire("Gagal", "Terjadi kesalahan sistem: " + err.message, "error");
     }
-  }
-
-  function batalkanAntreanLayanan(tiketId, namaIstri) {
-    Swal.fire({
-      title: 'Batalkan Pendaftaran?',
-      text: `Yakin ingin membatalkan antrean pelayanan untuk ${namaIstri}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Ya, Batalkan'
-    }).then(async (res) => {
-      if (res.isConfirmed) {
-        const { error } = await db.from('pendaftaran_layanan_kb')
-          .update({ status: 'BATAL', updated_at: new Date().toISOString() })
-          .eq('id', tiketId);
-
-        if (error) {
-          Swal.fire("Gagal", error.message, "error");
-        } else {
-          Swal.fire("Dibatalkan", "Pendaftaran calon akseptor berhasil dibatalkan.", "success");
-          loadAntreanLayananTable();
-          if (typeof updateDashboardBadgeLayanan === "function") updateDashboardBadgeLayanan();
-        }        
-      }
-    });
-  }
+  }  
   
   function getCleanLayananExportData() {
     if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
