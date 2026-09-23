@@ -315,50 +315,50 @@
     .chart-container { position: relative; height: 250px; width: 100%; }
 
     .sheet-a4 {
-  width: 210mm;
-  height: 297mm;
-  box-sizing: border-box;
-  padding: 23.5mm 15mm;
-  display: grid;
-  grid-template-columns: 90mm 90mm;
-  grid-template-rows: 125mm 125mm;
-  gap: 0;
-  margin: 0 auto;
-  background: #ffffff;
-  page-break-after: always;
-  break-after: page;
-}
+      width: 210mm;
+      height: 297mm;
+      box-sizing: border-box;
+      padding: 23.5mm 15mm;
+      display: grid;
+      grid-template-columns: 90mm 90mm;
+      grid-template-rows: 125mm 125mm;
+      gap: 0;
+      margin: 0 auto;
+      background: #ffffff;
+      page-break-after: always;
+      break-after: page;
+    }
 
-.ki-page-card {
-  width: 90mm !important;
-  height: 125mm !important;
-  box-sizing: border-box;
-  overflow: hidden;
-  position: relative;
-  border: 0.2mm dashed #cbd5e1;
-}
+    .ki-page-card {
+      width: 90mm !important;
+      height: 125mm !important;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+      border: 0.2mm dashed #cbd5e1;
+    }
 
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 0;
-  }
-  html, body {
-    width: 210mm;
-    height: 297mm;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff;
-  }
-  .sheet-a4 {
-    margin: 0;
-    box-shadow: none;
-    page-break-after: always;
-  }
-  .ki-page-card {
-    border: 0.2mm dashed #ccc;
-  }
-}
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      html, body {
+        width: 210mm;
+        height: 297mm;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff;
+      }
+      .sheet-a4 {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+      .ki-page-card {
+        border: 0.2mm dashed #ccc;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1514,6 +1514,52 @@
           <tr><td colspan="5" style="text-align: center; padding: 20px;">Memeriksa data mutasi...</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CETAK MASSAL FORM KARTU PELAYANAN KB -->
+<div id="modalCetakMassalLayanan" class="modal">
+  <div class="modal-content" style="max-width: 600px; width: 95%;">
+    <span class="close" onclick="tutupModalCetakMassal()">&times;</span>
+    <h3 style="margin-top:0; color:#1f4e78; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+      🖨️ CETAK FORM PELAYANAN KB
+    </h3>
+    <div style="font-size: 13px; color: #475569; margin-bottom: 12px;">
+      Pilih jenis dokumen dan beri centang pada akseptor yang ingin dicetak:
+    </div>
+
+    <!-- Pilihan Jenis Dokumen -->
+    <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px;">
+      <label style="font-weight: bold; font-size: 12px; color: #334155;">PILIH FORMAT DOKUMEN:</label>
+      <select id="cetakMassalJenisDokumen" style="width: 100%; padding: 9px; font-size: 13px; font-weight: bold; border-radius: 6px; border: 1.5px solid #cbd5e1; color: #0369a1;">
+        <option value="KIV">📄 Form K/IV/KB/15 (Register Layanan)</option>
+        <option value="KI">📋 Kartu Peserta KB (K/I/KB/13 - Standar BKKBN)</option>
+        <option value="CONSENT">✍️ Lembar Persetujuan Tindakan Medis (Informed Consent)</option>
+      </select>
+    </div>
+
+    <!-- Header Daftar Pilihan Akseptor -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <span style="font-size: 12px; font-weight: bold; color: #1e293b;">Daftar Akseptor Antrean:</span>
+      <div style="display: flex; gap: 6px;">
+        <button type="button" onclick="toggleAllCetakMassal(true)" style="padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff;">Pilih Semua</button>
+        <button type="button" onclick="toggleAllCetakMassal(false)" style="padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: #fff;">Hapus Semua</button>
+      </div>
+    </div>
+
+    <!-- Kontainer Checklist Akseptor -->
+    <div id="cetakMassalListContainer" style="max-height: 250px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; background: #ffffff; display: flex; flex-direction: column; gap: 8px;">
+      <!-- Diisi dinamis oleh JavaScript -->
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <button type="button" class="btn-submit" style="margin-top: 0; flex: 2; background-color: #0284c7; padding: 12px; font-size: 13px;" onclick="prosesCetakMassal()">
+        🖨️ PROSES CETAK DOKUMEN
+      </button>
+      <button type="button" class="btn-nav btn-secondary" style="flex: 1; justify-content: center;" onclick="tutupModalCetakMassal()">
+        Batal
+      </button>
     </div>
   </div>
 </div>
@@ -7707,46 +7753,56 @@ function onUserKabChange() {
   
   function downloadSkippedDuplicatesExcel() {
     if (!lastSkippedRowsData || lastSkippedRowsData.length === 0) {
-      Swal.fire("Info", "Tidak ada data duplikat untuk diunduh.", "info");
+      Swal.fire("Info", "Tidak ada data duplikat yang dilewati.", "info");
       return;
     }
 
-    const headers = [
-      "Alasan Dilewati", "Baris Excel", "ID PUS", "NIK Istri", "Nama Istri", 
-      "NIK Suami", "Nama Suami", "Kecamatan", "Desa", "Dusun", "RT"
+    // Susun data terstruktur mencakup Kabupaten, Kecamatan, Desa hingga alasan penolakan
+    const excelRows = lastSkippedRowsData.map((d, index) => ({
+      "NO": index + 1,
+      "KABUPATEN": d.kabupaten || "",
+      "KECAMATAN": d.kecamatan || "",
+      "DESA": d.desa || "",
+      "BARIS": d.barisKe || "-",
+      "TAHUN": String(d.tahun || ""),
+      "ID PUS": d.idPus || "-",
+      "NAMA ISTRI": d.namaIstri || "",
+      "NIK ISTRI": String(d.nikIstri || ""), // Diformat teks agar 16 digit tidak terpotong
+      "NAMA SUAMI": d.namaSuami || "",
+      "KETERANGAN / ALASAN": d.alasan || "",
+      "STATUS": d.status || "DIELIMINASI / DILEWATI"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelRows);
+
+    // Kunci kolom NIK agar Excel mengenalinya sebagai teks utuh
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: 8 }); // Kolom NIK Istri
+      if (worksheet[cellRef]) worksheet[cellRef].t = 's';
+    }
+
+    // Penyesuaian lebar kolom agar mudah dibaca
+    worksheet['!cols'] = [
+      { wch: 5 },   // NO
+      { wch: 20 },  // KABUPATEN
+      { wch: 18 },  // KECAMATAN
+      { wch: 22 },  // DESA
+      { wch: 8 },   // BARIS
+      { wch: 8 },   // TAHUN
+      { wch: 22 },  // ID PUS
+      { wch: 25 },  // NAMA ISTRI
+      { wch: 20 },  // NIK ISTRI
+      { wch: 25 },  // NAMA SUAMI
+      { wch: 65 },  // KETERANGAN / ALASAN
+      { wch: 24 }   // STATUS
     ];
 
-    const rows = lastSkippedRowsData.map(item => [
-      item.alasan,
-      item.barisKe,
-      item.idPus || "-",
-      String(item.nikIstri),
-      item.namaIstri,
-      String(item.nikSuami),
-      item.namaSuami,
-      item.kecamatan,
-      item.desa,
-      item.dusun,
-      item.rt
-    ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Log_Duplikat_Dieliminasi");
 
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    
-    // Format NIK sebagai text
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
-        if (ws[cell_ref] && [3, 5].includes(C)) {
-          ws[cell_ref].t = 's';
-        }
-      }
-    }
-    ws['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 22 }, { wch: 20 }, { wch: 25 }, { wch: 20 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 10 }];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "NIK_GANDA_DILEWATI");
-    XLSX.writeFile(wb, `DAFTAR_NIK_GANDA_DILEWATI_${new Date().getTime()}.xlsx`);
+    const tglSekarang = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `LOG_DUPLIKAT_PUS_TERELIMINASI_${tglSekarang}.xlsx`);
   }
 
   // Logika upload Excel dengan pencatatan identitas NIK ganda  
@@ -7772,7 +7828,7 @@ function onUserKabChange() {
     // 1. Ambil data NIK Istri dan ID PUS yang sudah ada di Supabase untuk tahun ini
     const { data: dbExistingRows, error: errFetchExisting } = await db
       .from('data_pus')
-      .select('id_pus, nik_istri, nama_istri, kode_prov, kode_kab, kode_kec, kode_desa, kode_dusun, kode_rt, kb_jan, kb_feb, kb_mar, kb_apr, kb_mei, kb_jun, kb_jul, kb_agu, kb_sep, kb_okt, kb_nov, kb_des')
+      .select('id_pus, nik_istri, nama_istri, kabupaten_nama, kecamatan_nama, desa_nama, kb_jan, kb_feb, kb_mar, kb_apr, kb_mei, kb_jun, kb_jul, kb_agu, kb_sep, kb_okt, kb_nov, kb_des')
       .eq('tahun', targetTahun);
 
     if (errFetchExisting) {
@@ -7804,7 +7860,13 @@ function onUserKabChange() {
             }
           }
           if (!isMutasi) {
-            dbActiveIstriNiks.set(nik, row.nama_istri || "");
+            dbActiveIstriNiks.set(nik, {
+              nama: row.nama_istri || "",
+              kabupaten: row.kabupaten_nama || "",
+              kecamatan: row.kecamatan_nama || "",
+              desa: row.desa_nama || "",
+              idPus: row.id_pus || ""
+            });
           }
         }
 
@@ -7883,42 +7945,45 @@ function onUserKabChange() {
 
           // Evaluasi Duplikat NIK Istri
           if (!idPus && !isDummy && !isMutasi && nikIstri) {
-            // Cek apakah sudah terdaftar aktif di database
+            // 1. Cek apakah sudah terdaftar aktif di database Supabase
             if (dbActiveIstriNiks.has(nikIstri)) {
+              const pemilikDb = dbActiveIstriNiks.get(nikIstri);
               lastSkippedRowsData.push({
-                alasan: "Sudah Terdaftar Aktif di Database",
-                barisKe: idx + 2,
-                idPus: r[0] || "-",
-                nikIstri: nikIstri,
-                namaIstri: namaIstriVal,
-                nikSuami: nikSuami,
-                namaSuami: namaSuamiVal,
+                kabupaten: r[5] || "",
                 kecamatan: r[7] || "",
                 desa: r[9] || "",
-                dusun: r[11] || "",
-                rt: r[13] || ""
+                barisKe: idx + 2,
+                tahun: targetTahun,
+                idPus: r[0] || "-",
+                namaIstri: namaIstriVal,
+                nikIstri: nikIstri,
+                namaSuami: namaSuamiVal,
+                alasan: `Duplikat NIK Istri Aktif dengan ${pemilikDb.nama || 'PUS Lain'} [${pemilikDb.kabupaten ? pemilikDb.kabupaten + ' - ' : ''}Desa ${pemilikDb.desa || '-'}] (ID: ${pemilikDb.idPus || '-'})`,
+                status: "DIELIMINASI / DILEWATI"
               });
               return;
             }
 
-            // Cek apakah ganda di dalam file Excel yang sama
+            // 2. Cek apakah ganda sesama baris di dalam file Excel yang sedang diunggah
             if (seenIstriNiksInExcel.has(nikIstri)) {
+              const prevRow = seenIstriNiksInExcel.get(nikIstri);
               lastSkippedRowsData.push({
-                alasan: "NIK Ganda di Dalam File Excel",
-                barisKe: idx + 2,
-                idPus: r[0] || "-",
-                nikIstri: nikIstri,
-                namaIstri: namaIstriVal,
-                nikSuami: nikSuami,
-                namaSuami: namaSuamiVal,
+                kabupaten: r[5] || "",
                 kecamatan: r[7] || "",
                 desa: r[9] || "",
-                dusun: r[11] || "",
-                rt: r[13] || ""
+                barisKe: idx + 2,
+                tahun: targetTahun,
+                idPus: r[0] || "-",
+                namaIstri: namaIstriVal,
+                nikIstri: nikIstri,
+                namaSuami: namaSuamiVal,
+                alasan: `Duplikat NIK Istri Aktif ganda dengan ${prevRow.nama} [Desa ${prevRow.desa} - Baris Excel ${prevRow.baris}]`,
+                status: "DIELIMINASI / DILEWATI"
               });
               return;
             }
-            seenIstriNiksInExcel.set(nikIstri, namaIstriVal);
+            
+            seenIstriNiksInExcel.set(nikIstri, { nama: namaIstriVal, desa: r[9] || "", baris: idx + 2 });
           }
 
           // Format Kode Wilayah Baku
