@@ -1430,11 +1430,11 @@
         <div style="display: grid; grid-template-columns: 1fr 85px 1fr 85px; gap: 10px; margin-bottom: 12px; align-items: end;">
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">PROVINSI</label>
-            <input type="text" id="mw_provinsi_nama" value="NUSA TENGGARA BARAT" required placeholder="NAMA PROVINSI" style="width: 100%; box-sizing: border-box;">
+            <input type="text" id="mw_provinsi_nama" required placeholder="NAMA PROVINSI" style="width: 100%; box-sizing: border-box;">
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase; white-space: nowrap;">KD PROV</label>
-            <input type="text" id="mw_kode_prov" value="52" maxlength="2" required placeholder="KODE" style="width: 100%; text-align: center; background-color: #f8fafc; box-sizing: border-box;">
+            <input type="text" id="mw_kode_prov" maxlength="2" required placeholder="KODE" style="width: 100%; text-align: center; background-color: #f8fafc; box-sizing: border-box;">
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <label style="width: 100% !important; margin: 0; font-size: 11px; color: #475569; font-weight: bold; text-align: center; text-transform: uppercase;">KABUPATEN</label>
@@ -2117,27 +2117,29 @@
       identity = String(namaLengkap).trim();
     } else {      
       const roleUpper = String(role || "").toUpperCase();
+      const namaWil = String(wilayahNama || "").trim();
 
       if (roleUpper.includes("PROV")) {
-        identity = "Admin Provinsi " + (provNama || "Nusa Tenggara Barat");
+        const pNama = provNama || Object.values(dataProvinsi)[0] || "";
+        identity = "Admin Provinsi " + (pNama || "");
       } else if (roleUpper.includes("KAB")) {
         const cleanKdKab = String(kodeKab || "").trim();
-        const nama = wilayahNama || "Lombok Barat";
+        const nama = namaWil || "Kabupaten/Kota";
 
-        if (cleanKdKab.startsWith("7")) {
+        if (cleanKdKab.startsWith("7") || /^KOTA\b/i.test(nama)) {
           identity = "Admin " + nama;
         } else {
           const cleanNama = nama.replace(/^KABUPATEN\s+/i, "");
           identity = "Admin Kabupaten " + cleanNama;
         }
       } else if (roleUpper.includes("KEC")) {
-        identity = "Admin Kecamatan " + (wilayahNama || "");
+        identity = "Admin Kecamatan " + (namaWil || "");
       } else {
-        identity = "User Desa " + (wilayahNama || "");
+        identity = "User Desa " + (namaWil || "");
       }
 
       identity = identity.trim();
-      if (!wilayahNama && !roleUpper.includes("PROV")) {
+      if (!namaWil && !roleUpper.includes("PROV")) {
         identity = role + " (" + username + ")";
       }
     }
@@ -2206,7 +2208,8 @@
         userAllowedDusun = Array.isArray(data.allowed_dusun) ? data.allowed_dusun : [];
 
         // Susun nama wilayah dan sapaan pengguna
-        let namaProvDinamis = dataProvinsi[userKodeProv || "52"] || "Nusa Tenggara Barat";
+        let activeProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+        let namaProvDinamis = dataProvinsi[activeProvKey] || Object.values(dataProvinsi)[0] || "";
         let namaWilayahDinamis = "";
 
         if (userRole.includes("PROV")) {
@@ -3791,7 +3794,8 @@
     };
     localStorage.setItem("pus_app_session", JSON.stringify(sessionData));
 
-    let namaProvDinamis = dataProvinsi[userKodeProv || "52"] || "Nusa Tenggara Barat";
+    let activeProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+    let namaProvDinamis = dataProvinsi[activeProvKey] || Object.values(dataProvinsi)[0] || "";
 
     let namaWilayahDinamis = "";
     if (userRole.includes("PROV")) {
@@ -6431,8 +6435,11 @@
     // =========================================================================
     if (isKecRole() && isKecRegisteredInDB) {
       // 1. ADMIN KECAMATAN: Kunci Provinsi, Kabupaten, dan Kecamatan
-      inProvNama.value = "NUSA TENGGARA BARAT";
-      inProvKode.value = userKodeProv || "52";
+      const defaultKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+      const defaultNmProv = dataProvinsi[defaultKdProv] || "";
+
+      inProvNama.value = defaultNmProv;
+      inProvKode.value = defaultKdProv;
       inProvNama.readOnly = true; inProvKode.readOnly = true;
       inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
 
@@ -6452,8 +6459,11 @@
     // >>> POTONGAN KODE ANDA DILETAKKAN DI SINI <<<
     } else if (isKabRole()) {
       // 2. ADMIN KABUPATEN: Kunci Provinsi dan Kabupaten saja. Kecamatan & Desa terbuka
-      inProvNama.value = "NUSA TENGGARA BARAT";
-      inProvKode.value = userKodeProv || "52";
+      const defaultKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+      const defaultNmProv = dataProvinsi[defaultKdProv] || "";
+
+      inProvNama.value = defaultNmProv;
+      inProvKode.value = defaultKdProv;
       inProvNama.readOnly = true; inProvKode.readOnly = true;
       inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
 
@@ -6472,8 +6482,11 @@
 
     } else {
       // 3. ADMIN PROVINSI: Kunci Provinsi saja, Kabupaten ke bawah bebas diinput
-      inProvNama.value = "NUSA TENGGARA BARAT";
-      inProvKode.value = userKodeProv || "52";
+      const defaultKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+      const defaultNmProv = dataProvinsi[defaultKdProv] || "";
+
+      inProvNama.value = defaultNmProv;
+      inProvKode.value = defaultKdProv;
       inProvNama.readOnly = true; inProvKode.readOnly = true;
       inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
 
@@ -7651,10 +7664,20 @@ function onUserKabChange() {
       "KB_Juni", "KB_Juli", "KB_Agustus", "KB_September", "KB_Oktober", "KB_November", "KB_Desember"
     ];
 
+    const currentProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+    const currentProvName = dataProvinsi[currentProvKey] || "PROVINSI";
+    let sampleKabKey = "";
+    let sampleKabName = "";
+
+    if (dataKabupaten[currentProvKey]) {
+      sampleKabKey = Object.keys(dataKabupaten[currentProvKey])[0] || "01";
+      sampleKabName = dataKabupaten[currentProvKey][sampleKabKey] || "KABUPATEN/KOTA";
+    }
+
     const sampleRow = [
-      "", "2026", "", "NUSA TENGGARA BARAT", "52", "LOMBOK BARAT", "01",
-      "LEMBAR", "05", "MAREJE", "0001", "DUSUN SATU", "0001",
-      "RT 001", "001", "AHMAD SUAMI", "5201050101850001", "SITI ISTRI", "5201054101900001",
+      "", String(new Date().getFullYear()), "", currentProvName, currentProvKey, sampleKabName, sampleKabKey,
+      "NAMA KECAMATAN", "01", "NAMA DESA", "0001", "NAMA DUSUN", "0001",
+      "RT 001", "001", "NAMA SUAMI", "16 DIGIT NIK SUAMI", "NAMA ISTRI", "16 DIGIT NIK ISTRI",
       "1990-05-15", "36", "2", "3",
       "PBI", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN",
       "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN"
@@ -8367,8 +8390,8 @@ function onUserKabChange() {
     ];
 
     const sampleRow = [
-      "NUSA TENGGARA BARAT", "52", "LOMBOK BARAT", "01",
-      "LEMBAR", "05", "MAREJE", "0001",
+      currentProvName, currentProvKey, sampleKabName, sampleKabKey,
+      "KECAMATAN CONTOH", "01", "DESA CONTOH", "0001",
       "DUSUN SATU", "0001", "5"
     ];
 
@@ -9306,7 +9329,7 @@ function onUserKabChange() {
     }
     nmKab = nmKab || "KABUPATEN";
 
-    let nmProv = item.provinsi_nama || dataProvinsi[provKey] || "NUSA TENGGARA BARAT";
+    let nmProv = item.provinsi_nama || (provKey && dataProvinsi[provKey]) || Object.values(dataProvinsi)[0] || "PROVINSI";
 
     const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || '-');
     const compositeDesaKey = curKab + "_" + curKec;
@@ -10007,7 +10030,7 @@ function onUserKabChange() {
     }
     nmKab = nmKab || "KABUPATEN";
 
-    let nmProv = item.provinsi_nama || dataProvinsi[provKey] || "NUSA TENGGARA BARAT";    
+    let nmProv = item.provinsi_nama || (provKey && dataProvinsi[provKey]) || Object.values(dataProvinsi)[0] || "PROVINSI";    
 
     const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || "");
     const compositeDesaKey = curKab + "_" + curKec;
