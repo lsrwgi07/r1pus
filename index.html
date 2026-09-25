@@ -9951,6 +9951,15 @@ function onUserKabChange() {
     const curKec = String(item.kode_kec || "").padStart(2, '0');
     const curDesa = String(item.kode_desa || "").padStart(4, '0');
     const curDsn = String(item.kode_dusun || "").padStart(4, '0');
+    
+    const provKey = String(item.kode_prov || userKodeProv || "52").padStart(2, '0');
+    let nmKab = item.kabupaten_nama || "";
+    if (!nmKab && dataKabupaten[provKey] && dataKabupaten[provKey][curKab]) {
+      nmKab = dataKabupaten[provKey][curKab];
+    }
+    nmKab = nmKab || "KABUPATEN";
+
+    let nmProv = item.provinsi_nama || dataProvinsi[provKey] || "NUSA TENGGARA BARAT";    
 
     const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || "");
     const compositeDesaKey = curKab + "_" + curKec;
