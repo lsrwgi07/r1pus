@@ -6342,13 +6342,17 @@
     switchMwTab('form');
   }
 
-  function switchMwTab(tab) {
+  function switchMwTab(tab, isEdit = false) {
     const isForm = (tab === 'form');
     document.getElementById("mwTabForm").style.display = isForm ? "block" : "none";
     document.getElementById("mwTabList").style.display = isForm ? "none" : "block";
 
     document.getElementById("tabBtnFormMw").className = isForm ? "btn-nav btn-action" : "btn-nav btn-secondary";
     document.getElementById("tabBtnListMw").className = isForm ? "btn-nav btn-secondary" : "btn-nav btn-action";
+    
+    if (isForm && !isEdit) {
+      resetMwForm();
+    }
 
     if (!isForm) {
       loadRegisteredWilayahList();
@@ -6603,7 +6607,8 @@
     document.getElementById("mw_jumlah_rt").value = item.jumlah_rt;
 
     document.getElementById("btnSaveMw").innerText = "💾 PERBARUI WILAYAH";
-    switchMwTab('form');
+    // Pindah ke tab form dengan parameter isEdit = true agar tidak direset
+    switchMwTab('form', true);
   }
 
   function confirmDeleteMw(id, namaDusun) {
@@ -6690,13 +6695,18 @@
     switchUserTab('form');
   }
 
-  function switchUserTab(tab) {
+  function switchUserTab(tab, isEdit = false) {
     const isForm = (tab === 'form');
     document.getElementById("userTabForm").style.display = isForm ? "block" : "none";
     document.getElementById("userTabList").style.display = isForm ? "none" : "block";
 
     document.getElementById("tabBtnUserForm").className = isForm ? "btn-nav btn-action" : "btn-nav btn-secondary";
     document.getElementById("tabBtnUserList").className = isForm ? "btn-nav btn-secondary" : "btn-nav btn-action";
+
+    // Bersihkan formulir jika tab diklik secara manual
+    if (isForm && !isEdit) {
+      resetUserForm();
+    }
 
     if (!isForm) {
       loadUsersList();
@@ -6770,6 +6780,8 @@
     const selKec = document.getElementById("user_kec_select");
     const selDesa = document.getElementById("user_desa_select");
 
+    // === PENYELESAIAN ERROR: Deklarasikan kdKab di sini ===
+    const kdKab = isProvRole() ? (selKab ? selKab.value : "") : userKodeKab;
     const kdKec = (isProvRole() || isKabRole()) ? (selKec ? selKec.value : "") : userKodeKec;
     const kdDesa = isDesaRole() ? userKodeDesa : (selDesa ? selDesa.value : "");
 
@@ -7224,8 +7236,8 @@ function onUserKabChange() {
       const selKec = document.getElementById("user_kec_select");
       if (selKec) {
         selKec.value = kecVal;
-        // Isi dropdown desa berdasarkan kecamatan terpilih
-        populateDesaByKec(kecVal, "user_desa_select");
+        // Isi dropdown desa berdasarkan kecamatan terpilih, sisipkan item.kode_kab
+        populateDesaByKec(kecVal, "user_desa_select", item.kode_kab);
       }
     }
 
@@ -7241,7 +7253,8 @@ function onUserKabChange() {
     renderUserDusunCheckboxes(item.allowed_dusun || []);
 
     document.getElementById("btnSaveUserAcc").innerText = "💾 PERBARUI AKUN";
-    switchUserTab('form');
+    // Pindah ke tab form dengan parameter isEdit = true agar form tidak di-reset
+    switchUserTab('form', true);
   }
 
   function confirmDeleteUser(id, username) {
