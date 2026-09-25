@@ -2100,6 +2100,17 @@
   let chartTrendBulananInstance = null;
 
   const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+  function parseAllowedDusun(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+      return raw.map(d => String(d).trim().padStart(4, '0')).filter(Boolean);
+    }
+    if (typeof raw === "string") {
+      return raw.split(',').map(d => d.trim().padStart(4, '0')).filter(d => d !== "" && d !== "0000");
+    }
+    return [];
+  }
   
   function getTimeGreeting() {
     const hour = new Date().getHours();
@@ -2205,7 +2216,8 @@
         userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
         userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
         userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
-        userAllowedDusun = Array.isArray(data.allowed_dusun) ? data.allowed_dusun : [];
+        const rawDusunFromSession = data.allowed_dusun || data.userAllowedDusun || data.kode_dusun_list || null;
+        userAllowedDusun = parseAllowedDusun(rawDusunFromSession);
 
         // Susun nama wilayah dan sapaan pengguna
         let activeProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
@@ -3780,7 +3792,8 @@
     userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
     userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
     userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
-    userAllowedDusun = Array.isArray(data.allowed_dusun) ? data.allowed_dusun : [];
+    const rawDusunFromDb = data.allowed_dusun || data.kode_dusun_list || null;
+    userAllowedDusun = parseAllowedDusun(rawDusunFromDb);
 
     const sessionData = {
       username: data.username,
@@ -4168,23 +4181,40 @@
   }
 
   function updateDusun(selectedVal = "") {
+    const kodeKab = document.getElementById("kode_kab")?.value || userKodeKab || "";
     const kodeKec = document.getElementById("kecamatan").value;
     const kodeDesa = document.getElementById("desa").value;
     document.getElementById("kode_desa").value = kodeDesa;
-    resetDropdown("dusun", "kode_dusun"); resetDropdown("rt", "kode_rt");
-    let dusunObj = getDusunList(kodeKec, kodeDesa);
+    resetDropdown("dusun", "kode_dusun"); 
+    resetDropdown("rt", "kode_rt");    
+    
+    let dusunObj = getDusunList(kodeKec, kodeDesa, kodeKab);
+    
     if (kodeDesa && dusunObj) {
       const dusunSelect = document.getElementById("dusun");
       dusunSelect.disabled = false;
-      
-      for (let kode in dusunObj) {        
-        if (userAllowedDusun.length > 0 && !userAllowedDusun.includes(kode)) {
-          continue;
-        }
-        dusunSelect.add(new Option(dusunObj[kode].nama.toUpperCase(), kode));
+
+      const allowedSet = new Set((userAllowedDusun || []).map(d => String(d).trim().padStart(4, '0')));
+
+      for (let kode in dusunObj) {
+        let cleanKd = String(kode).trim().padStart(4, '0');        
+        
+        if (isDesaRole() && allowedSet.size > 0) {
+          if (!allowedSet.has(cleanKd)) {
+            continue; 
+          }
+        }        
+        
+        dusunSelect.add(new Option(dusunObj[kode].nama.toUpperCase(), cleanKd));
       }
-      
-      if (selectedVal) { setSelectValueCaseInsensitive("dusun", selectedVal); updateRT(); }
+
+      if (isDesaRole() && dusunSelect.options.length === 2) {
+        dusunSelect.selectedIndex = 1;
+        updateRT();
+      } else if (selectedVal) { 
+        setSelectValueCaseInsensitive("dusun", selectedVal); 
+        updateRT(); 
+      }
     }
   }
 
@@ -4654,28 +4684,59 @@
       submitBtn.disabled = false;
       submitBtn.innerText = "SIMPAN DATA";
     }
-  }   
-
-  // --- REKAPITULASI DENGAN FILTER TINGKAT ---
+  }
+  
   async function fetchAllPusDataChunked(tahun, filterKab, filterKec, filterDesa, filterDusun) {
     let allData = [];
     let from = 0;
     const step = 1000;
     let hasMore = true;
+    
+    const cleanKabFilter = filterKab ? String(filterKab).trim().replace(/\D/g, "") : "";
+    const cleanKecFilter = filterKec ? String(filterKec).trim().replace(/\D/g, "") : "";
+    const cleanDesaFilter = filterDesa ? String(filterDesa).trim().replace(/\D/g, "") : "";
+    const cleanDusunFilter = (filterDusun && filterDusun !== "0000") ? String(filterDusun).trim().replace(/\D/g, "") : "";
+    
+    const allowedDusunList = (isDesaRole() && userAllowedDusun && userAllowedDusun.length > 0)
+      ? userAllowedDusun.map(d => String(d).trim().padStart(4, '0')).filter(d => d !== "" && d !== "0000")
+      : [];
 
     while (hasMore) {
       let query = db.from('data_pus').select('*').eq('tahun', tahun);
-
-      // Filter Wilayah dengan Normalisasi Presisi
-      if (filterKab) query = query.eq('kode_kab', String(filterKab).trim().padStart(2, '0'));
-      if (filterKec) query = query.eq('kode_kec', String(filterKec).trim().padStart(2, '0'));
-      if (filterDesa) query = query.eq('kode_desa', String(filterDesa).trim().padStart(4, '0'));
-      if (filterDusun && filterDusun !== "0000") query = query.eq('kode_dusun', String(filterDusun).trim().padStart(4, '0'));
       
-      // Filter Keamanan Akun User Desa
-      if (userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
+      if (userKodeProv) {
+        query = query.eq('kode_prov', String(userKodeProv).trim().padStart(2, '0'));
+      }
+      
+      if (cleanKabFilter) {
+        const kabPad = cleanKabFilter.padStart(2, '0');
+        const kabNum = parseInt(cleanKabFilter, 10);
+        query = query.or(`kode_kab.eq.${kabPad},kode_kab.eq.${kabNum}`);
+      }
+      
+      if (cleanKecFilter) {
+        const kecPad = cleanKecFilter.padStart(2, '0');
+        const kecNum = parseInt(cleanKecFilter, 10);
+        query = query.or(`kode_kec.eq.${kecPad},kode_kec.eq.${kecNum}`);
+      }
+      
+      if (cleanDesaFilter) {
+        const desPad = cleanDesaFilter.padStart(4, '0');
+        const desNum = parseInt(cleanDesaFilter, 10);
+        query = query.or(`kode_desa.eq.${desPad},kode_desa.eq.${desNum}`);
+      }
+      
+      if (cleanDusunFilter) {
+        const dsnPad = cleanDusunFilter.padStart(4, '0');
+        query = query.eq('kode_dusun', dsnPad);
+      } else if (allowedDusunList.length > 0) {        
+        query = query.in('kode_dusun', allowedDusunList);
+      }
+      
+      const { data, error } = await query
+        .order('id_pus', { ascending: true })
+        .range(from, from + step - 1);
 
-      const { data, error } = await query.range(from, from + step - 1);
       if (error) throw error;
 
       if (data && data.length > 0) {
@@ -4686,6 +4747,47 @@
         hasMore = false;
       }
     }
+    
+    if (cleanKabFilter) {
+      const targetKabNum = parseInt(cleanKabFilter, 10);
+      allData = allData.filter(r => {
+        const rKab = String(r.kode_kab || "").trim().replace(/\D/g, "");
+        return rKab !== "" && parseInt(rKab, 10) === targetKabNum;
+      });
+    }
+
+    if (cleanKecFilter) {
+      const targetKecNum = parseInt(cleanKecFilter, 10);
+      allData = allData.filter(r => {
+        const rKec = String(r.kode_kec || "").trim().replace(/\D/g, "");
+        return rKec !== "" && parseInt(rKec, 10) === targetKecNum;
+      });
+    }
+
+    if (cleanDesaFilter) {
+      const targetDesaNum = parseInt(cleanDesaFilter, 10);
+      allData = allData.filter(r => {
+        const rDesa = String(r.kode_desa || "").trim().replace(/\D/g, "");
+        return rDesa !== "" && parseInt(rDesa, 10) === targetDesaNum;
+      });
+    }
+
+    if (cleanDusunFilter) {
+      const targetDsnPad = cleanDusunFilter.padStart(4, '0');
+      allData = allData.filter(r => {
+        const rDsn = String(r.kode_dusun || "").trim().padStart(4, '0');
+        return rDsn === targetDsnPad;
+      });
+    }
+    
+    if (allowedDusunList.length > 0 && !cleanDusunFilter) {
+      const allowedSet = new Set(allowedDusunList);
+      allData = allData.filter(r => {
+        const rDsn = String(r.kode_dusun || "").trim().padStart(4, '0');
+        return allowedSet.has(rDsn);
+      });
+    }
+
     return allData;
   }
 
