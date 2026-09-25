@@ -2290,17 +2290,17 @@
       tbody.appendChild(tr);
     });
 
-    const inputsToCheck = [
+    const watchedFieldIds = [
       "provinsi", "kabupaten", "kecamatan", "desa", "dusun", "rt",
-      "nama_suami", "nik_suami", "nama_istri", "nik_istri", 
-      "tgl_lahir_istri", "jumlah_anak", "umur_anak_terkecil", "peserta_jkn"
+      "nama_suami", "nik_suami", "nama_istri", "nik_istri",
+      "tgl_lahir_istri", "peserta_jkn", "jumlah_anak", "umur_anak_terkecil"
     ];
 
-    inputsToCheck.forEach(id => {
+    watchedFieldIds.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.addEventListener("input", applyMutationAndAgeLocks);
-        el.addEventListener("change", applyMutationAndAgeLocks);
+        el.addEventListener("input", checkAndLockKbTable);
+        el.addEventListener("change", checkAndLockKbTable);
       }
     });
 
@@ -2346,17 +2346,20 @@
       for (let kode in dataProvinsi) provSelect.add(new Option(dataProvinsi[kode].toUpperCase(), kode));
     }
   }
-  
+
+  // Helper: Mengecek apakah Data Wilayah dan Identitas PUS sudah lengkap
   function isIdentitasDanWilayahLengkap() {
     const missingFields = [];
-    
+
+    // Validasi Wilayah Asal
     if (!document.getElementById("provinsi").value) missingFields.push("Provinsi");
     if (!document.getElementById("kabupaten").value) missingFields.push("Kabupaten / Kota");
     if (!document.getElementById("kecamatan").value) missingFields.push("Kecamatan");
     if (!document.getElementById("desa").value) missingFields.push("Desa");
     if (!document.getElementById("dusun").value) missingFields.push("Dusun");
     if (!document.getElementById("rt").value) missingFields.push("RT");
-    
+
+    // Validasi Identitas PUS
     const namaSuami = document.getElementById("nama_suami").value.trim();
     const nikSuami  = document.getElementById("nik_suami").value.trim();
     const namaIstri = document.getElementById("nama_istri").value.trim();
@@ -2427,7 +2430,8 @@
     
     let mutationTriggeredIndex = -1;
     let age50StartIndex = 13; // default: tidak terkunci (di luar 12 bulan)
-    
+
+    // 1. Cek titik bulan mencapai usia 50 tahun
     if (tglLahir) {
       const dob = new Date(tglLahir);
       if (!isNaN(dob.getTime())) {
@@ -2442,7 +2446,8 @@
         }
       }
     }
-    
+
+    // 2. Cek bulan pertama kali terjadinya status MUTASI
     for (let i = 1; i <= 12; i++) {
       const sel = document.getElementById("kb_" + i);
       if (!sel) continue;
@@ -2453,7 +2458,8 @@
         break;
       }
     }
-    
+
+    // 3. Tentukan batas awal lock (prioritaskan yang terjadi lebih dulu)
     let lockStartingIndex = 13;
     let lockReason = "";
 
@@ -2472,7 +2478,8 @@
       lockStartingIndex = age50StartIndex;
       lockReason = "TERKUNCI (USIA 50+)";
     }
-    
+
+    // 4. Kunci dan OTOMATIS KOSONGKAN bulan setelah mutasi/usia 50+
     for (let i = 1; i <= 12; i++) {
       const sel = document.getElementById("kb_" + i);
       if (!sel) continue;
@@ -2493,7 +2500,7 @@
       }
     }
   }
-  
+
   function initDlExportDropdowns() {
     const selTingkat = document.getElementById("dlExpTingkat");
     if (!selTingkat) return;
@@ -4207,45 +4214,16 @@
   function hitungUmurIstri() {
     const tglLahirInput = document.getElementById("tgl_lahir_istri").value;
     const umurInput = document.getElementById("umur_istri");
-    const tahunPelaporan = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
+    const tahunPelaporan = parseInt(document.getElementById("tahun_input")?.value || new Date().getFullYear(), 10);
 
     if (!tglLahirInput) {
       umurInput.value = 0;
       applyMutationAndAgeLocks();
       return;
     }
-
-    const dob = new Date(tglLahirInput);    
     
-    if (isNaN(dob.getTime()) || dob.getFullYear() > tahunPelaporan) {
-      umurInput.value = 0;
-      applyMutationAndAgeLocks();
-      return;
-    }
-
-    const birthYear = dob.getFullYear();
-    const birthMonth = dob.getMonth(); 
-    const birthDay = dob.getDate();
-    
-    const today = new Date();
-    let refDate;
-    if (tahunPelaporan === today.getFullYear()) {
-      refDate = today;
-    } else if (tahunPelaporan < today.getFullYear()) {
-      refDate = new Date(tahunPelaporan, 11, 31);
-    } else {
-      refDate = new Date(tahunPelaporan, 0, 1);
-    }
-
-    let age = refDate.getFullYear() - birthYear;
-    const monthDiff = refDate.getMonth() - birthMonth;
-
-    if (monthDiff < 0 || (monthDiff === 0 && refDate.getDate() < birthDay)) {
-      age--;  
-    }
-    
-    umurInput.value = Math.max(0, age);
-    
+    const umur = hitungUmurPresisi(tglLahirInput, tahunPelaporan);
+    umurInput.value = umur;
     applyMutationAndAgeLocks();
   }
 
@@ -4253,8 +4231,7 @@
     if (!tglLahirInput) return 0;
 
     let birthYear, birthMonth, birthDay;
-
-    // Mendukung YYYY-MM-DD maupun DD/MM/YYYY
+    
     if (typeof tglLahirInput === "string") {
       if (tglLahirInput.includes("-")) {
         const p = tglLahirInput.split("-");
@@ -4266,13 +4243,13 @@
           birthYear = parseInt(p[2], 10);
           birthMonth = parseInt(p[1], 10);
           birthDay = parseInt(p[0], 10);
-        }
+        }      
       } else if (tglLahirInput.includes("/")) {
         const p = tglLahirInput.split("/");
         if (p[2].length === 4) {
           birthYear = parseInt(p[2], 10);
           birthMonth = parseInt(p[1], 10);
-          birthDay = parseInt(p[0], 10);
+          birthDay = parseInt(p[2], 10);
         } else {
           birthYear = parseInt(p[0], 10);
           birthMonth = parseInt(p[1], 10);
@@ -4281,7 +4258,7 @@
       }
     }
 
-    if (!birthYear || isNaN(birthYear)) return 0;
+    if (!birthYear || isNaN(birthYear)) return 0;    
     
     const today = new Date();
     const targetYear = tahunPelaporan ? parseInt(tahunPelaporan, 10) : today.getFullYear();
@@ -6055,7 +6032,10 @@
       executeSearch(); // Segarkan otomatis daftar pencarian
     });
   }
-  
+
+  // =========================================================================
+  // HELPER: VALIDASI APAKAH TABEL SUDAH MEMILIKI DATA VALID
+  // =========================================================================
   function isTableDataEmpty(tableId) {
     const table = document.getElementById(tableId);
     if (!table) return true;
@@ -6074,6 +6054,55 @@
       return true;
     }
     return false;
+  }
+
+  function selectDataForEdit(d) {
+    closeSearchModal();
+    showFormView();
+    document.getElementById("id_pus").value = d.id_pus;    
+    document.getElementById("old_id_pus").value = d.id_pus;
+    
+    document.getElementById("tahun_input").value = d.tahun;
+    setSelectValueCaseInsensitive("provinsi", d.kode_prov); updateKabupaten(d.kode_kab);
+    setSelectValueCaseInsensitive("kabupaten", d.kode_kab); updateKecamatan(d.kode_kec);
+    setSelectValueCaseInsensitive("kecamatan", d.kode_kec); updateDesa(d.kode_desa);
+    setSelectValueCaseInsensitive("desa", d.kode_desa); updateDusun(d.kode_dusun);
+    setSelectValueCaseInsensitive("dusun", d.kode_dusun); updateRT(d.kode_rt);
+    setSelectValueCaseInsensitive("rt", d.kode_rt); setKodeRT();
+
+    document.getElementById("nama_suami").value = d.nama_suami;
+    document.getElementById("nik_suami").value = d.nik_suami;
+    document.getElementById("nama_istri").value = d.nama_istri;
+    document.getElementById("nik_istri").value = d.nik_istri;
+    document.getElementById("tgl_lahir_istri").value = d.tgl_lahir_istri;
+    document.getElementById("umur_istri").value = d.umur_istri;
+    document.getElementById("jumlah_anak").value = d.jumlah_anak;
+    checkJumlahAnak();
+    document.getElementById("umur_anak_terkecil").value = d.umur_anak_terkecil;
+    setSelectValueCaseInsensitive("peserta_jkn", d.peserta_jkn);
+
+    let mutationFound = false;
+    for (let i = 1; i <= 12; i++) {
+      let mKey = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"][i - 1];
+      let val = String(d[mKey] || "").trim().toUpperCase();
+
+      if (mutationFound) {
+        document.getElementById("kb_" + i).value = "";
+      } else {
+        setSelectValueCaseInsensitive("kb_" + i, val);
+        if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
+          mutationFound = true;
+        }
+      }
+    }
+
+    applyMutationAndAgeLocks();
+
+    initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
+
+    // Tampilkan tombol hapus saat data dibuka untuk edit
+    const delBtn = document.getElementById("btnDeletePus");
+    if (delBtn) delBtn.style.display = "block";
   }
 
   function exportBnbaToExcel() {
@@ -6162,57 +6191,11 @@
       console.error("Export PDF Recap Error:", err);
       Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
     }
-  }
+  }   
 
-  function selectDataForEdit(d) {
-    closeSearchModal();
-    showFormView();
-    document.getElementById("id_pus").value = d.id_pus;    
-    document.getElementById("old_id_pus").value = d.id_pus;
-    
-    document.getElementById("tahun_input").value = d.tahun;
-    setSelectValueCaseInsensitive("provinsi", d.kode_prov); updateKabupaten(d.kode_kab);
-    setSelectValueCaseInsensitive("kabupaten", d.kode_kab); updateKecamatan(d.kode_kec);
-    setSelectValueCaseInsensitive("kecamatan", d.kode_kec); updateDesa(d.kode_desa);
-    setSelectValueCaseInsensitive("desa", d.kode_desa); updateDusun(d.kode_dusun);
-    setSelectValueCaseInsensitive("dusun", d.kode_dusun); updateRT(d.kode_rt);
-    setSelectValueCaseInsensitive("rt", d.kode_rt); setKodeRT();
-
-    document.getElementById("nama_suami").value = d.nama_suami;
-    document.getElementById("nik_suami").value = d.nik_suami;
-    document.getElementById("nama_istri").value = d.nama_istri;
-    document.getElementById("nik_istri").value = d.nik_istri;
-    document.getElementById("tgl_lahir_istri").value = d.tgl_lahir_istri;
-    document.getElementById("umur_istri").value = d.umur_istri;
-    document.getElementById("jumlah_anak").value = d.jumlah_anak;
-    checkJumlahAnak();
-    document.getElementById("umur_anak_terkecil").value = d.umur_anak_terkecil;
-    setSelectValueCaseInsensitive("peserta_jkn", d.peserta_jkn);
-
-    let mutationFound = false;
-    for (let i = 1; i <= 12; i++) {
-      let mKey = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"][i - 1];
-      let val = String(d[mKey] || "").trim().toUpperCase();
-
-      if (mutationFound) {
-        document.getElementById("kb_" + i).value = "";
-      } else {
-        setSelectValueCaseInsensitive("kb_" + i, val);
-        if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
-          mutationFound = true;
-        }
-      }
-    }
-
-    applyMutationAndAgeLocks();
-
-    initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
-
-    // Tampilkan tombol hapus saat data dibuka untuk edit
-    const delBtn = document.getElementById("btnDeletePus");
-    if (delBtn) delBtn.style.display = "block";
-  }
-  
+  // =========================================================================
+  // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
+  // =========================================================================
   function exportTableToExcel(tableId, filename) {
     try {
       const table = document.getElementById(tableId);
@@ -9066,23 +9049,26 @@ function onUserKabChange() {
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     const todayStr = new Date().toISOString().split('T')[0];
 
+    // Daftar metode kontrasepsi murni baku
+    const masterMetode = ["IMPLAN", "IUD", "SUNTIK", "PIL", "KONDOM", "MOW", "MOP"];
+    const cleanRencana = String(rencanaMetode || "").trim().toUpperCase();
+
+    // Susun opsi secara dinamis: alkon rencana otomatis terpilih tanpa teks tambahan
+    let opsiHtml = masterMetode.map(m => {
+      const isSelected = (m === cleanRencana) ? "selected" : "";
+      return `<option value="${m}" ${isSelected}>${m}</option>`;
+    }).join("");
+
     Swal.fire({
       title: 'Konfirmasi Pelayanan KB',
       html: `
         <div style="text-align:left; font-size:13px; color:#334155; margin-bottom:8px;">
           Akseptor: <b>${namaIstri}</b> (ID: <code>${idPus}</code>)<br>
-          Rencana Alkon: <b>${rencanaMetode}</b> (${monthNames[bulanRencana - 1]} ${tahun})
+          Rencana Alkon: <b>${cleanRencana}</b> (${monthNames[bulanRencana - 1]} ${tahun})
         </div>
         <div style="text-align:left; font-size:12px; font-weight:bold; margin-bottom:4px;">Metode Realisasi Tindakan:</div>
         <select id="swalRealMetode" class="swal2-input" style="width:100%; margin:0 0 10px 0; font-size:13px;">
-          <option value="${rencanaMetode}" selected>${rencanaMetode} (Sesuai Rencana)</option>
-          <option value="IMPLAN">IMPLAN</option>
-          <option value="IUD">IUD</option>
-          <option value="SUNTIK">SUNTIK</option>
-          <option value="PIL">PIL</option>
-          <option value="KONDOM">KONDOM</option>
-          <option value="MOW">MOW</option>
-          <option value="MOP">MOP</option>
+          ${opsiHtml}
         </select>
         <div style="text-align:left; font-size:12px; font-weight:bold; margin-bottom:4px;">Tanggal Tindakan:</div>
         <input type="date" id="swalRealTgl" class="swal2-input" value="${todayStr}" style="width:100%; margin:0; font-size:13px;">
@@ -9101,33 +9087,36 @@ function onUserKabChange() {
         }
         return { metode: met, tanggal: tgl };
       }
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    }).then(async (res) => {
+      if (res.isConfirmed) {
+        Swal.fire({ title: 'Menyimpan Realisasi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-          const { error: errLayanan } = await db.from('pendaftaran_layanan_kb')
+          const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+          const colName = mKeys[bulanRencana - 1];
+
+          // Update tabel pendaftaran_layanan_kb dengan nama kolom baku: tgl_realisasi
+          const { error: errLayanan } = await db
+            .from('pendaftaran_layanan_kb')
             .update({
               status: 'SELESAI',
-              metode_realisasi: result.value.metode,
-              tgl_realisasi_layanan: result.value.tanggal,
+              metode_realisasi: res.value.metode,
+              tgl_realisasi: res.value.tanggal,
               updated_at: new Date().toISOString()
             })
             .eq('id', tiketId);
 
           if (errLayanan) throw errLayanan;
 
-          const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
-          const targetField = mKeys[bulanRencana - 1];
+          // Update otomatis status kolom bulan di tabel data_pus
+          if (idPus && colName) {
+            const updateField = {};
+            updateField[colName] = res.value.metode;
+            await db.from('data_pus').update(updateField).eq('id_pus', idPus).eq('tahun', tahun);
+          }
 
-          await db.from('data_pus')
-            .update({ [targetField]: result.value.metode })
-            .eq('id_pus', idPus)
-            .eq('tahun', tahun);
-
-          Swal.fire('Berhasil!', `Pelayanan [${namaIstri}] telah selesai dicatat.`, 'success');
+          Swal.fire('Berhasil', 'Pelayanan berhasil dicatat dan status KB diperbarui.', 'success');
           loadAntreanLayananTable();
           if (typeof updateDashboardBadgeLayanan === "function") updateDashboardBadgeLayanan();
-
         } catch (err) {
           Swal.fire('Gagal', err.message, 'error');
         }
