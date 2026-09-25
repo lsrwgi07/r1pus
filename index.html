@@ -2305,7 +2305,7 @@
     });
 
     // Jalankan penguncian awal saat form pertama kali dimuat
-    applyMutationAndAgeLocks();
+    checkAndLockKbTable();
   };
 
   async function loadMasterWilayahFromDB() {
@@ -2341,95 +2341,119 @@
   });
 
   const provSelect = document.getElementById("provinsi");
-  if (provSelect) {
-    provSelect.innerHTML = '<option value="">-- PILIH --</option>';
-    for (let kode in dataProvinsi) provSelect.add(new Option(dataProvinsi[kode].toUpperCase(), kode));
-  }
-}
-
-  // Helper: Mengecek apakah Data Wilayah dan Identitas PUS sudah lengkap
-  function isPusDataComplete() {
-    // 1. Cek Data Wilayah (Bagian I)
-    const prov = document.getElementById("provinsi")?.value;
-    const kab  = document.getElementById("kabupaten")?.value;
-    const kec  = document.getElementById("kecamatan")?.value;
-    const desa = document.getElementById("desa")?.value;
-    const dusun= document.getElementById("dusun")?.value;
-    const rt   = document.getElementById("rt")?.value;
-
-    if (!prov || !kab || !kec || !desa || !dusun || !rt) return false;
-
-    // 2. Cek Data Identitas PUS (Bagian II)
-    const namaSuami = document.getElementById("nama_suami")?.value.trim();
-    const nikSuami  = document.getElementById("nik_suami")?.value.trim();
-    const namaIstri = document.getElementById("nama_istri")?.value.trim();
-    const nikIstri  = document.getElementById("nik_istri")?.value.trim();
-    const tglLahir  = document.getElementById("tgl_lahir_istri")?.value;
-    const jkn       = document.getElementById("peserta_jkn")?.value;
-    const jmlAnak   = parseInt(document.getElementById("jumlah_anak")?.value || 0, 10);
-    const umurAnak  = document.getElementById("umur_anak_terkecil")?.value;
-
-    if (!namaSuami) return false;
-    if (!nikSuami || nikSuami.length !== 16) return false;
-    if (!namaIstri) return false;
-    if (!nikIstri || nikIstri.length !== 16) return false;
-    if (!tglLahir) return false;
-    if (!jkn) return false;
-    if (jmlAnak > 0 && (!umurAnak || parseInt(umurAnak, 10) < 0)) return false;
-
-    return true;
+    if (provSelect) {
+      provSelect.innerHTML = '<option value="">-- PILIH --</option>';
+      for (let kode in dataProvinsi) provSelect.add(new Option(dataProvinsi[kode].toUpperCase(), kode));
+    }
   }
   
-  function applyMutationAndAgeLocks() {
-    const isComplete = isPusDataComplete();
-    const tglLahir = document.getElementById("tgl_lahir_istri").value;
-    const tahunInput = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
+  function isIdentitasDanWilayahLengkap() {
+    const missingFields = [];
     
-    // JIKA FORM BELUM LENGKAP: Kunci semua pilihan bulan KB
-    if (!isComplete) {
-      for (let i = 1; i <= 12; i++) {
-        const sel = document.getElementById("kb_" + i);
-        if (!sel) continue;
+    if (!document.getElementById("provinsi").value) missingFields.push("Provinsi");
+    if (!document.getElementById("kabupaten").value) missingFields.push("Kabupaten / Kota");
+    if (!document.getElementById("kecamatan").value) missingFields.push("Kecamatan");
+    if (!document.getElementById("desa").value) missingFields.push("Desa");
+    if (!document.getElementById("dusun").value) missingFields.push("Dusun");
+    if (!document.getElementById("rt").value) missingFields.push("RT");
+    
+    const namaSuami = document.getElementById("nama_suami").value.trim();
+    const nikSuami  = document.getElementById("nik_suami").value.trim();
+    const namaIstri = document.getElementById("nama_istri").value.trim();
+    const nikIstri  = document.getElementById("nik_istri").value.trim();
+    const tglLahir  = document.getElementById("tgl_lahir_istri").value;
+    const jkn       = document.getElementById("peserta_jkn").value;
+    const jmlAnak   = parseInt(document.getElementById("jumlah_anak").value || 0, 10);
+    const umurAnakTerkecil = document.getElementById("umur_anak_terkecil").value;
+
+    if (!namaSuami) missingFields.push("Nama Suami");
+    if (!nikSuami) {
+      missingFields.push("NIK Suami wajib diisi");
+    } else if (nikSuami.length !== 16) {
+      missingFields.push("NIK Suami (harus 16 digit)");
+    }
+
+    if (!namaIstri) missingFields.push("Nama Istri");
+    if (!nikIstri) {
+      missingFields.push("NIK Istri wajib diisi");
+    } else if (nikIstri.length !== 16) {
+      missingFields.push("NIK Istri (harus 16 digit)");
+    }
+
+    if (!tglLahir)  missingFields.push("Tanggal Lahir Istri");
+    if (!jkn)       missingFields.push("Kepesertaan JKN");
+
+    if (jmlAnak > 0 && (!umurAnakTerkecil || parseInt(umurAnakTerkecil, 10) < 0)) {
+      missingFields.push("Umur Anak Terkecil (karena anak > 0)");
+    }
+
+    return {
+      isLengkap: missingFields.length === 0,
+      missing: missingFields
+    };
+  }
+  
+  function checkAndLockKbTable() {
+    const check = isIdentitasDanWilayahLengkap();
+
+    for (let i = 1; i <= 12; i++) {
+      const sel = document.getElementById("kb_" + i);
+      if (!sel) continue;
+
+      if (!check.isLengkap) {
+        // Kunci jika data wilayah & PUS belum lengkap
         sel.style.backgroundColor = "#e9ecef";
         sel.style.pointerEvents = "none";
         sel.tabIndex = -1;
-        sel.title = "Lengkapi Data Wilayah dan Identitas PUS terlebih dahulu!";
+        sel.title = "Lengkapi data Wilayah dan Identitas PUS terlebih dahulu";
+      } else {
+        // Buka kunci jika sudah lengkap (kemudian aturan umur 50+ / mutasi akan menyesuaikan)
+        sel.style.backgroundColor = "#ffffff";
+        sel.style.pointerEvents = "auto";
+        sel.tabIndex = 0;
+        sel.title = "";
       }
-      return; // Hentikan evaluasi, jangan buka lock
     }
 
-    // JIKA FORM SUDAH LENGKAP: Jalankan evaluasi usia 50+ dan mutasi seperti biasa
-    let mutationTriggeredIndex = -1;
-    let age50StartIndex = 13;
+    // Jika sudah lengkap, jalankan proteksi usia/mutasi
+    if (check.isLengkap) {
+      applyMutationAndAgeLocks();
+    }
+  }
 
-    // 1. Hitung titik bulan usia 50 tahun
+  function applyMutationAndAgeLocks() {
+    const tglLahir = document.getElementById("tgl_lahir_istri").value;
+    const tahunInput = parseInt(document.getElementById("tahun_input").value || new Date().getFullYear(), 10);
+    
+    let mutationTriggeredIndex = -1;
+    let age50StartIndex = 13; // default: tidak terkunci (di luar 12 bulan)
+    
     if (tglLahir) {
       const dob = new Date(tglLahir);
       if (!isNaN(dob.getTime())) {
         const birthYear = dob.getFullYear();
-        const birthMonth = dob.getMonth() + 1;
+        const birthMonth = dob.getMonth() + 1; // 1 - 12 (Desember = 12)
         const yearTurning50 = birthYear + 50;
 
         if (tahunInput > yearTurning50) {
-          age50StartIndex = 1;
+          age50StartIndex = 1; 
         } else if (tahunInput === yearTurning50) {
-          age50StartIndex = birthMonth;
+          age50StartIndex = birthMonth; 
         }
       }
     }
-
-    // 2. Cek apakah ada status mutasi
+    
     for (let i = 1; i <= 12; i++) {
       const sel = document.getElementById("kb_" + i);
       if (!sel) continue;
       const val = String(sel.value || "").toUpperCase();
+      
       if (val === "BERCERAI" || val === "SUAMI/ISTRI MENINGGAL" || val === "PINDAH") {
         mutationTriggeredIndex = i;
         break;
       }
     }
-
-    // 3. Tentukan batas awal lock
+    
     let lockStartingIndex = 13;
     let lockReason = "";
 
@@ -2448,8 +2472,7 @@
       lockStartingIndex = age50StartIndex;
       lockReason = "TERKUNCI (USIA 50+)";
     }
-
-    // 4. Pasang proteksi bulan
+    
     for (let i = 1; i <= 12; i++) {
       const sel = document.getElementById("kb_" + i);
       if (!sel) continue;
@@ -2457,23 +2480,20 @@
       const shouldLock = (lockStartingIndex !== 13 && i >= lockStartingIndex);
 
       if (shouldLock) {
-        sel.value = ""; // <-- Baris ini yang ditambahkan untuk mengosongkan bulan yang terkunci
+        sel.value = ""; 
         sel.style.backgroundColor = "#e9ecef";
         sel.style.pointerEvents = "none";
         sel.tabIndex = -1;
         sel.title = lockReason;
-        sel.removeAttribute("disabled");
       } else {
         sel.style.backgroundColor = "#ffffff";
         sel.style.pointerEvents = "auto";
         sel.tabIndex = 0;
         sel.title = "";
-        sel.removeAttribute("disabled");
       }
     }
   }
-
-// --- KONTROL DROPDOWN BERTINGKAT UNTUK DOWNLOAD DATA TERISI ---
+  
   function initDlExportDropdowns() {
     const selTingkat = document.getElementById("dlExpTingkat");
     if (!selTingkat) return;
@@ -6035,24 +6055,113 @@
       executeSearch(); // Segarkan otomatis daftar pencarian
     });
   }
-
-  // =========================================================================
-  // HELPER: VALIDASI APAKAH TABEL SUDAH MEMILIKI DATA VALID
-  // =========================================================================
-  function isTableReadyForExport(tableId) {
+  
+  function isTableDataEmpty(tableId) {
     const table = document.getElementById(tableId);
-    if (!table) return false;
-
+    if (!table) return true;
     const tbody = table.querySelector("tbody");
-    if (!tbody || tbody.rows.length === 0) return false;
+    if (!tbody || tbody.rows.length === 0) return true;
+    
+    // Cek jika hanya ada 1 baris yang berisi pesan placeholder / teks info
+    if (tbody.rows.length === 1 && tbody.rows[0].cells.length <= 1) return true;
+    
+    // Cek jika baris pertama memuat teks default status belum ada data
+    const firstCellText = tbody.rows[0].innerText.toLowerCase();
+    if (firstCellText.includes("silakan atur filter") || 
+        firstCellText.includes("memuat") || 
+        firstCellText.includes("tidak ada data") ||
+        firstCellText.includes("mengambil seluruh data")) {
+      return true;
+    }
+    return false;
+  }
 
-    // Jika baris pertama memiliki colspan besar (tanda baris placeholder/pesan)
-    const firstCell = tbody.rows[0]?.cells[0];
-    if (firstCell && firstCell.colSpan >= 10) {
-      return false;
+  function exportBnbaToExcel() {
+    if (isTableDataEmpty('bnbaTable')) {
+      Swal.fire(
+        "Data Kosong", 
+        "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", 
+        "warning"
+      );
+      return;
+    }
+    exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS');
+  }
+
+  function exportBnbaToPDF() {
+    if (isTableDataEmpty('bnbaTable')) {
+      Swal.fire(
+        "Data Kosong", 
+        "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", 
+        "warning"
+      );
+      return;
     }
 
-    return true;
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'pt', 'a2');
+      doc.setFontSize(16);
+      doc.text("DATA BNBA PASANGAN USIA SUBUR", 40, 35);
+
+      doc.autoTable({
+        html: '#bnbaTable',
+        startY: 50,
+        styles: { fontSize: 7, cellPadding: 3, halign: 'center' },
+        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+        theme: 'grid'
+      });
+
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      doc.save(`DATA_BNBA_PASANGAN_USIA_SUBUR_${timeStamp}.pdf`);
+    } catch (err) {
+      console.error("Export PDF BNBA Error:", err);
+      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
+    }
+  }
+
+  function exportRecapToExcel() {
+    if (isTableDataEmpty('recapTable')) {
+      Swal.fire(
+        "Data Kosong", 
+        "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", 
+        "warning"
+      );
+      return;
+    }
+    exportTableToExcel('recapTable', 'REKAP_PUS');
+  }
+
+  function exportRecapToPDF() {
+    if (isTableDataEmpty('recapTable')) {
+      Swal.fire(
+        "Data Kosong", 
+        "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", 
+        "warning"
+      );
+      return;
+    }
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'pt', 'a3');
+      doc.setFontSize(14);
+      doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
+
+      doc.autoTable({
+        html: '#recapTable',
+        startY: 45,
+        styles: { fontSize: 6.5, cellPadding: 2, halign: 'center' },
+        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
+        theme: 'grid'
+      });
+
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      doc.save(`REKAP_PUS_${timeStamp}.pdf`);
+    } catch (err) {
+      console.error("Export PDF Recap Error:", err);
+      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
+    }
   }
 
   function selectDataForEdit(d) {
@@ -6103,82 +6212,7 @@
     const delBtn = document.getElementById("btnDeletePus");
     if (delBtn) delBtn.style.display = "block";
   }
-
-  function exportBnbaToExcel() {
-    if (!isTableReadyForExport('bnbaTable')) {
-      Swal.fire("Perhatian", "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
-      return;
-    }
-    exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS');
-  }
-
-  function exportBnbaToPDF() {
-    if (!isTableReadyForExport('bnbaTable')) {
-      Swal.fire("Perhatian", "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", "warning");
-      return;
-    }
-
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a2');
-      doc.setFontSize(16);
-      doc.text("DATA BNBA PASANGAN USIA SUBUR", 40, 35);
-
-      doc.autoTable({
-        html: '#bnbaTable',
-        startY: 50,
-        styles: { fontSize: 7, cellPadding: 3, halign: 'center' },
-        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
-        theme: 'grid'
-      });
-
-      const timeStamp = new Date().toISOString().slice(0, 10);
-      doc.save(`DATA_BNBA_PASANGAN_USIA_SUBUR_${timeStamp}.pdf`);
-    } catch (err) {
-      console.error("Export PDF BNBA Error:", err);
-      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
-    }
-  }
-
-  function exportRecapToExcel() {
-    if (!isTableReadyForExport('recapTable')) {
-      Swal.fire("Perhatian", "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
-      return;
-    }
-    exportTableToExcel('recapTable', 'REKAP_PUS');
-  }
-
-  function exportRecapToPDF() {
-    if (!isTableReadyForExport('recapTable')) {
-      Swal.fire("Perhatian", "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", "warning");
-      return;
-    }
-
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a3');
-      doc.setFontSize(14);
-      doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
-
-      doc.autoTable({
-        html: '#recapTable',
-        startY: 45,
-        styles: { fontSize: 6.5, cellPadding: 2, halign: 'center' },
-        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
-        theme: 'grid'
-      });
-
-      const timeStamp = new Date().toISOString().slice(0, 10);
-      doc.save(`REKAP_PUS_${timeStamp}.pdf`);
-    } catch (err) {
-      console.error("Export PDF Recap Error:", err);
-      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
-    }
-  }    
-
-  // =========================================================================
-  // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
-  // =========================================================================
+  
   function exportTableToExcel(tableId, filename) {
     try {
       const table = document.getElementById(tableId);
