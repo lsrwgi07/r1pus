@@ -4639,8 +4639,7 @@
       document.getElementById("id_pus").value = idPus;
       document.getElementById("old_id_pus").value = idPus;
 
-      // Tampilkan tombol Hapus Data
-      const btnDel = document.getElementById("btnDeletePus");
+      // Tampilkan tombol Hapus Data      
       const btnDel = document.getElementById("btnDeletePus");
       if (btnDel) btnDel.style.display = "block";
 
@@ -8474,7 +8473,7 @@ function onUserKabChange() {
           seenKeys.add(uniqueKey);
 
           payloadList.push({
-            provinsi: String(r[0] || "NUSA TENGGARA BARAT").trim().toUpperCase(),
+            provinsi: String(r[0] || dataProvinsi[kdProv] || "PROVINSI").trim().toUpperCase(),
             kode_prov: kdProv,
             kabupaten: String(r[2] || "").trim().toUpperCase(),
             kode_kab: kdKab,
@@ -11075,8 +11074,7 @@ function onUserKabChange() {
       reverseButtons: true,
       focusCancel: true
     }).then((result) => {
-      if (result.isConfirmed) {
-        // 1. Bersihkan listener realtime Supabase
+      if (result.isConfirmed) {        
         if (realtimeLayananChannel) {
           db.removeChannel(realtimeLayananChannel);
           realtimeLayananChannel = null;
@@ -11086,11 +11084,9 @@ function onUserKabChange() {
           db.removeChannel(realtimeMutasiChannel);
           realtimeMutasiChannel = null;
         }
-
-        // 2. Hapus sesi login dari localStorage
+        
         localStorage.removeItem("pus_app_session");
-
-        // 3. Tutup jendela aplikasi
+        
         window.close();
         setTimeout(() => {
           window.location.href = "about:blank";
@@ -11098,7 +11094,6 @@ function onUserKabChange() {
       }
     });
   }
-
 </script>
 </body>
 </html>
