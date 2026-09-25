@@ -23,6 +23,27 @@
     #loginContainer { max-width: 400px; margin-top: 10vh; }
     h2, h3 { text-align: center; color: #1f4e78; font-size: 18px; margin: 5px 0; }
     h3 { font-size: 14px; margin-bottom: 15px; }
+
+    #recapTingkat, #bnbaTingkat, #chartTingkat,
+    #recapTingkat option, #bnbaTingkat option, #chartTingkat option {
+      font-weight: bold !important;
+    }
+    
+    #bnbaFilterAdvCategory,
+    #bnbaFilterAdvCategory option {
+      font-weight: bold !important;
+    }
+    
+    @media (min-width: 601px) {
+      .br-mobile-only {
+        display: none;
+      }
+    }    
+    @media (max-width: 600px) {
+      .br-mobile-only {
+        display: inline;
+      }
+    }
     
     .dashboard-grid {
       display: grid;
@@ -67,20 +88,6 @@
       gap: 10px;
     }
     .page-header-right { display: flex; gap: 8px; }
-    
-    #recapTingkat,
-    #recapTingkat option,
-    #bnbaTingkat,
-    #bnbaTingkat option,
-    #chartTingkat,
-    #chartTingkat option {
-      font-weight: bold !important;
-    }
-    
-    #bnbaFilterAdvCategory,
-    #bnbaFilterAdvCategory option {
-      font-weight: bold !important;
-    }
     
     .btn-nav {
       padding: 8px 14px;
@@ -180,7 +187,7 @@
 
     .search-filter-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
       width: 100%;
       box-sizing: border-box;
@@ -252,34 +259,51 @@
       padding-bottom: 6px;
     }
 
-    /* Card Container Form Layanan */
+    /* Container Card Form Layanan */
     .card-layanan-plan {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
-      padding: 22px;
+      padding: 20px;
       margin-bottom: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
     }
 
-    /* Label Fleksibel & Teratur */
-    .label-field-kb {
-      font-size: 11.5px;
-      font-weight: 700;
-      color: #475569;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-      margin: 0;
-      line-height: 1.35;
-      min-height: 32px; /* Menyeragamkan ruang vertikal label agar kotak input di bawahnya sejajar */
+    /* Kolom Wrapper Input */
+    .form-col-kb {
       display: flex;
-      align-items: flex-end; /* Mengunci pangkal label tepat di atas kotak input */
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      width: 100%;
+    }    
+
+    .input-control-kb[readonly],
+    .input-control-kb:disabled {
+      background-color: #f1f5f9 !important;
+      color: #475569 !important;
+      cursor: not-allowed;
+      border-color: #e2e8f0 !important;
     }
 
-    /* Standarisasi Semua Elemen Input Form Layanan */
+    .label-field-kb {
+      font-size: 11.5px !important;
+      font-weight: 700 !important;
+      color: #475569 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.3px;
+      margin: 0 !important;
+      line-height: 1.35 !important;
+      min-height: 28px;
+      display: flex;
+      align-items: flex-end;
+      white-space: normal !important;
+      word-break: break-word;
+    }
+
     .input-control-kb {
-      height: 45px !important; /* Standar tinggi seragam yang ideal dan proporsional */
-      min-height: 45px !important;
+      height: 42px !important;
+      min-height: 42px !important;
       width: 100% !important;
       padding: 0 12px !important;
       border-radius: 6px !important;
@@ -288,31 +312,88 @@
       color: #1e293b !important;
       background-color: #ffffff;
       box-sizing: border-box !important;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: all 0.2s ease-in-out;
     }
 
     .input-control-kb:focus {
       border-color: #0284c7 !important;
       outline: none;
-      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+    }
+    
+    .grid-2-col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 14px;
     }
 
-    /* Wadah Field Dinamis */
-    .form-col-kb {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 0;
+    .grid-3-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 14px;
+    }    
+
+    .checkbox-item-kb {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #334155 !important;
+      cursor: pointer;
+      user-select: none;
+      margin: 0 !important;
+      line-height: 1.25;
+      background: #f8fafc;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      transition: background 0.15s;
     }
 
-    /* Responsif: Di desktop label tetap 1 baris jika muat, di HP otomatis membungkus rapi */
-    @media (min-width: 768px) {
+    .checkbox-item-kb:hover {
+      background: #f1f5f9;
+    }
+
+    .checkbox-item-kb input[type="checkbox"] {
+      width: 16px !important;
+      height: 16px !important;
+      margin: 0 !important;
+      flex-shrink: 0;
+      accent-color: #0284c7;
+      cursor: pointer;
+    }
+
+    .checkbox-item-kb span {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+    }
+    
+    @media (max-width: 640px) {
+      .grid-2-col, .grid-3-col {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
       .label-field-kb {
-        white-space: normal;
+        min-height: auto;
       }
     }
 
-    .chart-container { position: relative; height: 250px; width: 100%; }
+    @media (max-width: 768px) {
+      #filterExpLayananDesaGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+    @media (max-width: 480px) {
+      #filterExpLayananDesaGrid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    .chart-container { position: relative; height: 250px; width: 100%; }    
 
     .sheet-a4 {
       width: 210mm;
@@ -353,10 +434,93 @@
       .sheet-a4 {
         margin: 0;
         box-shadow: none;
-        page-break-after: always;
       }
-      .ki-page-card {
-        border: 0.2mm dashed #ccc;
+    }
+   
+    /* Optimasi Responsif Layanan KB Mobile */
+    @media (max-width: 640px) {    
+      #modalPelayananKb .modal-content {
+        width: 95% !important;
+        padding: 14px 10px !important;
+        margin: 3% auto !important;
+        max-height: 94vh !important;
+      }
+      
+      #modalPelayananKb .modal-content > div[style*="display: flex; gap: 10px; margin-bottom: 15px"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      #tabBtnLayananAntrean,
+      #tabBtnLayananDaftar {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 10px !important;
+      }
+      
+      #layananTabAntrean div[style*="grid-template-columns: minmax(180px"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        width: 100% !important;
+      }
+      #layananTabAntrean div[style*="grid-template-columns: minmax(180px"] > div {
+        width: 100% !important;
+      }
+      #layananTabAntrean div[style*="grid-template-columns: minmax(180px"] button {
+        width: 100% !important;
+      }
+      
+      #filterExpLayananDesaGrid,
+      #filterExpLayananDusunGrid {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-height: 180px !important;
+      }
+      
+      #layananTabAntrean div[style*="border-top: 1px solid #e2e8f0"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      #layananTabAntrean div[style*="border-top: 1px solid #e2e8f0"] button {
+        width: 100% !important;
+      }
+      
+      #layananTabDaftar div[style*="grid-template-columns: repeat(auto-fit"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      #layananTabDaftar div[style*="display: flex; gap: 8px;"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      #layananTabDaftar div[style*="display: flex; gap: 8px;"] button {
+        width: 100% !important;
+        padding: 10px !important;
+      }
+      
+      #formPendaftaranLayanan .grid-2-col,
+      #formPendaftaranLayanan .grid-3-col {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      #formPendaftaranLayanan .card-layanan-plan {
+        padding: 12px 10px !important;
+      }
+      
+      #layananTabDaftar .card-layanan-plan > div[style*="justify-content: space-between"] {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+      }
+      
+      #formPendaftaranLayanan > div[style*="display: flex; gap: 10px;"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      #btnSimpanPendaftaranLayanan,
+      #formPendaftaranLayanan button[type="button"] {
+        width: 100% !important;
       }
     }
   </style>
@@ -805,8 +969,8 @@
           </div>
 
           <!-- 2. PENCARIAN LANJUTAN & SUB CHECKLIST MULTI-PILIH -->
-          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-            <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()" style="width: 100%;">
+          <div>
+            <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: normal; color: #1e293b;">
               <option value="">-- PENCARIAN LANJUTAN --</option>
               <option value="JKN">JKN</option>
               <option value="KESERTAAN_KB">KESERTAAN KB</option>
@@ -818,29 +982,34 @@
               <option value="PUS_BARU">PUS BARU</option>
               <option value="MUTASI">MUTASI</option>
             </select>
+          </div>
 
-            <!-- Wadah Kotak Centang Multi-Pilihan -->
-            <div id="bnbaFilterAdvCheckboxContainer" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; box-sizing: border-box; width: 100%;">
-              <!-- Header: Judul & Dua Tombol Pil -->
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #cbd5e1;">
-                <span id="bnbaAdvSubLabel" style="font-weight: 800; font-size: 13px; color: #1f4e78; line-height: 1.2; flex: 1;">
-                  PILIH KEPESERTAAN JKN:
-                </span>
-                <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                  <button type="button" onclick="toggleAllAdvCheckboxes(true)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
-                    Pilih<br>Semua
-                  </button>
-                  <button type="button" onclick="toggleAllAdvCheckboxes(false)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
-                    Hapus<br>Semua
-                  </button>
-                </div>
-              </div>
-              <!-- Area Checkbox: Menggunakan Grid 3 Kolom -->
-              <div id="bnbaAdvCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; align-items: start;">
-                <!-- Diisi otomatis oleh JavaScript -->
-              </div>
+          <!-- PANEL PILIHAN CHECKBOX ADAPTIF -->
+          <div id="bnbaAdvCheckboxPanel" style="display: none; margin-top: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+            
+            <!-- Header: Judul Kiri & Tombol Aksi Kanan -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
+              <span id="bnbaAdvPanelTitle" style="font-size: 11px; font-weight: 800; color: #075985; letter-spacing: 0.5px; text-transform: uppercase;">
+                PILIH METODE AKSEPTOR KB BARU:
+              </span>
+              <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                <button type="button" onclick="toggleAllAdvCheckboxes(true)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
+                  Pilih<br>Semua
+                </button>
+                <button type="button" onclick="toggleAllAdvCheckboxes(false)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
+                  Hapus<br>Semua
+                </button>
+              </div>              
             </div>
-          </div>          
+
+            <!-- Garis Pemisah Halus (Dotted Divider) -->
+            <div style="border-bottom: 1px dotted #cbd5e1; margin-bottom: 12px;"></div>
+
+            <!-- Grid Multi-Kolom Rata & Adaptif -->
+            <div id="bnbaAdvCheckboxGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 10px 14px; align-items: flex-start;">
+              <!-- Item Checkbox dirender dinamis oleh JS onBnbaAdvCategoryChange -->
+            </div>
+          </div>         
 
           <!-- 3. BULAN (DILETAKKAN DI BAWAH PENCARIAN LANJUTAN) -->
           <div>
@@ -1716,7 +1885,7 @@
       <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #0284c7;">
         <div style="font-size: 12.5px; color: #334155; font-weight: bold; margin-bottom: 8px;">Cari Calon Akseptor dari Database</div>
         
-        <!-- GRID FILTER WILAYAH PENCARIAN CALON AKSEPTOR -->
+        <!-- GRID FILTER WILAYAH PENCARIAN -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px;">
           <select id="cariLayananKab" onchange="onCariLayananKabChange()" style="padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
             <option value="">-- KABUPATEN/KOTA --</option>
@@ -1751,78 +1920,60 @@
         <input type="hidden" id="reg_kode_rt" value="">
         <input type="hidden" id="reg_nik_suami" value="">
 
-        <!-- KARTU 1: IDENTITAS CALON AKSEPTOR -->
+        <!-- KARTU 1: IDENTITAS PUS TERPILIH (TERISI OTOMATIS) -->
         <div class="card-layanan-plan">
-          
-          <!-- Header Sub-Bagian -->
-          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="background: #0284c7; color: #ffffff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;">1</span>
-              <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; letter-spacing: 0.3px; text-transform: uppercase;">
+              <span style="background: #0284c7; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">1</span>
+              <span style="font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase;">
                 Data Identitas Calon Akseptor
               </span>
             </div>
             <span style="font-size: 11px; color: #64748b; font-weight: 600;">(Terisi Otomatis)</span>
           </div>
 
-          <!-- Baris 1: Nama Istri & NIK Istri (Grid 2 Kolom Simetris) -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 18px;">
-            
+          <!-- Baris 1: Nama Istri & NIK Istri -->
+          <div class="grid-2-col">
             <div class="form-col-kb">
-              <label for="reg_nama_istri" class="label-field-kb">
-                Nama Istri:
-              </label>
-              <input type="text" id="reg_nama_istri" class="input-control-kb" readonly placeholder="PILIH PUS TERLEBIH DAHULU" style="background: #f1f5f9; font-weight: 700; color: #0f172a; cursor: not-allowed;">
+              <label for="reg_nama_istri" class="label-field-kb">Nama Istri:</label>
+              <input type="text" id="reg_nama_istri" class="input-control-kb" readonly placeholder="PILIH PUS TERLEBIH DAHULU" style="font-weight: 700; color: #0f172a;">
             </div>
-
             <div class="form-col-kb">
-              <label for="reg_nik_istri" class="label-field-kb">
-                NIK Istri:
-              </label>
-              <input type="text" id="reg_nik_istri" class="input-control-kb" readonly placeholder="-" style="background: #f1f5f9; font-family: monospace; font-weight: 600; color: #334155; cursor: not-allowed;">
+              <label for="reg_nik_istri" class="label-field-kb">NIK Istri:</label>
+              <input type="text" id="reg_nik_istri" class="input-control-kb" readonly placeholder="-" style="font-family: monospace; font-weight: 600;">
             </div>
           </div>
 
-          <!-- Baris 2: Nama Suami & Wilayah Domisili (Grid 2 Kolom Simetris) -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 6px;">
-            
+          <!-- Baris 2: Nama Suami & Wilayah Domisili -->
+          <div class="grid-2-col" style="margin-bottom: 0;">
             <div class="form-col-kb">
-              <label for="reg_nama_suami" class="label-field-kb">
-                Nama Suami:
-              </label>
-              <input type="text" id="reg_nama_suami" class="input-control-kb" readonly placeholder="-" style="background: #f1f5f9; color: #334155; font-weight: 600; cursor: not-allowed;">
+              <label for="reg_nama_suami" class="label-field-kb">Nama Suami:</label>
+              <input type="text" id="reg_nama_suami" class="input-control-kb" readonly placeholder="-" style="font-weight: 600;">
             </div>
-
             <div class="form-col-kb">
-              <label for="reg_info_wilayah" class="label-field-kb">
-                Wilayah Domisili:
-              </label>
-              <input type="text" id="reg_info_wilayah" class="input-control-kb" readonly placeholder="-" style="background: #f1f5f9; font-size: 12.5px; color: #334155; cursor: not-allowed;" title="Wilayah Domisili Calon Akseptor">
+              <label for="reg_info_wilayah" class="label-field-kb">Wilayah Domisili:</label>
+              <input type="text" id="reg_info_wilayah" class="input-control-kb" readonly placeholder="-">
             </div>
           </div>
         </div>
 
-        <!-- KARTU 2: FORM RENCANA PELAYANAN MEDIS -->
+        <!-- KARTU 2: RENCANA TINDAKAN KB -->
         <div class="card-layanan-plan">
-          
-          <!-- Header Sub-Bagian -->
-          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="background: #0284c7; color: #ffffff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;">2</span>
-              <span style="font-size: 13.5px; font-weight: 800; color: #1e293b; letter-spacing: 0.3px; text-transform: uppercase;">
+              <span style="background: #0284c7; color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">2</span>
+              <span style="font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase;">
                 Rencana Pelayanan & Tindakan KB
               </span>
             </div>
-            <span style="font-size: 11px; color: #ef4444; font-weight: 700;">* Wajib diisi</span>
+            <span style="font-size: 11px; color: #ef4444; font-weight: 700;">* Wajib Diisi</span>
           </div>
 
-          <!-- Baris 1: Jenis Pelayanan, Metode Kontrasepsi & Jenis Akseptor (Grid 3 Kolom Simetris) -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 14px;">
-            
-            <!-- 1. Jenis Pelayanan -->
+          <!-- Baris 1: Jenis Pelayanan, Metode, & Jenis Akseptor -->
+          <div class="grid-3-col">
             <div class="form-col-kb">
               <label for="reg_jenis_pelayanan" class="label-field-kb">
-                Jenis Pelayanan <span style="color: #ef4444; margin-left: 3px;">*</span>
+                Jenis Pelayanan <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <select id="reg_jenis_pelayanan" class="input-control-kb" onchange="onJenisPelayananChange()" required style="font-weight: 700;">
                 <option value="">-- PILIH PELAYANAN --</option>
@@ -1832,41 +1983,36 @@
               </select>
             </div>
 
-            <!-- 2. Metode Kontrasepsi -->
             <div class="form-col-kb">
               <label for="reg_rencana_metode" class="label-field-kb">
-                Metode Kontrasepsi <span style="color: #ef4444; margin-left: 3px;">*</span>
+                Metode Kontrasepsi <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
-              <select id="reg_rencana_metode" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" disabled required style="font-weight: 700; color: #0369a1; background-color: #f1f5f9;">
+              <select id="reg_rencana_metode" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" disabled required style="font-weight: 700; color: #0369a1;">
                 <option value=""></option>
               </select>
             </div>
 
-            <!-- 3. Jenis Akseptor (Otomatis) -->
             <div class="form-col-kb">
               <label class="label-field-kb">
-                Jenis Akseptor <span style="font-size: 10px; color: #0284c7; font-weight: 800; margin-left: 4px;">(OTOMATIS)</span>
+                Jenis Akseptor <span style="font-size: 10px; color: #0284c7; margin-left: 4px;">(OTOMATIS)</span>
               </label>
               <input type="hidden" id="reg_jenis_akseptor" value="">
-              <div id="badgeJenisAkseptorDisplay" class="input-control-kb" style="background: #f8fafc; font-weight: 700; color: #64748b; display: flex; align-items: center; user-select: none; border-style: dashed;">
-                Menunggu pemilihan metode...
+              <div id="badgeJenisAkseptorDisplay" class="input-control-kb" style="background: #f8fafc; font-weight: 700; color: #64748b; display: flex; align-items: center; border-style: dashed;">
+                Menunggu metode...
               </div>
             </div>
-
           </div>
 
-          <!-- Keterangan Deteksi Cerdas Riwayat KB -->
-          <div style="margin-bottom: 18px; padding: 2px 2px;">
+          <!-- Info Deteksi Cerdas Riwayat KB -->
+          <div style="margin-bottom: 14px;">
             <small id="infoRiwayatKb" style="font-size: 11.5px; font-weight: 600; color: #0369a1; display: block; line-height: 1.4;"></small>
           </div>
 
-          <!-- Baris 2: Bulan Pelayanan & Tanggal Rencana (Grid 2 Kolom Simetris) -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 18px;">
-            
-            <!-- Bulan Pelayanan -->
+          <!-- Baris 2: Bulan & Tanggal Rencana -->
+          <div class="grid-2-col">
             <div class="form-col-kb">
               <label for="reg_bulan_rencana" class="label-field-kb">
-                Bulan Pelayanan <span style="color: #ef4444; margin-left: 3px;">*</span>
+                Bulan Pelayanan <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <select id="reg_bulan_rencana" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" required style="font-weight: 600;">
                 <option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option>
@@ -1876,57 +2022,44 @@
               </select>
             </div>
 
-            <!-- Tanggal Rencana Tindakan -->
             <div class="form-col-kb">
-              <label for="reg_tgl_rencana" class="label-field-kb" style="width: auto !important;">
-                <span style="display: inline-flex; align-items: center; white-space: nowrap;">
-                  Tanggal Rencana Tindakan<span style="color: #ef4444; margin-left: 2px;">*</span>:
-                </span>
+              <label for="reg_tgl_rencana" class="label-field-kb">
+                Tanggal Rencana Tindakan <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <input type="date" id="reg_tgl_rencana" class="input-control-kb" required>
             </div>
-
           </div>
 
-          <!-- Baris 3: Fasilitas Pelayanan & Kader Pendamping (Grid 2 Kolom Simetris) -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 18px;">
-            
-            <!-- Tempat / Fasilitas Pelayanan -->
+          <!-- Baris 3: Tempat Pelayanan & Kader Pendamping -->
+          <div class="grid-2-col">
             <div class="form-col-kb">
-              <label for="reg_faskes_tujuan" class="label-field-kb" style="width: auto !important;">
-                <span style="display: inline-flex; align-items: center; white-space: nowrap;">
-                  Tempat / Fasilitas Pelayanan<span style="color: #ef4444; margin-left: 2px;">*</span>:
-                </span>
+              <label for="reg_faskes_tujuan" class="label-field-kb">
+                Tempat / Fasilitas Pelayanan <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <input type="text" id="reg_faskes_tujuan" class="input-control-kb" required placeholder="CONTOH: RSUD / PUSKESMAS / PMB" oninput="this.value = this.value.toUpperCase()">
             </div>
 
-            <!-- Nama Kader Pendamping -->
             <div class="form-col-kb">
               <label for="reg_nama_kader" class="label-field-kb">
-                Nama Kader Pendamping <span style="color: #ef4444; margin-left: 3px;">*</span>
+                Nama Kader Pendamping <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <input type="text" id="reg_nama_kader" class="input-control-kb" required placeholder="NAMA LENGKAP KADER" oninput="this.value = this.value.toUpperCase()" style="font-weight: 600;">
             </div>
-
           </div>
 
-          <!-- Baris 4: Catatan Tambahan (Full Width Simetris) -->
-          <div class="form-col-kb" style="margin-bottom: 6px;">
-            <label for="reg_catatan" class="label-field-kb" style="min-height: auto; margin-bottom: 2px;">
-              Catatan Tambahan:
-            </label>
+          <!-- Baris 4: Catatan Tambahan -->
+          <div class="form-col-kb">
+            <label for="reg_catatan" class="label-field-kb" style="min-height: auto;">Catatan Tambahan:</label>
             <input type="text" id="reg_catatan" class="input-control-kb" placeholder="Contoh: Riwayat tensi tinggi, ganti dari suntik 3 bulanan, dll." style="text-transform: none;">
           </div>
-
-        </div>        
+        </div>
 
         <!-- TOMBOL AKSI -->
         <div style="display: flex; gap: 10px;">
-          <button type="submit" id="btnSimpanPendaftaranLayanan" class="btn-submit" style="margin-top: 0; flex: 2; background-color: #0284c7; padding: 13px; font-size: 14px; cursor: pointer;">
+          <button type="submit" id="btnSimpanPendaftaranLayanan" class="btn-submit" style="margin-top: 0; flex: 2; background-color: #0284c7; padding: 12px; font-size: 14px;">
             💾 DAFTARKAN CALON AKSEPTOR
           </button>
-          <button type="button" class="btn-nav btn-secondary" style="flex: 1; justify-content: center; padding: 13px; font-size: 14px;" onclick="resetFormPendaftaranLayanan()">
+          <button type="button" class="btn-nav btn-secondary" style="flex: 1; justify-content: center; padding: 12px; font-size: 14px;" onclick="resetFormPendaftaranLayanan()">
             Bersihkan
           </button>
         </div>
@@ -2484,15 +2617,16 @@
   }
 
   function onDlExpDesaChange() {
-    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("dlExpKecamatan").value;
-    const desa = isDesaRole() ? userKodeDesa : document.getElementById("dlExpDesa").value;
+    const kab = (isProvRole() ? document.getElementById("dlExpKabupaten")?.value : userKodeKab) || userKodeKab;
+    const kec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("dlExpKecamatan")?.value;
+    const desa = isDesaRole() ? userKodeDesa : document.getElementById("dlExpDesa")?.value;
     const sel = document.getElementById("dlExpDusun");
     if (!sel) return;
 
     sel.innerHTML = '<option value="">-- SEMUA DUSUN --</option>';
 
     if (kec && desa) {
-      const dsn = getDusunList(kec, desa);
+      const dsn = getDusunList(kec, desa, kab);
       if (dsn) {
         for (let kd in dsn) {
           sel.add(new Option(dsn[kd].nama.toUpperCase(), String(kd).padStart(4, '0')));
@@ -2581,22 +2715,45 @@
   }
 	
   function getDusunList(kdKec, kdDesa, kdKab = "") {
-  let cleanKab = String(kdKab || userKodeKab || document.getElementById("kode_kab")?.value || "").padStart(2, '0');
-  let cleanKec = String(kdKec).padStart(2, '0');
-  let cleanDesa = String(kdDesa).padStart(4, '0');
-  
-  // 1. Coba composite key lengkap (paling aman & presisi)
-  let fullKey = cleanKab + "_" + cleanKec + "_" + cleanDesa;
-  if (dataDusun[fullKey]) return dataDusun[fullKey];
+    if (!kdKec || !kdDesa) return null;
+    
+    let cleanKab = String(
+      kdKab || 
+      (typeof getActiveKabupaten === "function" ? getActiveKabupaten("recap") : "") ||
+      userKodeKab || 
+      document.getElementById("kode_kab")?.value || 
+      document.getElementById("searchKabupaten")?.value ||
+      document.getElementById("user_kab_select")?.value ||
+      ""
+    ).trim().padStart(2, '0');
 
-  // 2. Fallback jika kdKab tidak terdeteksi
-  for (let k in dataDusun) {
-    if (k.endsWith("_" + cleanKec + "_" + cleanDesa)) {
-      return dataDusun[k];
+    let cleanKec = String(kdKec).trim().padStart(2, '0');
+    let cleanDesa = String(kdDesa).trim().padStart(4, '0');
+    
+    if (cleanKab && cleanKab !== "00") {
+      let fullKey = `${cleanKab}_${cleanKec}_${cleanDesa}`;
+      if (dataDusun[fullKey]) return dataDusun[fullKey];
     }
+    
+    if (cleanKab && cleanKab !== "00") {
+      let expectedPrefix = `${cleanKab}_`;
+      let expectedSuffix = `_${cleanKec}_${cleanDesa}`;
+      for (let k in dataDusun) {
+        if (k.startsWith(expectedPrefix) && k.endsWith(expectedSuffix)) {
+          return dataDusun[k];
+        }
+      }
+    }
+    
+    let expectedSuffixOnly = `_${cleanKec}_${cleanDesa}`;
+    for (let k in dataDusun) {
+      if (k.endsWith(expectedSuffixOnly)) {
+        return dataDusun[k];
+      }
+    }
+
+    return null;
   }
-  return null;
-}
   
   function isProvRole() {
   const r = String(userRole || "").toUpperCase();
@@ -3171,18 +3328,19 @@
     }
   }
 
-  function toggleAllAdvCheckboxes(status) {    
-    const checkboxes = document.querySelectorAll('input[name="bnba_adv_check"], input[name="bnba_adv_cb"]');
+  function toggleAllAdvCheckboxes(status) {
+    const checkboxes = document.querySelectorAll('input[name="bnba_adv_cb"]');
     checkboxes.forEach(cb => cb.checked = status);
   }
 
   function onBnbaAdvCategoryChange() {
     const cat = document.getElementById("bnbaFilterAdvCategory").value;
-    const container = document.getElementById("bnbaFilterAdvCheckboxContainer");
-    const listEl = document.getElementById("bnbaAdvCheckboxList");
-    const labelEl = document.getElementById("bnbaAdvSubLabel");
+    const container = document.getElementById("bnbaAdvCheckboxPanel");
+    const listEl = document.getElementById("bnbaAdvCheckboxGrid");
+    const titleEl = document.getElementById("bnbaAdvPanelTitle");
     const bulanSelect = document.getElementById("bnbaBulan");
 
+    // Efek border merah pada dropdown bulan jika filter lanjutan dipilih
     if (cat) {
       bulanSelect.style.border = "2px solid #ef4444";
       bulanSelect.setAttribute("title", "Wajib memilih bulan untuk pencarian lanjutan");
@@ -3191,13 +3349,22 @@
       bulanSelect.removeAttribute("title");
     }
 
-    listEl.innerHTML = "";
-    container.style.display = "none";
+    // Reset container checkbox
+    if (listEl) listEl.innerHTML = "";
+    if (container) container.style.display = "none";
 
-    // Daftar opsi per kategori
+    let labelJudul = "";
     let options = [];
-    if (cat === "JKN") {
-      labelEl.innerText = "PILIH KEPESERTAAN JKN:";
+
+    if (cat === "MUTASI") {
+      labelJudul = "PILIH JENIS MUTASI:";
+      options = [
+        { val: "BERCERAI", text: "BERCERAI" },
+        { val: "SUAMI/ISTRI MENINGGAL", text: 'SUAMI/ISTRI<br class="br-mobile-only"> MENINGGAL' },
+        { val: "PINDAH", text: "PINDAH" }
+      ];
+    } else if (cat === "JKN") {
+      labelJudul = "PILIH KEPESERTAAN JKN:";
       options = [
         { val: "PBI", text: "PBI" },
         { val: "BUKAN PBI", text: "BUKAN PBI" },
@@ -3205,13 +3372,24 @@
         { val: "TIDAK MEMILIKI", text: "TIDAK MEMILIKI" }
       ];
     } else if (cat === "KESERTAAN_KB") {
-      labelEl.innerText = "PILIH KESERTAAN KB:";
+      labelJudul = "PILIH KESERTAAN KB:";
       options = [
-        { val: "BER_KB", text: "BER KB" },
-        { val: "TIDAK_BER_KB", text: "TIDAK BER KB" }
+        { val: "BER_KB", text: "BER-KB" },
+        { val: "TIDAK_BER_KB", text: "TIDAK BER-KB" }
       ];
-    } else if (cat === "METODE_KONTRASEPSI" || cat === "AKSEPTOR_KB_BARU") {
-      labelEl.innerText = cat === "METODE_KONTRASEPSI" ? "PILIH METODE KONTRASEPSI:" : "PILIH METODE AKSEPTOR KB BARU:";
+    } else if (cat === "METODE_KONTRASEPSI") {
+      labelJudul = "PILIH METODE KONTRASEPSI:";
+      options = [
+        { val: "PIL", text: "PIL" },
+        { val: "SUNTIK", text: "SUNTIK" },
+        { val: "KONDOM", text: "KONDOM" },
+        { val: "IMPLAN", text: "IMPLAN" },
+        { val: "IUD", text: "IUD" },
+        { val: "MOW", text: "MOW" },
+        { val: "MOP", text: "MOP" }
+      ];
+    } else if (cat === "AKSEPTOR_KB_BARU") {
+      labelJudul = "PILIH METODE AKSEPTOR KB BARU:";
       options = [
         { val: "PIL", text: "PIL" },
         { val: "SUNTIK", text: "SUNTIK" },
@@ -3222,7 +3400,7 @@
         { val: "MOP", text: "MOP" }
       ];
     } else if (cat === "ALASAN_TIDAK_KB") {
-      labelEl.innerText = "PILIH ALASAN TIDAK BER-KB:";
+      labelJudul = "PILIH ALASAN TIDAK BER-KB:";
       options = [
         { val: "IAS", text: "IAS" },
         { val: "IAT", text: "IAT" },
@@ -3230,25 +3408,18 @@
         { val: "HAMIL", text: "HAMIL" },
         { val: "TKI", text: "TKI" }
       ];
-    } else if (cat === "MUTASI") {
-      labelEl.innerText = "PILIH JENIS MUTASI:";
-      options = [
-        { val: "BERCERAI", text: "BERCERAI" },
-        { val: "SUAMI/ISTRI MENINGGAL", text: "SUAMI/ISTRI MENINGGAL" },
-        { val: "PINDAH", text: "PINDAH" }
-      ];
     }
 
-    // Jika kategori memiliki sub-pilihan (seperti JKN, Metode, Alasan, Mutasi)
+    // Render Sub-Pilihan jika ada
     if (options.length > 0) {
-      container.style.display = "block";
+      if (titleEl) titleEl.innerText = labelJudul;
+      if (container) container.style.display = "block";
+
       options.forEach(opt => {
         const itemLabel = document.createElement("label");
-        // 1. align-items: flex-start agar checkbox terkunci di baris pertama
-        // 2. hilangkan word-break: break-word agar kata tidak dipotong per suku kata
         itemLabel.style.cssText = "display: flex; align-items: flex-start; gap: 7px; font-size: 11px; font-weight: 700; color: #1e293b; cursor: pointer; user-select: none; line-height: 1.25;";
         itemLabel.innerHTML = `
-          <input type="checkbox" name="bnba_adv_check" value="${opt.val}" style="width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0; cursor: pointer; border: 1px solid #94a3b8; border-radius: 3px; accent-color: #1f4e78;">
+          <input type="checkbox" name="bnba_adv_cb" value="${opt.val}" style="width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0; cursor: pointer; border: 1px solid #94a3b8; border-radius: 3px; accent-color: #1f4e78;">
           <span style="white-space: normal;">${opt.text}</span>
         `;
         listEl.appendChild(itemLabel);
@@ -3269,15 +3440,18 @@
 
     // Reset Dropdown Lanjutan & Bulan
     const bln = document.getElementById("bnbaBulan");
-    if (bln) bln.value = "";
+    if (bln) {
+      bln.value = "";
+      bln.style.border = "1px solid #ccc";
+    }
+
     const advCat = document.getElementById("bnbaFilterAdvCategory");
     if (advCat) advCat.value = "";
-    onBnbaAdvCategoryChange();
 
-    if (bln) {
-    bln.value = "";
-    bln.style.border = "1px solid #ccc";
-    }
+    const panel = document.getElementById("bnbaAdvCheckboxPanel");
+    if (panel) panel.style.display = "none";
+    const grid = document.getElementById("bnbaAdvCheckboxGrid");
+    if (grid) grid.innerHTML = "";
 
     const thead = document.getElementById("bnbaTableHeader");
     const tbody = document.getElementById("bnbaTableBody");
@@ -3531,12 +3705,15 @@
   }
 
   function onSearchDusunChange() {
-    const kec = document.getElementById("searchKecamatan").value;
-    const desa = document.getElementById("searchDesa").value;
-    const dusun = document.getElementById("searchDusun").value;
+    const kab = isProvRole() ? document.getElementById("searchKabupaten")?.value : userKodeKab;
+    const kec = document.getElementById("searchKecamatan")?.value;
+    const desa = document.getElementById("searchDesa")?.value;
+    const dusun = document.getElementById("searchDusun")?.value;
     const sel = document.getElementById("searchRt");
+    if (!sel) return;
     sel.innerHTML = '<option value="">-- PILIH RT --</option>';
-    const dsn = getDusunList(kec, desa);
+
+    const dsn = getDusunList(kec, desa, kab);
     if (dsn && dsn[dusun]) {
       for (let i = 1; i <= dsn[dusun].jumlah_rt; i++) {
         let formatted = String(i).padStart(3, '0');
@@ -4105,7 +4282,7 @@
     const umur = document.getElementById("umur_anak_terkecil");
     if (isNaN(val) || val <= 0) { umur.value = "0"; umur.disabled = true; } else { umur.disabled = false; }
   }
-
+  
   // Fungsi menghapus data yang sedang dibuka di Form Input
   async function handleDeleteCurrentPus() {
     const idPus = document.getElementById("id_pus").value.trim();
@@ -4117,9 +4294,11 @@
       return;
     }
 
-    confirmDeletePus(idPus, tahun, namaIstri, () => {
-      // Callback setelah sukses hapus dari form
-      resetInputForm();
+    confirmDeletePus(idPus, tahun, namaIstri, () => {      
+      navRtDataList = [];
+      navRtCurrentIndex = -1;
+      resetInputForm();      
+
       Swal.fire("Terhapus!", `Data keluarga [${namaIstri}] (${idPus}) telah dihapus.`, "success");
     });
   }
@@ -4475,11 +4654,13 @@
     while (hasMore) {
       let query = db.from('data_pus').select('*').eq('tahun', tahun);
 
-      // KUNCI KABUPATEN DI LEVEL QUERY DATABASE
-      if (filterKab) query = query.eq('kode_kab', filterKab);
-      if (filterKec) query = query.eq('kode_kec', filterKec);
-      if (filterDesa) query = query.eq('kode_desa', filterDesa);
-      if (filterDusun && filterDusun !== "0000") query = query.eq('kode_dusun', filterDusun);
+      // Filter Wilayah dengan Normalisasi Presisi
+      if (filterKab) query = query.eq('kode_kab', String(filterKab).trim().padStart(2, '0'));
+      if (filterKec) query = query.eq('kode_kec', String(filterKec).trim().padStart(2, '0'));
+      if (filterDesa) query = query.eq('kode_desa', String(filterDesa).trim().padStart(4, '0'));
+      if (filterDusun && filterDusun !== "0000") query = query.eq('kode_dusun', String(filterDusun).trim().padStart(4, '0'));
+      
+      // Filter Keamanan Akun User Desa
       if (userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
 
       const { data, error } = await query.range(from, from + step - 1);
@@ -4880,8 +5061,7 @@
     const tahun = parseInt(document.getElementById("bnbaTahun").value, 10);
     const bulanVal = document.getElementById("bnbaBulan").value;
     const advCat = document.getElementById("bnbaFilterAdvCategory").value;
-    const checkedAdvBoxes = document.querySelectorAll('input[name="bnba_adv_check"]:checked');
-    const selectedAdvVals = Array.from(checkedAdvBoxes).map(cb => cb.value);
+    const selectedAdvVals = Array.from(document.querySelectorAll('input[name="bnba_adv_cb"]:checked')).map(cb => cb.value);
 
     const thead = document.getElementById("bnbaTableHeader");
     const tbody = document.getElementById("bnbaTableBody");
@@ -6599,7 +6779,7 @@
       return;
     }
 
-    const dusunList = getDusunList(kdKec, kdDesa);
+    const dusunList = getDusunList(kdKec, kdDesa, kdKab);
     if (!dusunList || Object.keys(dusunList).length === 0) {
       dusunRow.style.display = "none";
       return;
@@ -8676,24 +8856,23 @@ function onUserKabChange() {
     } else {
       loadAntreanLayananTable();
     }
-  }
+  }  
 
   function updateStatusTombolCetak() {
-    const statusFilter = document.getElementById("filterStatusLayanan")?.value;
+    const statusFilter = String(document.getElementById("filterStatusLayanan")?.value || "").toUpperCase().trim();
     const btnCetak = document.getElementById("btnCetakMassal");
-    
     if (!btnCetak) return;
-
+    
     if (statusFilter === "TERDAFTAR") {
       btnCetak.disabled = false;
       btnCetak.style.opacity = "1";
       btnCetak.style.cursor = "pointer";
       btnCetak.title = "Cetak formulir pelayanan KB";
-    } else {
+    } else {    
       btnCetak.disabled = true;
       btnCetak.style.opacity = "0.45";
       btnCetak.style.cursor = "not-allowed";
-      btnCetak.title = "Tombol cetak hanya aktif untuk status Calon Akseptor";
+      btnCetak.title = "Tombol cetak hanya aktif pada pilihan Calon Akseptor";
     }
   }
 
@@ -8921,142 +9100,195 @@ function onUserKabChange() {
         }
       }
     });
-  }
-
+  }  
+  
   // =========================================================================
-  // MODUL CETAK DOKUMEN MEDIS KB (K/IV, K/I, INFORMED CONSENT & CETAK MASSAL)
+  // MODUL KONTROL MODAL & CETAK MASSAL PELAYANAN KB (STANDAR IDENTIK KAB)
   // =========================================================================
-  function bukaPilihanCetakDokumen(index) {
-    const item = cachedAntreanLayanan[index];
-    if (!item) return;
-
-    Swal.fire({
-      title: 'Cetak Dokumen Pelayanan KB',
-      html: `
-        <div style="text-align: left; font-size: 13px; color: #334155; margin-bottom: 12px;">
-          Akseptor: <b>${item.nama_istri}</b> (ID: <code>${item.id_pus}</code>)<br>
-          Rencana Alkon: <span style="color:#0284c7; font-weight:bold;">${item.rencana_metode}</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px;" onclick="eksporDokumenKbKePDF('KIV', [${index}])">
-            📄 Cetak Form K/IV/KB/15
-          </button>
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #0d9488;" onclick="eksporDokumenKbKePDF('KI', [${index}])">
-            📋 Cetak Kartu K/I/KB/13
-          </button>
-          <button type="button" class="btn-nav btn-action" style="padding: 10px; justify-content: center; font-size: 13px; background-color: #d97706;" onclick="eksporDokumenKbKePDF('CONSENT', [${index}])">
-            ✍️ Cetak Informed Consent
-          </button>
-        </div>
-      `,
-      showConfirmButton: false,
-      showCancelButton: true,
-      cancelButtonText: 'Tutup'
-    });
-  }
-
   function bukaModalCetakMassal() {
-    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
-      Swal.fire("Perhatian", "Tidak ada antrean pelayanan yang ditampilkan pada tabel!", "warning");
+    const statusFilter = String(document.getElementById("filterStatusLayanan")?.value || "").toUpperCase().trim();
+    if (statusFilter !== "TERDAFTAR") {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Akses Cetak Terbatas',
+        text: 'Formulir pelayanan hanya dapat dicetak untuk kategori Calon Akseptor.'
+      });
       return;
     }
 
-    const container = document.getElementById("cetakMassalListContainer");
-    container.innerHTML = "";
+    if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Data Masih Kosong',
+        text: 'Tabel antrean belum memiliki data Calon Akseptor untuk dicetak. Pastikan periode Bulan Mulai & Sampai sudah dipilih.'
+      });
+      return;
+    }
 
-    cachedAntreanLayanan.forEach((item, idx) => {
+    const daftarAkseptor = cachedAntreanLayanan.filter(item => item && String(item.status || "").toUpperCase() === 'TERDAFTAR');
+    if (daftarAkseptor.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Tidak Ada Data Terdaftar',
+        text: 'Tidak ada akseptor berstatus Calon Akseptor yang dapat dicetak.'
+      });
+      return;
+    }
+
+    const listContainer = document.getElementById("cetakMassalListContainer");
+    listContainer.innerHTML = "";
+
+    daftarAkseptor.forEach((item, idx) => {
       const label = document.createElement("label");
-      label.style.cssText = "display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: #334155; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;";
+      label.style.cssText = "display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;";
       label.innerHTML = `
-        <input type="checkbox" name="cb_cetak_massal" value="${idx}" checked style="accent-color: #0284c7;">
-        <span><b>${item.nama_istri}</b> (${item.id_pus}) - <i>${item.rencana_metode}</i> [Desa ${item.desa_nama || '-'}]</span>
+        <input type="checkbox" name="cb_cetak_akseptor" value="${item.id}" checked style="accent-color:#0284c7;">
+        <span><b>${idx + 1}. ${item.nama_istri}</b> (${item.nik_istri || '-'}) - ${item.rencana_metode || '-'}</span>
       `;
-      container.appendChild(label);
+      listContainer.appendChild(label);
     });
 
     document.getElementById("modalCetakMassalLayanan").style.display = "block";
   }
 
   function tutupModalCetakMassal() {
-    document.getElementById("modalCetakMassalLayanan").style.display = "none";
+    const modal = document.getElementById("modalCetakMassalLayanan");
+    if (modal) {
+      modal.style.display = "none";
+    }
   }
 
   function toggleAllCetakMassal(status) {
-    const boxes = document.querySelectorAll('input[name="cb_cetak_massal"]');
+    const boxes = document.querySelectorAll('input[name="cb_cetak_akseptor"]');
     boxes.forEach(cb => cb.checked = status);
   }
 
-  function prosesCetakMassal() {
-    const checked = Array.from(document.querySelectorAll('input[name="cb_cetak_massal"]:checked')).map(cb => parseInt(cb.value, 10));
-    if (checked.length === 0) {
-      Swal.fire("Peringatan", "Pilih minimal 1 akseptor untuk dicetak!", "warning");
+  async function prosesCetakMassal() {
+    const selectedBoxes = document.querySelectorAll('input[name="cb_cetak_akseptor"]:checked');
+    const selectedIds = Array.from(selectedBoxes).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+      Swal.fire("Peringatan", "Beri centang minimal pada salah satu akseptor!", "warning");
       return;
     }
 
-    const jenis = document.getElementById("cetakMassalJenisDokumen").value;
+    let targetAkseptor = (cachedAntreanLayanan || []).filter(item => 
+      item && selectedIds.includes(String(item.id)) && item.status === 'TERDAFTAR'
+    );
+
+    if (targetAkseptor.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Cetak Dibatalkan',
+        text: 'Data akseptor yang dipilih tidak valid atau sudah tidak ada di antrean.'
+      });
+      tutupModalCetakMassal();
+      return;
+    }
+
     tutupModalCetakMassal();
-    eksporDokumenKbKePDF(jenis, checked);
-  }
-
-  async function eksporDokumenKbKePDF(tipe, indexArray) {
-    if (!indexArray || indexArray.length === 0) return;
-
-    Swal.fire({
-      title: 'Menyiapkan Dokumen PDF...',
-      text: `Memproses ${indexArray.length} data dokumen...`,
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
+    const formatDokumen = document.getElementById("cetakMassalJenisDokumen").value;
 
     try {
-      const { jsPDF } = window.jspdf;
-      let doc;
+      const idPusList = targetAkseptor.map(a => a.id_pus).filter(Boolean);
+      if (idPusList.length > 0) {
+        const { data: pusDetails } = await db.from('data_pus')
+          .select('id_pus, tgl_lahir_istri, umur_istri, peserta_jkn, jumlah_anak, umur_anak_terkecil')
+          .in('id_pus', idPusList);
 
-      if (tipe === 'KIV') {
-        doc = new jsPDF('landscape', 'pt', 'a4');
-        indexArray.forEach((idx, i) => {
-          if (i > 0) doc.addPage('a4', 'landscape');
-          renderFormKIV(doc, cachedAntreanLayanan[idx]);
-        });
-        doc.save(`FORM_KIV_KB_${new Date().getTime()}.pdf`);
-
-      } else if (tipe === 'KI') {
-        doc = new jsPDF('portrait', 'pt', 'a4');
-        indexArray.forEach((idx, i) => {
-          if (i > 0) doc.addPage('a4', 'portrait');
-          renderKartuKI(doc, cachedAntreanLayanan[idx]);
-        });
-        doc.save(`KARTU_KI_KB_${new Date().getTime()}.pdf`);
-
-      } else if (tipe === 'CONSENT') {
-        doc = new jsPDF('portrait', 'pt', 'a4');
-        indexArray.forEach((idx, i) => {
-          if (i > 0) doc.addPage('a4', 'portrait');
-          renderInformedConsent(doc, cachedAntreanLayanan[idx]);
-        });
-        doc.save(`INFORMED_CONSENT_${new Date().getTime()}.pdf`);
+        if (pusDetails && pusDetails.length > 0) {
+          const pusMap = new Map(pusDetails.map(p => [p.id_pus, p]));
+          targetAkseptor = targetAkseptor.map(item => {
+            const detail = pusMap.get(item.id_pus);
+            if (detail) {
+              return {
+                ...item,
+                tgl_lahir_istri: detail.tgl_lahir_istri || item.tgl_lahir_istri,
+                umur_istri: (detail.umur_istri !== undefined && detail.umur_istri !== null) ? detail.umur_istri : item.umur_istri,
+                peserta_jkn: detail.peserta_jkn || item.peserta_jkn,
+                jumlah_anak: detail.jumlah_anak !== undefined ? detail.jumlah_anak : item.jumlah_anak,
+                umur_anak_terkecil: detail.umur_anak_terkecil !== undefined ? detail.umur_anak_terkecil : item.umur_anak_terkecil
+              };
+            }
+            return item;
+          });
+        }
       }
-
-      Swal.close();
-      Swal.fire("Berhasil", "Dokumen PDF berhasil diunduh.", "success");
-
     } catch (err) {
-      console.error("PDF Export Error:", err);
-      Swal.fire("Gagal", "Terjadi kesalahan pembuatan dokumen: " + err.message, "error");
+      console.warn("Gagal sinkronisasi data PUS untuk cetak:", err);
     }
-  } 
+
+    if (formatDokumen === "KI") {
+      cetakBatchKiKbA4(targetAkseptor);
+    } else {
+      cetakBatchDokumenA4(targetAkseptor, formatDokumen);
+    }
+  }
 
   function renderSatuKartuDepan(item) {
-    const isPbi = String(item.peserta_jkn || '').toUpperCase().includes('PBI') && !String(item.peserta_jkn || '').toUpperCase().includes('BUKAN');
-    const isNonPbi = String(item.peserta_jkn || '').toUpperCase().includes('BUKAN PBI') || String(item.peserta_jkn || '').toUpperCase().includes('SWASTA');
-    const isNonJkn = String(item.peserta_jkn || '').toUpperCase().includes('TIDAK') || (!isPbi && !isNonPbi);
+    const rawJkn = String(item.peserta_jkn || '').toUpperCase().trim();
 
-    const tglLahirTeks = (item.tgl_lahir_istri ? item.tgl_lahir_istri : '-') + (item.umur_istri ? ` / ${item.umur_istri} TH` : '');
-    const alamatLengkap = `RT ${item.kode_rt || '-'}, DUSUN ${item.dusun_nama || '-'}, DESA ${item.desa_nama || '-'}, KEC. ${item.kecamatan_nama || '-'}`;
+    let checkPesertaJkn = false;
+    let checkPbi = false;
+    let checkBukanPbi = false;
+    let checkBukanPesertaJkn = false;
+
+    if (rawJkn === "PBI" || (rawJkn.includes("PBI") && !rawJkn.includes("BUKAN"))) {
+      checkPesertaJkn = true;
+      checkPbi = true;
+    } else if (rawJkn.includes("BUKAN PBI") || rawJkn.includes("SWASTA") || rawJkn.includes("NON PBI") || rawJkn.includes("BPJS")) {
+      checkPesertaJkn = true;
+      checkBukanPbi = true;
+    } else {
+      checkBukanPesertaJkn = true;
+    }
 
     const tglRef = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
     const [yLayanan, mLayanan, dLayanan] = tglRef.split('-');
-    const nmDesa = item.desa_nama || 'DESA';
+
+    const curKab = String(item.kode_kab || userKodeKab || "01").padStart(2, '0');
+    const curKec = String(item.kode_kec || "").padStart(2, '0');
+    const curDesa = String(item.kode_desa || "").padStart(4, '0');
+    const curDsn = String(item.kode_dusun || "").padStart(4, '0');
+
+    const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || '-');
+    const compositeDesaKey = curKab + "_" + curKec;
+    let desasMap = dataDesa[compositeDesaKey] || dataDesa[curKec] || {};
+    const nmDesa = (desasMap && desasMap[curDesa]) ? desasMap[curDesa] : (item.desa_nama || curDesa || '-');
+    const dsnMap = (typeof getDusunList === "function") ? getDusunList(curKec, curDesa, curKab) : null;
+    const nmDsn = (dsnMap && dsnMap[curDsn]) ? dsnMap[curDsn].nama : (item.dusun_nama || curDsn || '-');
+
+    const alamatLengkap = `RT ${item.kode_rt || '-'}, DUSUN ${nmDsn}, DESA ${nmDesa}, KEC. ${nmKec}`;
+
+    let strTglLahirDmy = "-";
+    let yLahir = "";
+    if (item.tgl_lahir_istri) {
+      const cleanTgl = String(item.tgl_lahir_istri).replace(/\//g, '-').trim();
+      const p = cleanTgl.split('-');
+      if (p.length === 3) {
+        if (p[0].length === 4) {
+          strTglLahirDmy = `${p[2].padStart(2, '0')}-${p[1].padStart(2, '0')}-${p[0]}`;
+          yLahir = p[0];
+        } else {
+          strTglLahirDmy = `${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}-${p[2]}`;
+          yLahir = p[2];
+        }
+      }
+    }
+
+    let parsedUmurDb = parseInt(item.umur_istri, 10);
+    let umurIstriVal = "";
+    if (!isNaN(parsedUmurDb) && parsedUmurDb > 0) {
+      umurIstriVal = parsedUmurDb;
+    } else if (item.tgl_lahir_istri) {
+      const thnRef = parseInt(item.tahun || yLayanan || new Date().getFullYear(), 10);
+      const umurDihitung = (typeof hitungUmurPresisi === "function") 
+        ? hitungUmurPresisi(item.tgl_lahir_istri, thnRef)
+        : (yLahir ? (thnRef - parseInt(yLahir, 10)) : 0);
+      umurIstriVal = umurDihitung > 0 ? umurDihitung : "";
+    }
+
+    const tglLahirTeks = umurIstriVal ? `${strTglLahirDmy} / ${umurIstriVal} Tahun` : strTglLahirDmy;
 
     return `
       <div class="ki-page-card">
@@ -9073,27 +9305,38 @@ function onUserKabChange() {
           <div class="ki-bar-bottom"></div>
           <div class="ki-body-front">
             <table class="tbl-front-data">
-              <tr><td class="b-text" style="width:37%;">Nama Peserta KB</td><td class="b-text" style="width:3%;">:</td><td class="b-text" style="width:60%;">${item.nama_istri || '-'}</td></tr>
+              <tr><td class="b-text" style="width:37%;">Nama Peserta KB</td><td class="b-text" style="width:3%;">:</td><td class="b-text" style="width:60%; font-weight:bold;">${item.nama_istri || '-'}</td></tr>
               <tr><td class="b-text">Nama Suami/Istri</td><td class="b-text">:</td><td class="b-text">${item.nama_suami || '-'}</td></tr>
               <tr><td class="b-text">Tgl. Lahir/Umur Istri</td><td class="b-text">:</td><td class="b-text">${tglLahirTeks}</td></tr>
               <tr><td class="b-text" style="vertical-align:top;">Alamat Peserta KB</td><td class="b-text" style="vertical-align:top;">:</td><td class="b-text">${alamatLengkap}</td></tr>
-              <tr><td class="b-text">Tahapan KS</td><td class="b-text">:</td><td class="b-text">KPS</td></tr>
+              <tr><td class="b-text">Tahapan KS</td><td class="b-text">:</td><td class="b-text"></td></tr>
               <tr>
                 <td class="b-text" style="vertical-align:top;">Status Peserta Jaminan<br>Kesehatan Nasional (JKN)</td>
                 <td class="b-text" style="vertical-align:top;">:</td>
                 <td>
                   <table style="width:100%; border-collapse:collapse; font-size:7pt;">
                     <tr>
-                      <td style="width:14px; vertical-align:middle; padding:0.5mm 0;"><span class="box-check">${(!isNonJkn) ? '&#10003;' : '&nbsp;'}</span></td>
+                      <td style="width:14px; vertical-align:middle; padding:0.5mm 0;">
+                        <span class="box-check">${checkPesertaJkn ? '&#10003;' : '&nbsp;'}</span>
+                      </td>
                       <td style="vertical-align:middle; padding:0.5mm 0;" class="b-text">Peserta JKN :</td>
                     </tr>
                     <tr>
                       <td></td>
                       <td style="padding-left:4.5mm;">
-                        <div style="display:flex; align-items:center; margin-bottom:0.5mm;"><span class="box-check">${isPbi ? '&#10003;' : '&nbsp;'}</span> Penerima Bantuan Iuran</div>
-                        <div style="display:flex; align-items:center; margin-bottom:0.5mm;"><span class="box-check">${isNonPbi ? '&#10003;' : '&nbsp;'}</span> Bukan Penerima Bantuan Iuran</div>
-                        <div style="display:flex; align-items:center;"><span class="box-check">${isNonJkn ? '&#10003;' : '&nbsp;'}</span> Bukan Peserta JKN</div>
+                        <div style="display:flex; align-items:center; margin-bottom:0.5mm;">
+                          <span class="box-check">${checkPbi ? '&#10003;' : '&nbsp;'}</span> Penerima Bantuan Iuran
+                        </div>
+                        <div style="display:flex; align-items:center; margin-bottom:0.8mm;">
+                          <span class="box-check">${checkBukanPbi ? '&#10003;' : '&nbsp;'}</span> Bukan Penerima Bantuan Iuran
+                        </div>
                       </td>
+                    </tr>
+                    <tr>
+                      <td style="width:14px; vertical-align:middle; padding:0.5mm 0;">
+                        <span class="box-check">${checkBukanPesertaJkn ? '&#10003;' : '&nbsp;'}</span>
+                      </td>
+                      <td style="vertical-align:middle; padding:0.5mm 0;" class="b-text">Bukan Peserta JKN</td>
                     </tr>
                   </table>
                 </td>
@@ -9131,7 +9374,7 @@ function onUserKabChange() {
       </div>
     `;
   }
-  
+
   function renderSatuKartuBelakang(item) {
     const alkon = String(item.rencana_metode || item.metode_realisasi || '-').toUpperCase();
     const tglRef = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
@@ -9207,555 +9450,7 @@ function onUserKabChange() {
       </div>
     `;
   }
-  
-  function renderSatuFormKIV(item) {
-    const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
-    const pTgl = tglFormatted.split('-');
-    const dLayanan = pTgl[2] || "01";
-    const mLayanan = pTgl[1] || "01";
-    const yLayanan = pTgl[0] || "2026";
 
-    let dLahir = "", mLahir = "", yLahir = "";
-    if (item.tgl_lahir_istri) {
-      const pLahir = String(item.tgl_lahir_istri).split('-');
-      if (pLahir.length === 3) {
-        dLahir = pLahir[2].padStart(2, '0');
-        mLahir = pLahir[1].padStart(2, '0');
-        yLahir = pLahir[0];
-      }
-    }
-    const umurIstriVal = (item.umur_istri !== undefined && item.umur_istri !== null) ? item.umur_istri : "";
-
-    const nmKec = (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][item.kode_kec]) ? dataKecamatan[userKodeKab][item.kode_kec] : (item.kecamatan_nama || item.kode_kec || "");
-    const nmDesa = (dataDesa[item.kode_kec] && dataDesa[item.kode_kec][item.kode_desa]) ? dataDesa[item.kode_kec][item.kode_desa] : (item.desa_nama || item.kode_desa || "");
-    const dsnMap = (typeof getDusunList === "function") ? getDusunList(item.kode_kec, item.kode_desa) : null;
-    const nmDsn = (dsnMap && dsnMap[item.kode_dusun]) ? dsnMap[item.kode_dusun].nama : (item.dusun_nama || item.kode_dusun || "");
-    const alamatLengkap = `RT ${item.kode_rt || '-'}, DUSUN ${nmDsn}, DESA ${nmDesa}, KEC. ${nmKec}`;
-
-    const alkon = String(item.rencana_metode || item.metode_realisasi || "").toUpperCase();
-    let kdAlkon = "";
-    if (alkon.includes("SUNTIK") && alkon.includes("1")) kdAlkon = "1";
-    else if (alkon.includes("SUNTIK")) kdAlkon = "2";
-    else if (alkon.includes("PIL")) kdAlkon = "3";
-    else if (alkon.includes("KONDOM")) kdAlkon = "4";
-    else if (alkon.includes("IMPLAN") && alkon.includes("1")) kdAlkon = "5";
-    else if (alkon.includes("IMPLAN")) kdAlkon = "6";
-    else if (alkon.includes("IUD") && alkon.includes("380")) kdAlkon = "7";
-    else if (alkon.includes("IUD")) kdAlkon = "8";
-    else if (alkon.includes("MOW") || alkon.includes("TUBEKTOMI")) kdAlkon = "9";
-    else if (alkon.includes("MOP") || alkon.includes("VASEKTOMI")) kdAlkon = "10";
-
-    let dCabut = "", mCabut = "", yCabut = "";
-    if (tglFormatted && (alkon.includes("IMPLAN") || alkon.includes("IUD") || alkon.includes("SUSUK"))) {
-      const tglPasangObj = new Date(tglFormatted);
-      if (!isNaN(tglPasangObj.getTime())) {
-        const addYears = alkon.includes("IUD") ? 8 : 3;
-        tglPasangObj.setFullYear(tglPasangObj.getFullYear() + addYears);
-        dCabut = String(tglPasangObj.getDate()).padStart(2, '0');
-        mCabut = String(tglPasangObj.getMonth() + 1).padStart(2, '0');
-        yCabut = String(tglPasangObj.getFullYear());
-      }
-    }
-
-    const jnsAkseptor = String(item.jenis_akseptor || "").toUpperCase();
-    let kdStatusPeserta = "";
-    if (jnsAkseptor.includes("MURNI") || jnsAkseptor.includes("PERTAMA")) kdStatusPeserta = "1";
-    else if (jnsAkseptor.includes("KBPP") || jnsAkseptor.includes("PERSALINAN")) kdStatusPeserta = "2";
-    else if (jnsAkseptor.includes("DO") || jnsAkseptor.includes("PASCA DO")) kdStatusPeserta = "3";
-    else if (jnsAkseptor.includes("ULANGAN") || jnsAkseptor.includes("GANTI")) kdStatusPeserta = "4";
-
-    const rawJkn = String(item.peserta_jkn || "").toUpperCase();
-    let kdAsuransi = "";
-    if (rawJkn.includes("PBI") || rawJkn.includes("BPJS")) kdAsuransi = "1";
-    else if (rawJkn.includes("SWASTA")) kdAsuransi = "2";
-    else if (rawJkn.includes("TIDAK")) kdAsuransi = "3";
-
-    const totalAnak = parseInt(item.jumlah_anak || 0, 10);
-    const anakLaki = totalAnak > 0 ? Math.floor(totalAnak / 2) : 0;
-    const anakPerempuan = totalAnak > 0 ? Math.ceil(totalAnak / 2) : 0;
-    const umurAnakNum = parseInt(item.umur_anak_terkecil || 0, 10);
-    const strUmurThn = String(umurAnakNum).padStart(2, '0');
-
-    return `
-      <div class="sheet-a4-page">
-        <div class="form-wrapper">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="width: 25%; font-weight: bold; font-size: 12pt; vertical-align: top;">K/IV/KB/15</td>
-              <td style="width: 40%; font-size: 7.5pt; vertical-align: top; line-height: 1.15;">
-                I. Kode Faskes KB/Jaringan/<br>&nbsp;&nbsp;&nbsp;Jejaring
-              </td>
-              <td style="width: 35%; text-align: right; vertical-align: top;">
-                <span class="box-single" style="min-width: 160px; text-align: left;">${item.faskes_tujuan || ''}</span>
-              </td>
-            </tr>
-            <tr>
-              <td></td>
-              <td style="font-size: 7.5pt; vertical-align: middle;">II. Kode Keluarga Indonesia:</td>
-              <td style="text-align: right; vertical-align: middle;">
-                <span class="box-single" style="min-width: 160px; text-align: center;">&nbsp;</span>
-              </td>
-            </tr>
-          </table>
-
-          <div style="text-align: center; font-weight: bold; font-size: 10.5pt; margin: 3px 0 5px 0; letter-spacing: 0.5px;">
-            KARTU STATUS PESERTA KB
-          </div>
-
-          <table class="tbl-field" style="width: 100%; border-collapse: collapse;">
-            <tr><td style="width: 27%;">III. Nama Peserta KB</td><td style="width: 1%;">:</td><td style="width: 72%; font-weight: bold;">${item.nama_istri || ''}</td></tr>
-            <tr>
-              <td>IV. Tgl Lahir/Umur Istri</td><td>:</td>
-              <td>
-                <span class="box-char">${dLahir ? dLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLahir ? dLahir.charAt(1) : '&nbsp;'}</span> / 
-                <span class="box-char">${mLahir ? mLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLahir ? mLahir.charAt(1) : '&nbsp;'}</span> / 
-                <span class="box-char">${yLahir ? yLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(3) : '&nbsp;'}</span>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Umur: <b>${umurIstriVal !== "" ? umurIstriVal : ''}</b> Tahun
-              </td>
-            </tr>
-            <tr><td>V. Nama Suami/Istri</td><td>:</td><td>${item.nama_suami || ''}</td></tr>
-            <tr>
-              <td>VI. Pendidikan Suami dan Istri</td><td>:</td>
-              <td>
-                <table style="width: 100%; font-size: 7.2pt;">
-                  <tr><td style="width: 33%;">1) Tidak Tamat SD/MI</td><td style="width: 33%;">3) Tamat SLTP/MTsN</td><td style="width: 34%;">5) Tamat PT</td></tr>
-                  <tr><td>2) Tamat SD/MI</td><td>4) Tamat SLTA/MA</td><td>6) Tidak Sekolah</td></tr>
-                </table>
-                <div style="margin-top: 2px; text-align: right; padding-right: 35px;">
-                  Suami &nbsp;<span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp; Istri &nbsp;<span class="box-char">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr><td>VII. Alamat Peserta KB</td><td>:</td><td>${alamatLengkap}</td></tr>
-            <tr>
-              <td>VIII. Pekerjaan Suami dan Istri</td><td>:</td>
-              <td>
-                <table style="width: 100%; font-size: 7.2pt;">
-                  <tr><td style="width: 25%;">1) Petani</td><td style="width: 25%;">4) PNS/TNI/POLRI</td><td style="width: 25%;">7) Pensiunan</td><td style="width: 25%;">10) Tidak Bekerja</td></tr>
-                  <tr><td>2) Nelayan</td><td>5) Pegawai Swasta</td><td>8) Pekerja Lepas</td><td></td></tr>
-                  <tr><td>3) Pedagang</td><td>6) Wiraswasta</td><td>9) Lainnya</td><td></td></tr>
-                </table>
-                <div style="margin-top: 2px; text-align: right; padding-right: 35px;">
-                  Suami &nbsp;<span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp; Istri &nbsp;<span class="box-char">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>IX. Penggunaan Asuransi</td><td>:</td>
-              <td><span class="box-char">${kdAsuransi || '&nbsp;'}</span> &nbsp;&nbsp; 1) BPJS Kesehatan &nbsp;&nbsp;&nbsp;&nbsp; 2) Lainnya &nbsp;&nbsp;&nbsp;&nbsp; 3) Tidak</td>
-            </tr>
-            <tr>
-              <td>X. Jumlah anak hidup</td><td>:</td>
-              <td>Laki-laki &nbsp;<span class="box-char">${totalAnak > 0 ? anakLaki : '&nbsp;'}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Perempuan &nbsp;<span class="box-char">${totalAnak > 0 ? anakPerempuan : '&nbsp;'}</span></td>
-            </tr>
-            <tr>
-              <td>XI. Umur anak terakhir yang masih hidup</td><td>:</td>
-              <td><span class="box-char">${totalAnak > 0 ? strUmurThn.charAt(0) : '&nbsp;'}</span><span class="box-char">${totalAnak > 0 ? strUmurThn.charAt(1) : '&nbsp;'}</span> Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="box-char">${totalAnak > 0 ? '0' : '&nbsp;'}</span><span class="box-char">${totalAnak > 0 ? '0' : '&nbsp;'}</span> Bulan</td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">XII. Status Peserta KB</td><td style="vertical-align: top;">:</td>
-              <td>
-                <span class="box-char">${kdStatusPeserta || '&nbsp;'}</span><br>
-                <table style="width: 100%; font-size: 7.2pt; margin-top: 2px;">
-                  <tr><td style="width: 50%;">1) Baru Pertama kali</td><td style="width: 50%;">3) Pernah pakai alat KB</td></tr>
-                  <tr><td>2) Pernah pakai alat KB berhenti sesudah bersalin/keguguran</td><td>4) Sedang ber-KB</td></tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">XIII. Alat/Obat/Cara KB terakhir</td><td style="vertical-align: top;">:</td>
-              <td>
-                <span class="box-char">${kdAlkon || '&nbsp;'}</span><br>
-                <table style="width: 100%; font-size: 7.2pt; margin-top: 2px;">
-                  <tr><td style="width: 25%;">1) Suntikan 1 Bulanan</td><td style="width: 25%;">4) Kondom</td><td style="width: 25%;">7) IUD CuT 380A</td><td style="width: 25%;">10) Vasektomi</td></tr>
-                  <tr><td>2) Suntikan 3 Bulanan</td><td>5) Implan 1 Batang</td><td>8) IUD Lain-lain</td><td></td></tr>
-                  <tr><td>3) Pil</td><td>6) Implan 2 Batang</td><td>9) Tubektomi</td><td></td></tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <div style="border-top: 1px solid #000; margin-top: 3px; padding-top: 2px;">
-            <div style="font-weight: bold; font-size: 7.8pt;">XIV. Penapisan (Skrining) untuk menentukan alat kontrasepsi yang dapat digunakan calon peserta KB</div>
-            <div style="font-size: 6.5pt; font-style: italic; margin-bottom: 2px; line-height: 1.15;">
-              Petunjuk: Periksalah keadaan berikut ini dan hasilnya ditulis dengan angka atau tanda centang (✓) pada kotak yang tersedia.<br>
-              Penapisan (Skrining) hanya boleh dilakukan oleh pelaksana yang telah dilatih dalam pelayanan KB.
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 7.2pt;">
-              <tr>
-                <td style="width: 50%; vertical-align: top; padding-right: 5px; border-right: 1px solid #000;">
-                  <b>Anamnese</b><br>
-                  1. Haid terakhir tanggal : <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><br>
-                  2. Hamil/Diduga Hamil : &nbsp; <span class="box-char">&nbsp;</span> 1) Ya &nbsp;&nbsp; 2) Tidak<br>
-                  3. Jumlah GPA : &nbsp; Gravida <span class="box-char">&nbsp;</span> &nbsp; Partus <span class="box-char">&nbsp;</span> &nbsp; Abortus <span class="box-char">&nbsp;</span><br>
-                  4. Menyusui : &nbsp; <span class="box-char">&nbsp;</span> 1) Ya &nbsp;&nbsp; 2) Tidak<br>
-                  5. Riwayat Penyakit Sebelumnya :<br>
-                  <table style="width: 100%; margin-left: 3px; font-size: 7pt;">
-                    <tr><td style="width: 72%;"></td><td style="width: 14%; text-align: center;">Tidak</td><td style="width: 14%; text-align: center;">Ya</td></tr>
-                    <tr><td>a. Sakit kuning</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>b. Perdarahan pervaginam yang tidak diketahui sebabnya</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>c. Keputihan yang lama</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>d. Tumor: Payudara / Rahim / Indung telur</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                  </table>
-                  <div style="font-size: 6pt; color: #333; margin-top: 1px; line-height: 1.1;">
-                    Bila semua jawaban TIDAK, dapat diberikan salah satu dari cara KB (kecuali IUD dan Tubektomi). Bila salah satu jawaban YA, rujuk ke dokter.
-                  </div>
-                </td>
-                <td style="width: 50%; vertical-align: top; padding-left: 5px;">
-                  <b>Pemeriksaan</b><br>
-                  6. Keadaan Umum : &nbsp; <span class="box-char">&nbsp;</span> 1) Baik &nbsp;&nbsp; 2) Sedang &nbsp;&nbsp; 3) Kurang<br>
-                  7. Berat Badan : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Kg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8. Tekanan Darah : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mmHg<br>
-                  9. Sebelum dilakukan pemasangan IUD atau Tubektomi dilakukan pemeriksaan dalam :<br>
-                  <table style="width: 100%; margin-left: 3px; font-size: 7pt;">
-                    <tr><td style="width: 72%;"></td><td style="width: 14%; text-align: center;">Tidak</td><td style="width: 14%; text-align: center;">Ya</td></tr>
-                    <tr><td>a. Tanda-tanda radang</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>b. Tumor/keganasan ginekologi</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                  </table>
-                  <div style="font-size: 6pt; color: #333; line-height: 1.1;">
-                    Bila semua jawaban TIDAK, pemasangan IUD atau tindakan Tubektomi dapat dilakukan. Bila salah satu jawaban YA, rujuk ke dokter.
-                  </div>
-                  10. Posisi Rahim : &nbsp; <span class="box-char">&nbsp;</span> 1) Retrofleksi &nbsp;&nbsp; 2) Antefleksi<br>
-                  11. Pemeriksaan tambahan (khusus untuk calon Vasektomi dan Tubektomi) :<br>
-                  <table style="width: 100%; margin-left: 3px; font-size: 7pt;">
-                    <tr><td style="width: 72%;"></td><td style="width: 14%; text-align: center;">Tidak</td><td style="width: 14%; text-align: center;">Ya</td></tr>
-                    <tr><td>a. Tanda-tanda diabetes</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>b. Kelainan pembekuan darah</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>c. Radang orchitis/epididymitis</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td>d. Tumor/keganasan ginekologi</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-
-            <div style="margin-top: 2px; font-size: 7.2pt;">
-              12. Alat/obat/cara kontrasepsi yang boleh dipergunakan :<br>
-              <table class="tbl-grid" style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 1px;">
-                <tr>
-                  <td>Suntikan 1 Bulanan</td><td>Suntikan 3 Bulanan</td><td>Pil</td><td>Kondom</td>
-                  <td>Implan 1 Batang</td><td>Implan 2 Batang</td><td>IUD CuT 380A</td><td>IUD Lain-lain</td>
-                  <td>Tubektomi</td><td>Vasektomi</td>
-                </tr>
-                <tr style="height: 14px;">
-                  <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                </tr>
-              </table>
-            </div>
-          </div>
-
-          <div style="border-top: 1px solid #000; margin-top: 3px; padding-top: 2px; font-size: 7.2pt;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="width: 45%; vertical-align: top;">
-                  XV. Alat/obat/cara kontrasepsi yang dipilih : <span class="box-char">${kdAlkon || '&nbsp;'}</span><br>
-                  <table style="width: 100%; font-size: 6.8pt; margin-top: 1px;">
-                    <tr><td>1) Suntikan 1 Bulanan</td><td>5) Implan 1 Batang</td><td>9) Tubektomi</td></tr>
-                    <tr><td>2) Suntikan 3 Bulanan</td><td>6) Implan 2 Batang</td><td>10) Vasektomi</td></tr>
-                    <tr><td>3) Pil</td><td>7) IUD CuT 380A</td><td></td></tr>
-                    <tr><td>4) Kondom</td><td>8) IUD Lain-lain</td><td></td></tr>
-                  </table>
-                </td>
-                <td style="width: 55%; vertical-align: top; padding-left: 8px;">
-                  XVI. Tanggal dilayani : 
-                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                  <span class="box-char">${dLayanan ? dLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLayanan ? dLayanan.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${mLayanan ? mLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLayanan ? mLayanan.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${yLayanan ? yLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(3) : '&nbsp;'}</span>
-                  <br><span style="font-size: 6pt; margin-left: 95px; color: #555;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span><br>
-                  
-                  XVII. Tanggal kunjungan ulang : 
-                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / 
-                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / 
-                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
-                  <br><span style="font-size: 6pt; margin-left: 95px; color: #555;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span><br>
-                  
-                  XVIII. Tanggal dicabut : 
-                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                  <span class="box-char">${dCabut ? dCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${dCabut ? dCabut.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${mCabut ? mCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${mCabut ? mCabut.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${yCabut ? yCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(1) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(2) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(3) : '&nbsp;'}</span>
-                  <br><span style="font-size: 6.5pt; margin-left: 95px; color: #555;">(khusus Implan/IUD)&nbsp;&nbsp; Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span>
-                </td>
-              </tr>
-            </table>
-
-            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
-              <tr>
-                <td style="width: 50%; font-size: 6.2pt; vertical-align: bottom; line-height: 1.15;">
-                  KETERANGAN:<br>
-                  *) Coret yang tidak perlu / yang tidak boleh diberikan.<br>
-                  **) Ditulis gratis untuk pelayanan tidak bayar
-                </td>
-                <td style="width: 50%; text-align: center; vertical-align: top;">
-                  XIX. Penanggungjawab Pelayanan KB<br>
-                  Dokter / Bidan / Perawat Kesehatan<br><br><br><br>
-                  <div style="display: inline-block; text-align: left;">
-                    ( ............................................................ )<br>
-                    <span style="margin-left: 7px;">NIP.</span>
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  
-  function renderSatuConsent(item) {
-    const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
-    const pTgl = tglFormatted.split('-');
-    const dLayanan = pTgl[2] || "01";
-    const mLayanan = pTgl[1] || "01";
-    const yLayanan = pTgl[0] || "2026";
-
-    const umurIstriVal = (item.umur_istri !== undefined && item.umur_istri !== null) ? item.umur_istri : "";
-    const nmKec = (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][item.kode_kec]) ? dataKecamatan[userKodeKab][item.kode_kec] : (item.kecamatan_nama || item.kode_kec || "");
-    const nmDesa = (dataDesa[item.kode_kec] && dataDesa[item.kode_kec][item.kode_desa]) ? dataDesa[item.kode_kec][item.kode_desa] : (item.desa_nama || item.kode_desa || "");
-    const dsnMap = (typeof getDusunList === "function") ? getDusunList(item.kode_kec, item.kode_desa) : null;
-    const nmDsn = (dsnMap && dsnMap[item.kode_dusun]) ? dsnMap[item.kode_dusun].nama : (item.dusun_nama || item.kode_dusun || "");
-
-    const alkon = String(item.rencana_metode || item.metode_realisasi || "").toUpperCase();
-    const isSuntik = alkon.includes("SUNTIK");
-    const isIud = alkon.includes("IUD");
-    const isImplan = alkon.includes("IMPLAN") || alkon.includes("SUSUK");
-    const isMow = alkon.includes("MOW") || alkon.includes("TUBEKTOMI");
-    const isMop = alkon.includes("MOP") || alkon.includes("VASEKTOMI");
-
-    return `
-      <div class="sheet-a4-page">
-        <div>
-          <!-- KOP DOKUMEN -->
-          <div class="ic-title-main">
-            LEMBAR PERSETUJUAN TINDAKAN MEDIK (INFORMED CONSENT) PELAYANAN<br>
-            KONTRASEPSI
-          </div>
-
-          <div style="text-align: right; font-size: 8pt; font-weight: bold; margin-bottom: 1mm;">
-            NOMOR KODE TINDAKAN
-            <span class="ic-digit-box" style="margin-left: 1.5mm;"></span><span class="ic-digit-box"></span>
-          </div>
-
-          <div class="ic-header-line"></div>
-
-          <!-- 1. IDENTITAS TEMPAT PELAYANAN -->
-          <div style="text-align: center; margin-bottom: 2mm;">
-            <span class="ic-box-header">IDENTITAS TEMPAT PELAYANAN</span>
-          </div>
-
-          <table class="tbl-ic-grid" style="margin-bottom: 3mm;">
-            <tr>
-              <td style="width: 35%; line-height: 1.25; vertical-align: top;">
-                Nama Faskes KB/RS/Praktik<br>
-                Dokter/Praktek Bidan Mandiri *)
-              </td>
-              <td style="width: 2%; vertical-align: top;">:</td>
-              <td style="width: 63%; vertical-align: top; padding-top: 0.5px;">
-                <span style="font-weight: bold; text-decoration: underline;">${item.faskes_tujuan || '....................................................................................................'}</span>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top: 1.5mm; vertical-align: top;">Nomor Kode Faskes KB</td>
-              <td style="padding-top: 1.5mm; vertical-align: top;">:</td>
-              <td style="padding-top: 1.5mm; vertical-align: top;">
-                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
-                &nbsp;&nbsp;
-                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
-                &nbsp;&nbsp;
-                <span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span>
-              </td>
-            </tr>
-            <tr>
-              <td style="line-height: 1.25; padding-top: 1.5mm; vertical-align: top;">
-                Nomor Klien / Nomor Seri Kartu<br>
-                (Sesuai dengan K/IV/KB)
-              </td>
-              <td style="padding-top: 1.5mm; vertical-align: top;">:</td>
-              <td style="padding-top: 1.5mm; vertical-align: top;">
-                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
-                &nbsp;&nbsp;
-                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top: 1.5mm; vertical-align: top;">Kode Keluarga Indonesia (KKN)</td>
-              <td style="padding-top: 1.5mm; vertical-align: top;">:</td>
-              <td style="padding-top: 1.5mm; vertical-align: top;">
-                <span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span>
-              </td>
-            </tr>
-          </table>
-
-          <!-- 2. PERSETUJUAN KLIEN -->
-          <div style="text-align: center; margin-bottom: 2mm;">
-            <span class="ic-box-header">PERSETUJUAN KLIEN</span>
-          </div>
-
-          <p style="margin: 0 0 1.5mm 0;">Saya yang bertanda tangan di bawah ini</p>
-          <table class="tbl-ic-grid" style="margin-bottom: 2mm;">
-            <tr>
-              <td style="width: 35%; vertical-align: top;">Nama</td>
-              <td style="width: 2%; vertical-align: top;">:</td>
-              <td style="width: 63%; font-weight: bold; vertical-align: top;">${item.nama_istri || '....................................................................................'}</td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">Umur</td>
-              <td style="vertical-align: top;">:</td>
-              <td style="vertical-align: top;">
-                ${umurIstriVal ? `<b>${umurIstriVal}</b>` : '......'} Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                Jenis Kelamin &nbsp;&nbsp;
-                <span style="text-decoration: line-through;">Laki-laki</span>/Perempuan *)
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">Alamat Lengkap</td>
-              <td style="vertical-align: top;">:</td>
-              <td style="vertical-align: top;">
-                Jalan........................................RT <b>${item.kode_rt || '.....'}</b> RW/Dusun <b>${nmDsn || '.....'}</b> Kelurahan/Desa <b>${nmDesa || '................'}</b>
-              </td>
-            </tr>
-            <tr>
-              <td></td>
-              <td></td>
-              <td style="vertical-align: top;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
-                  <tr>
-                    <td style="width: 50%;">Kecamatan <b>${nmKec || '...............................'}</b></td>
-                    <td style="width: 50%;">Kabupaten/Kota <b>LOMBOK BARAT</b></td>
-                  </tr>
-                  <tr>
-                    <td>Provinsi <b>NUSA TENGGARA BARAT</b></td>
-                    <td>Kode pos ....................</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <p style="text-align: justify; margin: 1.5mm 0 2.5mm 0; line-height: 1.35;">
-            Setelah mendapat penjelasan dan <b>MENGERTI SEPENUHNYA PERIHAL KONTRASEPSI YANG SAYA PILIH</b>, maka saya selaku <b>KLIEN SECARA SUKARELA MEMBERIKAN PERSETUJUAN UNTUK DILAKUKAN TINDAKAN MEDIK DAN ATAU PELAYANAN KONTRASEPSI SESUAI STANDAR PROFESI</b> berupa
-          </p>
-
-          <!-- PILIHAN KONTRASEPSI -->
-          <div style="display: flex; justify-content: space-around; align-items: center; margin: 3mm 0 3.5mm 0; font-weight: bold; font-size: 9pt;">
-            <div style="display: flex; align-items: center;">
-              <span class="ic-big-checkbox">${isSuntik ? '&#10003;' : '&nbsp;'}</span> SUNTIKAN
-            </div>
-            <div style="display: flex; align-items: center;">
-              <span class="ic-big-checkbox">${isIud ? '&#10003;' : '&nbsp;'}</span> IUD
-            </div>
-            <div style="display: flex; align-items: center;">
-              <span class="ic-big-checkbox">${isImplan ? '&#10003;' : '&nbsp;'}</span> IMPLAN
-            </div>
-            <div style="display: flex; align-items: center;">
-              <span class="ic-big-checkbox">${isMow ? '&#10003;' : '&nbsp;'}</span> MOW
-            </div>
-            <div style="display: flex; align-items: center;">
-              <span class="ic-big-checkbox">${isMop ? '&#10003;' : '&nbsp;'}</span> MOP **)
-            </div>
-          </div>
-
-          <!-- 3. PERSETUJUAN SUAMI / ISTERI KLIEN -->
-          <div style="text-align: center; margin-bottom: 2mm;">
-            <span class="ic-box-header">PERSETUJUAN SUAMI/ISTERI KLIEN</span>
-          </div>
-
-          <p style="margin: 0 0 1.5mm 0;">Saya yang bertanda tangan di bawah ini</p>
-          <table class="tbl-ic-grid" style="margin-bottom: 2mm;">
-            <tr>
-              <td style="width: 35%; vertical-align: top;">Nama</td>
-              <td style="width: 2%; vertical-align: top;">:</td>
-              <td style="width: 63%; font-weight: bold; vertical-align: top;">${item.nama_suami || '....................................................................................'}</td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">Umur</td>
-              <td style="vertical-align: top;">:</td>
-              <td style="vertical-align: top;">
-                ...... Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                Jenis Kelamin &nbsp;&nbsp;
-                Laki-laki/<span style="text-decoration: line-through;">Perempuan</span> *)
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">Alamat Lengkap</td>
-              <td style="vertical-align: top;">:</td>
-              <td style="vertical-align: top;">
-                Jalan........................................RT <b>${item.kode_rt || '.....'}</b> RW/Dusun <b>${nmDsn || '.....'}</b> Kelurahan/Desa <b>${nmDesa || '................'}</b>
-              </td>
-            </tr>
-            <tr>
-              <td></td>
-              <td></td>
-              <td style="vertical-align: top;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
-                  <tr>
-                    <td style="width: 50%;">Kecamatan <b>${nmKec || '...............................'}</b></td>
-                    <td style="width: 50%;">Kabupaten/Kota <b>LOMBOK BARAT</b></td>
-                  </tr>
-                  <tr>
-                    <td>Provinsi <b>NUSA TENGGARA BARAT</b></td>
-                    <td>Kode pos ....................</td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <p style="text-align: justify; margin: 1.5mm 0; line-height: 1.35;">
-            Selaku Suami/<span style="text-decoration: line-through;">Isteri</span> *) klien telah mendapat penjelasan, memahami dan ikut menyetujui terhadap tindakan medik dan atau pelayanan kontrasepsi tersebut.
-          </p>
-          <p style="text-align: justify; margin: 1.5mm 0; line-height: 1.35;">
-            Pernyataan ini kami buat dengan <b>KESADARAN PENUH ATAS SEGALA RESIKO TINDAK MEDIK</b> yang akan diberikan.
-          </p>
-
-          <!-- TANDA TANGAN 3 PIHAK -->
-          <table class="ic-sign-table">
-            <tr>
-              <td style="width: 40%; vertical-align: bottom;">
-                Yang memberi pelayanan konseling<br>
-                Dokter/Bidan/Perawat *)
-              </td>
-              <td style="width: 25%; vertical-align: bottom;">
-                Klien
-              </td>
-              <td style="width: 35%; text-align: center; vertical-align: bottom;">
-                <div style="margin-bottom: 2mm;">Lombok Barat, ${dLayanan}-${mLayanan}-${yLayanan}</div>
-                <div style="height: 6mm;"></div>
-                Suami/Isteri Klien *)
-              </td>
-            </tr>
-            <tr>
-              <td style="padding-top: 18mm;">
-                (....................................................)
-              </td>
-              <td style="padding-top: 18mm;">
-                ( <b>${item.nama_istri}</b> )
-              </td>
-              <td style="padding-top: 18mm;">
-                ( <b>${item.nama_suami || '................................'}</b> )
-              </td>
-            </tr>
-          </table>
-
-          <!-- CATATAN KAKI -->
-          <div style="font-size: 8pt; margin-top: 3.5mm; line-height: 1.3;">
-            <table style="border-collapse: collapse;">
-              <tr>
-                <td style="vertical-align: top; width: 22mm;">Keterangan :</td>
-                <td>*) coret yang tidak perlu</td>
-              </tr>
-              <tr>
-                <td></td>
-                <td style="padding-top: 1mm;">
-                  **) beri tanda &nbsp;<span style="border: 1px solid #000; display: inline-block; width: 3.5mm; height: 3.5mm; text-align: center; line-height: 3.5mm; font-size: 7.5pt; font-weight: bold;">&#10003;</span>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  
   function generateBatchKiKbPrint(listAkseptor) {
     let fullHtml = '';
     for (let i = 0; i < listAkseptor.length; i += 4) {
@@ -9808,12 +9503,21 @@ function onUserKabChange() {
         <head>
           <title>Cetak Kartu K/I/KB/13</title>
           <style>
-            @page { size: A4 portrait; margin: 0; }
+            @page { 
+              size: A4 portrait; 
+              margin: 0 !important; 
+            }
             * {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+              color-adjust: exact !important;
             }
-            html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; }
+            html, body { 
+              margin: 0 !important; 
+              padding: 0 !important; 
+              background: #fff; 
+              font-family: 'Segoe UI', Arial, sans-serif; 
+            }
             .sheet-a4 {
               width: 210mm;
               height: 297mm;
@@ -9836,7 +9540,7 @@ function onUserKabChange() {
               position: relative;
             }
             .ki-inner-border {
-              border: 1.5px solid #000;
+              border: 1.5px solid #1f4e78;
               margin: 2mm;
               height: calc(100% - 4mm);
               box-sizing: border-box;
@@ -9844,23 +9548,21 @@ function onUserKabChange() {
               display: flex;
               flex-direction: column;
             }
-            .ki-bar-top { height: 6mm !important; background-color: #343499 !important; display: block !important; }
-            .ki-bar-bottom { height: 5mm !important; background-color: #343499 !important; margin-top: 1.5mm; display: block !important; }
-            .ki-header-mid { display: flex; align-items: center; padding: 1mm 2.5mm 0 2.5mm; position: relative; height: 19mm; }
-            .ki-logo-wrap { width: 19mm; height: 18mm; display: flex; align-items: center; }
-            .ki-logo-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
-            .ki-title-wrap { padding-left: 2mm; }
-            .ki-title-1 { font-size: 16pt; font-weight: 900; color: #000; line-height: 0.95; letter-spacing: 0.5px; }
-            .ki-title-2 { font-size: 13pt; font-weight: 900; color: #000; line-height: 1.1; letter-spacing: 0.5px; margin-top: 1.5mm; }
-            .ki-kikb-box { position: absolute; right: 2.5mm; top: 1mm; border: 1.5px solid #000; padding: 0.4mm 2.5mm; font-size: 7.5pt; font-weight: 900; background: #fff; }
-            .b-text { font-weight: bold; font-size: 7pt; color: #000; line-height: 1.25; }
+            .ki-bar-top { height: 4.5mm !important; background-color: #1f4e78 !important; margin-bottom: 1.5mm; display: block !important; }
+            .ki-bar-bottom { height: 3mm !important; background-color: #1f4e78 !important; margin-top: 1.5mm; margin-bottom: 1.5mm; display: block !important; }
+            .ki-header-mid { display: flex; align-items: center; justify-content: space-between; padding: 0 1mm; }
+            .ki-logo-wrap img { height: 11mm; }
+            .ki-title-1 { font-size: 11pt; font-weight: 900; color: #1f4e78; line-height: 1; }
+            .ki-title-2 { font-size: 9pt; font-weight: 900; color: #1f4e78; line-height: 1.1; }
+            .ki-kikb-box { border: 1px solid #1f4e78; font-size: 6.5pt; font-weight: bold; padding: 1mm 2mm; }
+            .b-text { font-size: 6.5pt; font-weight: bold; color: #000; line-height: 1.25; }
             .tbl-front-data, .tbl-back-top, .tbl-back-table { width: 100%; border-collapse: collapse; }
-            .tbl-front-data td, .tbl-back-top td { padding: 0.7mm 0; }
-            .box-check { display: inline-flex; align-items: center; justify-content: center; width: 3.4mm; height: 3.4mm; border: 1.2px solid #000; font-size: 7pt; font-weight: 900; margin-right: 1mm; vertical-align: middle; }
-            .box-digit { display: inline-flex; align-items: center; justify-content: center; width: 3.4mm; height: 3.4mm; border: 1px solid #000; font-size: 6.8pt; font-weight: bold; margin: 0 0.2mm; vertical-align: middle; }
-            .sign-front-area { text-align: right; margin-top: 3mm; font-size: 6.8pt; line-height: 1.25; padding-right: 2mm; }
-            .tbl-back-table th, .tbl-back-table td { border: 1.2px solid #000; font-size: 7pt; text-align: center; }
-            .tbl-back-table th { background-color: #f1f5f9 !important; padding: 1.2mm 1mm; font-weight: bold; }
+            .tbl-front-data td, .tbl-back-top td { padding: 0.4mm 0; }
+            .box-check { display: inline-flex; align-items: center; justify-content: center; width: 3mm; height: 3mm; border: 1px solid #000; font-size: 6pt; margin-right: 1.5mm; vertical-align: middle; }
+            .box-digit { display: inline-flex; align-items: center; justify-content: center; width: 3.2mm; height: 3.8mm; border: 1px solid #000; font-size: 6.5pt; font-weight: bold; margin-right: 0.4mm; }
+            .sign-front-area { text-align: right; margin-top: auto; font-size: 6pt; line-height: 1.2; padding-right: 2mm; }
+            .tbl-back-table th, .tbl-back-table td { border: 1px solid #000; font-size: 6pt; text-align: center; }
+            .tbl-back-table th { background-color: #f1f5f9 !important; padding: 1mm; }
           </style>
         </head>
         <body>
@@ -9879,7 +9581,604 @@ function onUserKabChange() {
       iframe.contentWindow.print();
     }, 600);
   }
-  
+
+  function renderSatuFormKIV(item) {
+    const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
+    const pTgl = tglFormatted.split('-');
+    const dLayanan = pTgl[2] || "01";
+    const mLayanan = pTgl[1] || "01";
+    const yLayanan = pTgl[0] || "2026";
+
+    let dLahir = "", mLahir = "", yLahir = "";
+    if (item.tgl_lahir_istri) {
+      const cleanTgl = String(item.tgl_lahir_istri).replace(/\//g, '-').trim();
+      const pLahir = cleanTgl.split('-');
+      if (pLahir.length === 3) {
+        if (pLahir[0].length === 4) {
+          dLahir = pLahir[2].padStart(2, '0');
+          mLahir = pLahir[1].padStart(2, '0');
+          yLahir = pLahir[0];
+        } else {
+          dLahir = pLahir[0].padStart(2, '0');
+          mLahir = pLahir[1].padStart(2, '0');
+          yLahir = pLahir[2];
+        }
+      }
+    }
+    
+    let parsedUmurDb = parseInt(item.umur_istri, 10);
+    let umurIstriVal = "";
+    if (!isNaN(parsedUmurDb) && parsedUmurDb > 0) {
+      umurIstriVal = parsedUmurDb;
+    } else if (item.tgl_lahir_istri) {      
+      const thnRef = parseInt(item.tahun || yLayanan || new Date().getFullYear(), 10);
+      const umurDihitung = (typeof hitungUmurPresisi === "function") 
+        ? hitungUmurPresisi(item.tgl_lahir_istri, thnRef)
+        : (yLahir ? (thnRef - parseInt(yLahir, 10)) : 0);
+      umurIstriVal = umurDihitung > 0 ? umurDihitung : "";
+    }
+
+    const curKab = String(item.kode_kab || userKodeKab || "01").padStart(2, '0');
+    const curKec = String(item.kode_kec || "").padStart(2, '0');
+    const curDesa = String(item.kode_desa || "").padStart(4, '0');
+    const curDsn = String(item.kode_dusun || "").padStart(4, '0');
+
+    const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || "");
+    const compositeDesaKey = curKab + "_" + curKec;
+    let desasMapKiv = dataDesa[compositeDesaKey] || dataDesa[curKec] || {};
+    const nmDesa = (desasMapKiv && desasMapKiv[curDesa]) ? desasMapKiv[curDesa] : (item.desa_nama || curDesa || "");
+    const dsnMap = (typeof getDusunList === "function") ? getDusunList(curKec, curDesa, curKab) : null;
+    const nmDsn = (dsnMap && dsnMap[curDsn]) ? dsnMap[curDsn].nama : (item.dusun_nama || curDsn || "");
+
+    const alamatLengkap = `RT ${item.kode_rt || '-'}, DUSUN ${nmDsn}, DESA ${nmDesa}, KEC. ${nmKec}`;
+
+    const alkon = String(item.rencana_metode || item.metode_realisasi || "").toUpperCase();
+    let kdAlkon = "";
+    if (alkon.includes("SUNTIK") && alkon.includes("1")) kdAlkon = "1";
+    else if (alkon.includes("SUNTIK")) kdAlkon = "2";
+    else if (alkon.includes("PIL")) kdAlkon = "3";
+    else if (alkon.includes("KONDOM")) kdAlkon = "4";
+    else if (alkon.includes("IMPLAN") && alkon.includes("1")) kdAlkon = "5";
+    else if (alkon.includes("IMPLAN")) kdAlkon = "6";
+    else if (alkon.includes("IUD") && alkon.includes("380")) kdAlkon = "7";
+    else if (alkon.includes("IUD")) kdAlkon = "8";
+    else if (alkon.includes("MOW") || alkon.includes("TUBEKTOMI")) kdAlkon = "9";
+    else if (alkon.includes("MOP") || alkon.includes("VASEKTOMI")) kdAlkon = "10";
+
+    let dCabut = "", mCabut = "", yCabut = "";
+    if (tglFormatted && (alkon.includes("IMPLAN") || alkon.includes("IUD") || alkon.includes("SUSUK"))) {
+      const tglPasangObj = new Date(tglFormatted);
+      if (!isNaN(tglPasangObj.getTime())) {
+        const addYears = alkon.includes("IUD") ? 8 : 3;
+        tglPasangObj.setFullYear(tglPasangObj.getFullYear() + addYears);
+        dCabut = String(tglPasangObj.getDate()).padStart(2, '0');
+        mCabut = String(tglPasangObj.getMonth() + 1).padStart(2, '0');
+        yCabut = String(tglPasangObj.getFullYear());
+      }
+    }
+
+    const jnsAkseptor = String(item.jenis_akseptor || "").toUpperCase();
+    let kdStatusPeserta = "";
+    if (jnsAkseptor.includes("MURNI") || jnsAkseptor.includes("PERTAMA")) kdStatusPeserta = "1";
+    else if (jnsAkseptor.includes("KBPP") || jnsAkseptor.includes("PERSALINAN")) kdStatusPeserta = "2";
+    else if (jnsAkseptor.includes("DO") || jnsAkseptor.includes("PASCA DO")) kdStatusPeserta = "3";
+    else if (jnsAkseptor.includes("ULANGAN") || jnsAkseptor.includes("GANTI")) kdStatusPeserta = "4";
+
+    const rawJkn = String(item.peserta_jkn || "").toUpperCase().trim();
+    let kdAsuransi = "";
+    if (rawJkn.includes("PBI") || rawJkn.includes("BPJS")) {
+      kdAsuransi = "1";
+    } else if (rawJkn.includes("SWASTA")) {
+      kdAsuransi = "2";
+    } else if (rawJkn.includes("TIDAK") || rawJkn === "TIDAK MEMILIKI" || rawJkn === "NON-JKN") {
+      kdAsuransi = "3";
+    }
+
+    const totalAnak = parseInt(item.jumlah_anak || 0, 10);
+    const anakLaki = totalAnak > 0 ? Math.floor(totalAnak / 2) : 0;
+    const anakPerempuan = totalAnak > 0 ? Math.ceil(totalAnak / 2) : 0;
+
+    let strUmurThn = "";
+    let strBulan = "";
+    if (totalAnak > 0) {
+      const umurAnakNum = parseInt(item.umur_anak_terkecil || 0, 10);
+      strUmurThn = String(umurAnakNum).padStart(2, '0');
+      strBulan = "00";
+    }
+
+    return `
+      <div class="sheet-a4-page page-kiv">
+        <div class="form-wrapper-kiv">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 2mm;">
+            <tr>
+              <td style="width: 25%; font-weight: bold; font-size: 11.5pt; vertical-align: top;">K/IV/KB/15</td>
+              <td style="width: 38%; font-size: 7.8pt; vertical-align: top; line-height: 1.2;">
+                I. Kode Faskes KB/Jaringan/<br>&nbsp;&nbsp;&nbsp;Jejaring
+              </td>
+              <td style="width: 37%; text-align: right; vertical-align: top;">
+                <span class="box-single" style="min-width: 180px; text-align: left;">${item.faskes_tujuan || ''}</span>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="font-size: 7.8pt; vertical-align: middle;">II. Kode Keluarga Indonesia:</td>
+              <td style="text-align: right; vertical-align: middle;">
+                <span class="box-single" style="min-width: 180px; text-align: center;">&nbsp;</span>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; font-weight: bold; font-size: 10.5pt; margin: 1mm 0 3mm 0; letter-spacing: 0.5px;">
+            KARTU STATUS PESERTA KB
+          </div>
+
+          <table class="tbl-field" style="width: 100%; border-collapse: collapse;">
+            <tr><td style="width: 30%;">III. Nama Peserta KB</td><td style="width: 1%;">:</td><td style="width: 69%; font-weight: bold;">${item.nama_istri || ''}</td></tr>
+            <tr>
+              <td>IV. Tgl Lahir/Umur Istri</td><td>:</td>
+              <td>
+                <span class="box-char">${dLahir ? dLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLahir ? dLahir.charAt(1) : '&nbsp;'}</span> / 
+                <span class="box-char">${mLahir ? mLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLahir ? mLahir.charAt(1) : '&nbsp;'}</span> / 
+                <span class="box-char">${yLahir ? yLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(3) : '&nbsp;'}</span>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Umur: <b>${umurIstriVal !== "" ? umurIstriVal : ''}</b> Tahun
+              </td>
+            </tr>
+            <tr><td>V. Nama Suami/Istri</td><td>:</td><td>${item.nama_suami || ''}</td></tr>
+            <tr>
+              <td>VI. Pendidikan Suami dan Istri</td><td>:</td>
+              <td>
+                <table style="width: 100%; font-size: 7.4pt; border-collapse: collapse;">
+                  <tr><td style="width: 33%;">1) Tidak Tamat SD/MI</td><td style="width: 33%;">3) Tamat SLTP/MTsN</td><td style="width: 34%;">5) Tamat PT</td></tr>
+                  <tr><td>2) Tamat SD/MI</td><td>4) Tamat SLTA/MA</td><td>6) Tidak Sekolah</td></tr>
+                </table>
+                <div style="margin-top: 1px; text-align: right; padding-right: 25px;">
+                  Suami &nbsp;<span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp; Istri &nbsp;<span class="box-char">&nbsp;</span>
+                </div>
+              </td>
+            </tr>
+            <tr><td>VII. Alamat Peserta KB</td><td>:</td><td>${alamatLengkap}</td></tr>
+            <tr>
+              <td>VIII. Pekerjaan Suami dan Istri</td><td>:</td>
+              <td>
+                <table style="width: 100%; font-size: 7.4pt; border-collapse: collapse;">
+                  <tr><td style="width: 25%;">1) Petani</td><td style="width: 25%;">4) PNS/TNI/POLRI</td><td style="width: 25%;">7) Pensiunan</td><td style="width: 25%;">10) Tidak Bekerja</td></tr>
+                  <tr><td>2) Nelayan</td><td>5) Pegawai Swasta</td><td>8) Pekerja Lepas</td><td></td></tr>
+                  <tr><td>3) Pedagang</td><td>6) Wiraswasta</td><td>9) Lainnya</td><td></td></tr>
+                </table>
+                <div style="margin-top: 1px; text-align: right; padding-right: 25px;">
+                  Suami &nbsp;<span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp; Istri &nbsp;<span class="box-char">&nbsp;</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>IX. Penggunaan Asuransi</td><td>:</td>
+              <td><span class="box-char">${kdAsuransi || '&nbsp;'}</span> &nbsp;&nbsp; 1) BPJS Kesehatan &nbsp;&nbsp;&nbsp;&nbsp; 2) Lainnya &nbsp;&nbsp;&nbsp;&nbsp; 3) Tidak</td>
+            </tr>
+            <tr>
+              <td>X. Jumlah anak hidup</td><td>:</td>
+              <td>Laki-laki &nbsp;<span class="box-char">${totalAnak > 0 ? anakLaki : '&nbsp;'}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Perempuan &nbsp;<span class="box-char">${totalAnak > 0 ? anakPerempuan : '&nbsp;'}</span></td>
+            </tr>
+            <tr>
+              <td>XI. Umur anak terakhir yang masih hidup</td><td>:</td>
+              <td>
+                <span class="box-char">${strUmurThn ? strUmurThn.charAt(0) : '&nbsp;'}</span><span class="box-char">${strUmurThn ? strUmurThn.charAt(1) : '&nbsp;'}</span> Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                <span class="box-char">${strBulan ? strBulan.charAt(0) : '&nbsp;'}</span><span class="box-char">${strBulan ? strBulan.charAt(1) : '&nbsp;'}</span> Bulan
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">XII. Status Peserta KB</td><td style="vertical-align: top;">:</td>
+              <td>
+                <span class="box-char">${kdStatusPeserta || '&nbsp;'}</span><br>
+                <table style="width: 100%; font-size: 7.4pt; margin-top: 1px; border-collapse: collapse;">
+                  <tr><td style="width: 50%;">1) Baru Pertama kali</td><td style="width: 50%;">3) Pernah pakai alat KB</td></tr>
+                  <tr><td>2) Pernah pakai alat KB berhenti sesudah bersalin/keguguran</td><td>4) Sedang ber-KB</td></tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">XIII. Alat/Obat/Cara KB terakhir</td><td style="vertical-align: top;">:</td>
+              <td>
+                <span class="box-char">${kdAlkon || '&nbsp;'}</span><br>
+                <table style="width: 100%; font-size: 7.4pt; margin-top: 1px; border-collapse: collapse;">
+                  <tr><td style="width: 25%;">1) Suntikan 1 Bulanan</td><td style="width: 25%;">4) Kondom</td><td style="width: 25%;">7) IUD CuT 380A</td><td style="width: 25%;">10) Vasektomi</td></tr>
+                  <tr><td>2) Suntikan 3 Bulanan</td><td>5) Implan 1 Batang</td><td>8) IUD Lain-lain</td><td></td></tr>
+                  <tr><td>3) Pil</td><td>6) Implan 2 Batang</td><td>9) Tubektomi</td><td></td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <div style="border-top: 1px solid #000; margin-top: 2.5mm; padding-top: 2mm;">
+            <div style="font-weight: bold; font-size: 7.8pt; margin-bottom: 0.5mm;">XIV. Penapisan (Skrining) untuk menentukan alat kontrasepsi yang dapat digunakan calon peserta KB</div>
+            <div style="font-size: 6.6pt; font-style: italic; margin-bottom: 1.5mm; line-height: 1.2;">
+              Petunjuk: Periksalah keadaan berikut ini dan hasilnya ditulis dengan angka atau tanda centang (✓) pada kotak yang tersedia.<br>
+              Penapisan (Skrining) hanya boleh dilakukan oleh pelaksana yang telah dilatih dalam pelayanan KB.
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 7.3pt;">
+              <tr>
+                <td style="width: 50%; vertical-align: top; padding-right: 5px; border-right: 1px solid #000;">
+                  <b>Anamnese</b><br>
+                  1. Haid terakhir tanggal : <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><br>
+                  2. Hamil/Diduga Hamil : &nbsp; <span class="box-char">&nbsp;</span> 1) Ya &nbsp;&nbsp; 2) Tidak<br>
+                  3. Jumlah GPA : &nbsp; Gravida <span class="box-char">&nbsp;</span> &nbsp; Partus <span class="box-char">&nbsp;</span> &nbsp; Abortus <span class="box-char">&nbsp;</span><br>
+                  4. Menyusui : &nbsp; <span class="box-char">&nbsp;</span> 1) Ya &nbsp;&nbsp; 2) Tidak<br>
+                  5. Riwayat Penyakit Sebelumnya :<br>
+                  <table style="width: 100%; margin-left: 2px; font-size: 7.1pt; border-collapse: collapse;">
+                    <tr><td style="width: 74%;"></td><td style="width: 13%; text-align: center;">Tidak</td><td style="width: 13%; text-align: center;">Ya</td></tr>
+                    <tr><td style="padding: 0.8px 0;">a. Sakit kuning</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">b. Perdarahan pervaginam tidak diketahui sebabnya</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">c. Keputihan yang lama</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">d. Tumor: Payudara / Rahim / Indung telur</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                  </table>
+                  <div style="font-size: 6pt; color: #333; margin-top: 1mm; line-height: 1.15;">
+                    Bila semua jawaban TIDAK, dapat diberikan salah satu cara KB (kecuali IUD dan Tubektomi). Bila salah satu jawaban YA, rujuk ke dokter.
+                  </div>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 5px;">
+                  <b>Pemeriksaan</b><br>
+                  6. Keadaan Umum : &nbsp; <span class="box-char">&nbsp;</span> 1) Baik &nbsp;&nbsp; 2) Sedang &nbsp;&nbsp; 3) Kurang<br>
+                  7. Berat Badan : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Kg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8. Tekanan Darah : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mmHg<br>
+                  9. Sebelum pemasangan IUD/Tubektomi dilakukan pemeriksaan dalam :<br>
+                  <table style="width: 100%; margin-left: 2px; font-size: 7.1pt; border-collapse: collapse;">
+                    <tr><td style="width: 74%;"></td><td style="width: 13%; text-align: center;">Tidak</td><td style="width: 13%; text-align: center;">Ya</td></tr>
+                    <tr><td style="padding: 0.8px 0;">a. Tanda-tanda radang</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">b. Tumor/keganasan ginekologi</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                  </table>
+                  <div style="font-size: 6pt; color: #333; line-height: 1.15; margin-top: 0.5mm;">
+                    Bila semua jawaban TIDAK, pemasangan IUD/Tubektomi dapat dilakukan. Bila YA, rujuk ke dokter.
+                  </div>
+                  10. Posisi Rahim : &nbsp; <span class="box-char">&nbsp;</span> 1) Retrofleksi &nbsp;&nbsp; 2) Antefleksi<br>
+                  11. Pemeriksaan tambahan (khusus Vasektomi dan Tubektomi) :<br>
+                  <table style="width: 100%; margin-left: 2px; font-size: 7.1pt; border-collapse: collapse;">
+                    <tr><td style="width: 74%;"></td><td style="width: 13%; text-align: center;">Tidak</td><td style="width: 13%; text-align: center;">Ya</td></tr>
+                    <tr><td style="padding: 0.8px 0;">a. Tanda-tanda diabetes</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">b. Kelainan pembekuan darah</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">c. Radang orchitis/epididymitis</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.8px 0;">d. Tumor/keganasan ginekologi</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <div style="margin-top: 2mm; font-size: 7.3pt;">
+              12. Alat/obat/cara kontrasepsi yang boleh dipergunakan :<br>
+              <table class="tbl-grid" style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 1mm;">
+                <tr>
+                  <td>Suntikan 1 Bulanan</td><td>Suntikan 3 Bulanan</td><td>Pil</td><td>Kondom</td>
+                  <td>Implan 1 Batang</td><td>Implan 2 Batang</td><td>IUD CuT 380A</td><td>IUD Lain-lain</td>
+                  <td>Tubektomi</td><td>Vasektomi</td>
+                </tr>
+                <tr style="height: 16px;">
+                  <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #000; margin-top: 3.5mm; padding-top: 2mm; font-size: 7.4pt;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="width: 45%; vertical-align: top;">
+                  XV. Alat/obat/cara kontrasepsi yang dipilih : <span class="box-char">${kdAlkon || '&nbsp;'}</span><br>
+                  <table style="width: 100%; font-size: 7pt; margin-top: 1.5mm; border-collapse: collapse;">
+                    <tr><td style="padding: 0.8px 0;">1) Suntikan 1 Bulanan</td><td style="padding: 0.8px 0;">5) Implan 1 Batang</td><td style="padding: 0.8px 0;">9) Tubektomi</td></tr>
+                    <tr><td style="padding: 0.8px 0;">2) Suntikan 3 Bulanan</td><td style="padding: 0.8px 0;">6) Implan 2 Batang</td><td style="padding: 0.8px 0;">10) Vasektomi</td></tr>
+                    <tr><td style="padding: 0.8px 0;">3) Pil</td><td style="padding: 0.8px 0;">7) IUD CuT 380A</td><td></td></tr>
+                    <tr><td style="padding: 0.8px 0;">4) Kondom</td><td style="padding: 0.8px 0;">8) IUD Lain-lain</td><td></td></tr>
+                  </table>
+                </td>
+                <td style="width: 55%; vertical-align: top; padding-left: 6px;">
+                  XVI. Tanggal dilayani : 
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span class="box-char">${dLayanan ? dLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLayanan ? dLayanan.charAt(1) : '&nbsp;'}</span> / 
+                  <span class="box-char">${mLayanan ? mLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLayanan ? mLayanan.charAt(1) : '&nbsp;'}</span> / 
+                  <span class="box-char">${yLayanan ? yLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(3) : '&nbsp;'}</span>
+                  <br><span style="font-size: 6pt; margin-left: 90px; color: #555;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span><br>
+                  
+                  XVII. Tanggal kunjungan ulang : 
+                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / 
+                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / 
+                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
+                  <br><span style="font-size: 6pt; margin-left: 90px; color: #555;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span><br>
+                  
+                  XVIII. Tanggal dicabut : 
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <span class="box-char">${dCabut ? dCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${dCabut ? dCabut.charAt(1) : '&nbsp;'}</span> / 
+                  <span class="box-char">${mCabut ? mCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${mCabut ? mCabut.charAt(1) : '&nbsp;'}</span> / 
+                  <span class="box-char">${yCabut ? yCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(1) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(2) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(3) : '&nbsp;'}</span>
+                  <br><span style="font-size: 6.5pt; margin-left: 90px; color: #555;">(khusus Implan/IUD)&nbsp;&nbsp; Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span>
+                </td>
+              </tr>
+            </table>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 3mm;">
+              <tr>
+                <td style="width: 50%; font-size: 6.5pt; vertical-align: bottom; line-height: 1.2;">
+                  KETERANGAN:<br>
+                  *) Coret yang tidak perlu / yang tidak boleh diberikan.<br>
+                  **) Ditulis gratis untuk pelayanan tidak bayar
+                </td>
+                <td style="width: 50%; text-align: center; vertical-align: top;">
+                  XIX. Penanggungjawab Pelayanan KB<br>
+                  Dokter / Bidan / Perawat Kesehatan<br><br><br>
+                  <div style="display: inline-block; text-align: left;">
+                    ( ............................................................ )<br>
+                    <span style="margin-left: 6px;">NIP.</span>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSatuConsent(item) {
+    const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
+    const pTgl = tglFormatted.split('-');
+    const dLayanan = pTgl[2] || "01";
+    const mLayanan = pTgl[1] || "01";
+    const yLayanan = pTgl[0] || "2026";
+
+    let parsedUmurDb = parseInt(item.umur_istri, 10);
+    let umurIstriVal = "";
+    if (!isNaN(parsedUmurDb) && parsedUmurDb > 0) {
+      umurIstriVal = parsedUmurDb;
+    } else if (item.tgl_lahir_istri) {
+      const thnRef = parseInt(item.tahun || yLayanan || new Date().getFullYear(), 10);
+      const umurDihitung = (typeof hitungUmurPresisi === "function") 
+        ? hitungUmurPresisi(item.tgl_lahir_istri, thnRef)
+        : 0;
+      umurIstriVal = umurDihitung > 0 ? umurDihitung : "";
+    }
+
+    const curKab = String(item.kode_kab || userKodeKab || "01").padStart(2, '0');
+    const curKec = String(item.kode_kec || "").padStart(2, '0');
+    const curDesa = String(item.kode_desa || "").padStart(4, '0');
+    const curDsn = String(item.kode_dusun || "").padStart(4, '0');
+
+    const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || "");
+    const compositeDesaKey = curKab + "_" + curKec;
+    let desasMapConsent = dataDesa[compositeDesaKey] || dataDesa[curKec] || {};
+    const nmDesa = (desasMapConsent && desasMapConsent[curDesa]) ? desasMapConsent[curDesa] : (item.desa_nama || curDesa || "");
+    const dsnMap = (typeof getDusunList === "function") ? getDusunList(curKec, curDesa, curKab) : null;
+    const nmDsn = (dsnMap && dsnMap[curDsn]) ? dsnMap[curDsn].nama : (item.dusun_nama || curDsn || "");
+
+    const alkon = String(item.rencana_metode || item.metode_realisasi || "").toUpperCase();
+    const isSuntik = alkon.includes("SUNTIK");
+    const isIud = alkon.includes("IUD");
+    const isImplan = alkon.includes("IMPLAN") || alkon.includes("SUSUK");
+    const isMow = alkon.includes("MOW") || alkon.includes("TUBEKTOMI");
+    const isMop = alkon.includes("MOP") || alkon.includes("VASEKTOMI");
+
+    return `
+      <div class="sheet-a4-page page-consent">
+        <div class="form-wrapper-consent">
+          <div class="ic-title-main">
+            LEMBAR PERSETUJUAN TINDAKAN MEDIK (INFORMED CONSENT) PELAYANAN<br>
+            KONTRASEPSI
+          </div>
+
+          <div style="text-align: right; font-size: 7.5pt; font-weight: bold; margin-bottom: 1mm;">
+            NOMOR KODE TINDAKAN
+            <span class="ic-digit-box" style="margin-left: 1.5mm;"></span><span class="ic-digit-box"></span>
+          </div>
+
+          <div class="ic-header-line"></div>
+
+          <div style="text-align: center; margin-bottom: 1.5mm;">
+            <span class="ic-box-header">IDENTITAS TEMPAT PELAYANAN</span>
+          </div>
+
+          <table class="tbl-ic-grid" style="margin-bottom: 2mm;">
+            <tr>
+              <td style="width: 35%; line-height: 1.2; vertical-align: top;">
+                Nama Faskes KB/RS/Praktik<br>
+                Dokter/Praktek Bidan Mandiri *)
+              </td>
+              <td style="width: 2%; vertical-align: top;">:</td>
+              <td style="width: 63%; vertical-align: top;">
+                <span style="font-weight: bold;">${item.faskes_tujuan || '....................................................................................'}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top: 1mm; vertical-align: top;">Nomor Kode Faskes KB</td>
+              <td style="padding-top: 1mm; vertical-align: top;">:</td>
+              <td style="padding-top: 1mm; vertical-align: top;">
+                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
+                &nbsp;&nbsp;
+                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
+                &nbsp;&nbsp;
+                <span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span>
+              </td>
+            </tr>
+            <tr>
+              <td style="line-height: 1.2; padding-top: 1mm; vertical-align: top;">
+                Nomor Klien / Nomor Seri Kartu<br>
+                (Sesuai dengan K/IV/KB)
+              </td>
+              <td style="padding-top: 1mm; vertical-align: top;">:</td>
+              <td style="padding-top: 1mm; vertical-align: top;">
+                <span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span>
+                &nbsp;&nbsp;
+                <span class="ic-digit-box"></span><span class="ic-digit-box"></span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top: 1mm; vertical-align: top;">Kode Keluarga Indonesia (KKN)</td>
+              <td style="padding-top: 1mm; vertical-align: top;">:</td>
+              <td style="padding-top: 1mm; vertical-align: top;">
+                <span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span><span class="ic-digit-box"></span>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-bottom: 1.5mm;">
+            <span class="ic-box-header">PERSETUJUAN KLIEN</span>
+          </div>
+
+          <p style="margin: 0 0 1mm 0;">Saya yang bertanda tangan di bawah ini :</p>
+          <table class="tbl-ic-grid" style="margin-bottom: 1.5mm;">
+            <tr>
+              <td style="width: 35%; vertical-align: top;">Nama</td>
+              <td style="width: 2%; vertical-align: top;">:</td>
+              <td style="width: 63%; font-weight: bold; vertical-align: top;">${item.nama_istri || '....................................................................................'}</td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">Umur</td>
+              <td style="vertical-align: top;">:</td>
+              <td style="vertical-align: top;">
+                ${umurIstriVal ? `<b>${umurIstriVal}</b>` : '......'} Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Jenis Kelamin &nbsp;&nbsp;
+                <span style="text-decoration: line-through;">Laki-laki</span>/Perempuan *)
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">Alamat Lengkap</td>
+              <td style="vertical-align: top;">:</td>
+              <td style="vertical-align: top;">
+                Jalan........................................RT <b>${item.kode_rt || '.....'}</b> RW/Dusun <b>${nmDsn || '.....'}</b> Kelurahan/Desa <b>${nmDesa || '................'}</b>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td></td>
+              <td style="vertical-align: top;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                  <tr>
+                    <td style="width: 50%;">Kecamatan <b>${nmKec || '...............................'}</b></td>
+                    <td style="width: 50%;">Kabupaten/Kota <b>${item.kabupaten_nama || 'LOMBOK BARAT'}</b></td>
+                  </tr>
+                  <tr>
+                    <td>Provinsi <b>NUSA TENGGARA BARAT</b></td>
+                    <td>Kode pos ....................</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <p style="text-align: justify; margin: 1mm 0; line-height: 1.25;">
+            Setelah mendapat penjelasan dan <b>MENGERTI SEPENUHNYA PERIHAL KONTRASEPSI YANG SAYA PILIH</b>, maka saya selaku <b>KLIEN SECARA SUKARELA MEMBERIKAN PERSETUJUAN UNTUK DILAKUKAN TINDAKAN MEDIK DAN ATAU PELAYANAN KONTRASEPSI SESUAI STANDAR PROFESI</b> berupa :
+          </p>
+
+          <div style="display: flex; justify-content: space-around; align-items: center; margin: 2mm 0 2.5mm 0; font-weight: bold; font-size: 8.5pt;">
+            <div style="display: flex; align-items: center;">
+              <span class="ic-big-checkbox">${isSuntik ? '&#10003;' : '&nbsp;'}</span> SUNTIKAN
+            </div>
+            <div style="display: flex; align-items: center;">
+              <span class="ic-big-checkbox">${isIud ? '&#10003;' : '&nbsp;'}</span> IUD
+            </div>
+            <div style="display: flex; align-items: center;">
+              <span class="ic-big-checkbox">${isImplan ? '&#10003;' : '&nbsp;'}</span> IMPLAN
+            </div>
+            <div style="display: flex; align-items: center;">
+              <span class="ic-big-checkbox">${isMow ? '&#10003;' : '&nbsp;'}</span> MOW
+            </div>
+            <div style="display: flex; align-items: center;">
+              <span class="ic-big-checkbox">${isMop ? '&#10003;' : '&nbsp;'}</span> MOP **)
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 1.5mm;">
+            <span class="ic-box-header">PERSETUJUAN SUAMI/ISTERI KLIEN</span>
+          </div>
+
+          <p style="margin: 0 0 1mm 0;">Saya yang bertanda tangan di bawah ini :</p>
+          <table class="tbl-ic-grid" style="margin-bottom: 1.5mm;">
+            <tr>
+              <td style="width: 35%; vertical-align: top;">Nama</td>
+              <td style="width: 2%; vertical-align: top;">:</td>
+              <td style="width: 63%; font-weight: bold; vertical-align: top;">${item.nama_suami || '....................................................................................'}</td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">Umur</td>
+              <td style="vertical-align: top;">:</td>
+              <td style="vertical-align: top;">
+                ...... Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                Jenis Kelamin &nbsp;&nbsp;
+                Laki-laki/<span style="text-decoration: line-through;">Perempuan</span> *)
+              </td>
+            </tr>
+            <tr>
+              <td style="vertical-align: top;">Alamat Lengkap</td>
+              <td style="vertical-align: top;">:</td>
+              <td style="vertical-align: top;">
+                Jalan........................................RT <b>${item.kode_rt || '.....'}</b> RW/Dusun <b>${nmDsn || '.....'}</b> Kelurahan/Desa <b>${nmDesa || '................'}</b>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td></td>
+              <td style="vertical-align: top;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+                  <tr>
+                    <td style="width: 50%;">Kecamatan <b>${nmKec || '...............................'}</b></td>
+                    <td style="width: 50%;">Kabupaten/Kota <b>${item.kabupaten_nama || 'LOMBOK BARAT'}</b></td>
+                  </tr>
+                  <tr>
+                    <td>Provinsi <b>NUSA TENGGARA BARAT</b></td>
+                    <td>Kode pos ....................</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <p style="text-align: justify; margin: 1mm 0; line-height: 1.25;">
+            Selaku Suami/<span style="text-decoration: line-through;">Isteri</span> *) klien telah mendapat penjelasan, memahami dan ikut menyetujui terhadap tindakan medik dan atau pelayanan kontrasepsi tersebut.
+          </p>
+          <p style="text-align: justify; margin: 1mm 0; line-height: 1.25;">
+            Pernyataan ini kami buat dengan <b>KESADARAN PENUH ATAS SEGALA RESIKO TINDAK MEDIK</b> yang akan diberikan.
+          </p>
+
+          <table class="ic-sign-table">
+            <tr>
+              <td style="width: 38%; vertical-align: bottom;">
+                Yang memberi pelayanan konseling<br>
+                Dokter/Bidan/Perawat *)
+              </td>
+              <td style="width: 27%; vertical-align: bottom;">
+                Klien
+              </td>
+              <td style="width: 35%; text-align: center; vertical-align: bottom;">
+                <div style="margin-bottom: 1.5mm;">${item.kabupaten_nama || 'Lombok Barat'}, ${dLayanan}-${mLayanan}-${yLayanan}</div>
+                Suami/Isteri Klien *)
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top: 14mm;">
+                (....................................................)
+              </td>
+              <td style="padding-top: 14mm;">
+                ( <b>${item.nama_istri}</b> )
+              </td>
+              <td style="padding-top: 14mm;">
+                ( <b>${item.nama_suami || '................................'}</b> )
+              </td>
+            </tr>
+          </table>
+
+          <div style="font-size: 7.2pt; margin-top: 2.5mm; line-height: 1.2;">
+            <table style="border-collapse: collapse;">
+              <tr>
+                <td style="vertical-align: top; width: 20mm;">Keterangan :</td>
+                <td>*) coret yang tidak perlu</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td style="padding-top: 0.5mm;">
+                  **) beri tanda &nbsp;<span style="border: 1px solid #000; display: inline-block; width: 3mm; height: 3mm; text-align: center; line-height: 3mm; font-size: 6.5pt; font-weight: bold;">&#10003;</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function cetakBatchDokumenA4(daftarAkseptor, jenisDoc) {
     const list = daftarAkseptor || cachedAntreanLayanan;
     if (!list || list.length === 0) {
@@ -9889,7 +10188,7 @@ function onUserKabChange() {
 
     let fullHtml = '';
     list.forEach(item => {
-      if (jenisDoc === 'KIV' || jenisDoc === 'K0') {
+      if (jenisDoc === 'KIV') {
         fullHtml += renderSatuFormKIV(item);
       } else if (jenisDoc === 'CONSENT') {
         fullHtml += renderSatuConsent(item);
@@ -9909,46 +10208,63 @@ function onUserKabChange() {
     iframe.style.border = '0';
     document.body.appendChild(iframe);
 
+    const isKiv = (jenisDoc === 'KIV');
     const doc = iframe.contentWindow.document;
     doc.open();
     doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${jenisDoc === 'KIV' ? 'Formulir K/IV/KB/15' : 'Informed Consent KB'}</title>
+          <title>${isKiv ? 'Formulir K/IV/KB/15' : 'Informed Consent KB'}</title>
           <style>
             @page {
-              size: A4 portrait !important;
-              margin: ${jenisDoc === 'KIV' ? '5mm 8mm' : '10mm 16mm 8mm 16mm'} !important;
+              size: A4 portrait;
+              margin: 0 !important;
             }
             * {
-              box-sizing: border-box;
+              box-sizing: border-box !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
             html, body {
-              margin: 0;
-              padding: 0;
+              margin: 0 !important;
+              padding: 0 !important;
               background: #fff;
               font-family: Arial, Helvetica, sans-serif;
               color: #000;
+              width: 210mm;
+              height: 297mm;
             }
             .sheet-a4-page {
               page-break-after: always;
               break-after: page;
               background: #fff;
+              width: 210mm;
+              height: 297mm;
+              box-sizing: border-box;
+              overflow: hidden;
             }
-            .form-wrapper {
+            .page-kiv {
+              padding: 20mm 15mm !important;
+            }
+            .page-consent {
+              padding: 20mm 20mm !important;
+            }
+            .form-wrapper-kiv {
               border: 1.5px solid #000;
-              padding: 5px 8px;
+              padding: 4mm 5mm;
               box-sizing: border-box;
               width: 100%;
+              height: 257mm;
+              max-height: 257mm;
+              display: flex;
+              flex-direction: column;
             }
             .box-single {
               border: 1px solid #000;
               padding: 2px 5px;
               display: inline-block;
-              font-size: 8pt;
+              font-size: 8.5pt;
             }
             .box-char {
               border: 1px solid #000;
@@ -9963,32 +10279,40 @@ function onUserKabChange() {
               vertical-align: middle;
             }
             .tbl-field td {
-              font-size: 7.5pt;
+              font-size: 7.4pt;
               padding: 1.2px 0;
               vertical-align: top;
-              line-height: 1.15;
             }
             .tbl-grid th, .tbl-grid td {
               border: 1px solid #000;
               padding: 2px;
               font-size: 6.5pt;
             }
+            .form-wrapper-consent {
+              box-sizing: border-box;
+              width: 100%;
+              height: 257mm;
+              max-height: 257mm;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+            }
             .ic-title-main {
               text-align: center;
               font-weight: bold;
               font-size: 9.5pt;
-              line-height: 1.3;
+              line-height: 1.35;
               margin-bottom: 2mm;
             }
             .ic-header-line {
               border-bottom: 1.5px solid #000;
-              margin-top: 2mm;
-              margin-bottom: 3mm;
+              margin-top: 1.5mm;
+              margin-bottom: 2.5mm;
             }
             .ic-box-header {
               border: 1.2px solid #000;
               display: inline-block;
-              padding: 1mm 5mm;
+              padding: 1mm 4mm;
               font-weight: bold;
               font-size: 8.5pt;
               text-align: center;
@@ -9997,11 +10321,11 @@ function onUserKabChange() {
             .ic-digit-box {
               border: 1px solid #000;
               display: inline-block;
-              width: 3.8mm;
-              height: 4mm;
-              line-height: 4mm;
+              width: 4mm;
+              height: 4.2mm;
+              line-height: 4.2mm;
               text-align: center;
-              font-size: 7.5pt;
+              font-size: 7.8pt;
               vertical-align: middle;
               margin-right: -1px;
             }
@@ -10011,7 +10335,7 @@ function onUserKabChange() {
               font-size: 8.5pt;
             }
             .tbl-ic-grid td {
-              padding: 1.5px 0;
+              padding: 1.2px 0;
               vertical-align: top;
             }
             .ic-big-checkbox {
@@ -10030,7 +10354,7 @@ function onUserKabChange() {
               width: 100%;
               border-collapse: collapse;
               font-size: 8.5pt;
-              margin-top: 3mm;
+              margin-top: 2.5mm;
             }
             .ic-sign-table td {
               vertical-align: top;
@@ -10053,72 +10377,6 @@ function onUserKabChange() {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
     }, 600);
-  }
-
-  // =========================================================================
-  // PARSER RENTANG NOMOR URUT
-  // =========================================================================
-  function parseRangeNomorUrut(inputStr, totalData) {
-    if (!inputStr || inputStr.trim() === "") {
-      return Array.from({ length: totalData }, (_, i) => i);
-    }
-
-    const selectedIndices = new Set();
-    const parts = inputStr.split(',');
-
-    parts.forEach(part => {
-      const trimmed = part.trim();
-      if (trimmed.includes('-')) {
-        const [startStr, endStr] = trimmed.split('-');
-        const start = parseInt(startStr, 10);
-        const end = parseInt(endStr, 10);
-        if (!isNaN(start) && !isNaN(end)) {
-          const min = Math.max(1, Math.min(start, end));
-          const max = Math.min(totalData, Math.max(start, end));
-          for (let i = min; i <= max; i++) {
-            selectedIndices.add(i - 1);
-          }
-        }
-      } else {
-        const num = parseInt(trimmed, 10);
-        if (!isNaN(num) && num >= 1 && num <= totalData) {
-          selectedIndices.add(num - 1);
-        }
-      }
-    });
-
-    return Array.from(selectedIndices).sort((a, b) => a - b);
-  }  
-
-  function eksekusiCetakPilihan(jenisDoc) {
-    const rangeStr = document.getElementById("inputRangeCetak")?.value || "";
-    const total = cachedAntreanLayanan.length;
-    const indices = parseRangeNomorUrut(rangeStr, total);
-
-    if (indices.length === 0) {
-      Swal.fire("Perhatian", "Nomor urut yang dimasukkan tidak valid atau di luar rentang!", "warning");
-      return;
-    }
-
-    const selectedData = indices.map(idx => cachedAntreanLayanan[idx]);
-    Swal.close();
-
-    if (jenisDoc === 'KI') {
-      cetakBatchKiKbA4(selectedData);
-    } else {
-      cetakBatchDokumenA4(selectedData, jenisDoc);
-    }
-  }
-
-  // Alias tunggal untuk tombol cetak individual di dalam modal lama
-  function eksporDokumenKbKePDF(jenisDoc, index) {
-    if (cachedAntreanLayanan && cachedAntreanLayanan[index]) {
-      if (jenisDoc === 'KI') {
-        cetakBatchKiKbA4([cachedAntreanLayanan[index]]);
-      } else {
-        cetakBatchDokumenA4([cachedAntreanLayanan[index]], jenisDoc);
-      }
-    }
   }
   
   async function updateDashboardBadgeLayanan() {
@@ -10277,89 +10535,68 @@ function onUserKabChange() {
     }
   }
 
-  // Pencarian PUS Calon Akseptor
+  // =========================================================================
+  // HANDLER PENCARIAN & EVALUASI OTOMATIS PENDAFTARAN LAYANAN KB
+  // =========================================================================
   async function cariPusUntukLayanan() {
-    const keywordInput = document.getElementById("cariPusLayananInput").value.trim();
-    const keyword = keywordInput.toUpperCase();
-    const resultBox = document.getElementById("hasilPencarianPusLayanan");
-    
-    // Ambil nilai filter wilayah
-    const filterKab = isProvRole() ? document.getElementById("cariLayananKab")?.value : userKodeKab;
-    const filterKec = (isDesaRole() || isKecRole()) ? userKodeKec : document.getElementById("cariLayananKec")?.value;
-    const filterDesa = isDesaRole() ? userKodeDesa : document.getElementById("cariLayananDesa")?.value;
-    const filterDusun = document.getElementById("cariLayananDusun")?.value;
+    const keyword = (document.getElementById("cariPusLayananInput")?.value || "").trim().toUpperCase();
+    const hasilContainer = document.getElementById("hasilPencarianPusLayanan");
+    if (!hasilContainer) return;
 
-    if (!keyword && !filterKab && !filterKec && !filterDesa && !filterDusun) {
-      Swal.fire("Perhatian", "Ketik kata kunci atau pilih salah satu filter wilayah!", "warning");
+    if (!keyword) {
+      Swal.fire("Perhatian", "Ketik nama istri, NIK, atau ID PUS untuk mencari data!", "warning");
       return;
     }
 
-    resultBox.style.display = "block";
-    resultBox.innerHTML = "<div style='padding:12px; font-size:12px; color:#64748b; text-align:center;'>Mencari data PUS...</div>";
+    hasilContainer.style.display = "block";
+    hasilContainer.innerHTML = `<div style="padding:10px; text-align:center; color:#64748b; font-size:12px;">Mencari data calon akseptor...</div>`;
 
-    let currentYear = new Date().getFullYear();
-    let query = db.from('data_pus').select('*').eq('tahun', currentYear);
+    const kdKab = isProvRole() ? document.getElementById("cariLayananKab")?.value : userKodeKab;
+    const kdKec = document.getElementById("cariLayananKec")?.value;
+    const kdDesa = document.getElementById("cariLayananDesa")?.value;
+    const kdDusun = document.getElementById("cariLayananDusun")?.value;
 
-    // Filter Kata Kunci (jika diisi)
-    if (keyword) {
-      query = query.or(`id_pus.ilike.%${keyword}%,nama_istri.ilike.%${keyword}%,nik_istri.ilike.%${keyword}%,nama_suami.ilike.%${keyword}%`);
+    let query = db.from('data_pus').select('*');
+    if (kdKab) query = query.eq('kode_kab', String(kdKab).padStart(2, '0'));
+    if (kdKec) query = query.eq('kode_kec', String(kdKec).padStart(2, '0'));
+    if (kdDesa) query = query.eq('kode_desa', String(kdDesa).padStart(4, '0'));
+    if (kdDusun) query = query.eq('kode_dusun', String(kdDusun).padStart(4, '0'));
+    
+    if (isDesaRole() && userAllowedDusun.length > 0) {
+      query = query.in('kode_dusun', userAllowedDusun);
     }
 
-    // Filter Wilayah Bertingkat
-    if (filterKab) query = query.eq('kode_kab', String(filterKab).padStart(2, '0'));
-    if (filterKec) query = query.eq('kode_kec', String(filterKec).padStart(2, '0'));
-    if (filterDesa) query = query.eq('kode_desa', String(filterDesa).padStart(4, '0'));
-    if (filterDusun) query = query.eq('kode_dusun', String(filterDusun).padStart(4, '0'));
-    if (userAllowedDusun && userAllowedDusun.length > 0) query = query.in('kode_dusun', userAllowedDusun);
-
-    let { data, error } = await query.order('id_pus', { ascending: true }).limit(20);
-    resultBox.innerHTML = "";
+    query = query.or(`id_pus.ilike.%${keyword}%,nama_istri.ilike.%${keyword}%,nik_istri.ilike.%${keyword}%,nama_suami.ilike.%${keyword}%`);
+    
+    const { data, error } = await query.order('id_pus', { ascending: true }).limit(15);
 
     if (error || !data || data.length === 0) {
-      resultBox.innerHTML = `<div style='padding:15px; font-size:12.5px; color:#ef4444; text-align:center;'>Data PUS tidak ditemukan untuk kriteria pencarian dan filter wilayah tersebut.</div>`;
+      hasilContainer.innerHTML = `<div style="padding:10px; text-align:center; color:#ef4444; font-size:12px;">Data calon akseptor tidak ditemukan.</div>`;
       return;
     }
 
+    hasilContainer.innerHTML = "";
     data.forEach(item => {
-      const hlId = highlightText(item.id_pus, keywordInput);
-      const hlIstri = highlightText(item.nama_istri, keywordInput);
-      const hlNikIstri = highlightText(item.nik_istri, keywordInput);
-      const hlSuami = highlightText(item.nama_suami, keywordInput);
-
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "search-result-item";
-      itemDiv.style.cssText = "padding: 10px 12px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s; background: #ffffff;";
-      itemDiv.onmouseover = () => itemDiv.style.backgroundColor = "#f1f5f9";
-      itemDiv.onmouseout = () => itemDiv.style.backgroundColor = "#ffffff";
-
-      itemDiv.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <span style="font-weight: bold; color: #1f4e78; font-size: 13px;">${hlId} (${item.tahun})</span>
-          <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 4px; font-weight: bold;">
-            RT ${item.kode_rt || '-'} / DSN ${item.dusun_nama || '-'}
-          </span>
-        </div>
-        <div style="font-size: 12.5px; color: #334155;">
-          🧕 <b>Istri:</b> ${hlIstri} (${hlNikIstri})<br>
-          👱 <b>Suami:</b> ${hlSuami}
-        </div>
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">
-          📍 Kab. ${item.kabupaten_nama || '-'} | Kec. ${item.kecamatan_nama || '-'} | Desa ${item.desa_nama || '-'}
-        </div>
+      const row = document.createElement("div");
+      row.style.cssText = "padding:8px 12px; border-bottom:1px solid #e2e8f0; cursor:pointer; background:#fff; font-size:12px;";
+      row.onmouseover = () => row.style.backgroundColor = "#f0f9ff";
+      row.onmouseout = () => row.style.backgroundColor = "#fff";
+      row.innerHTML = `
+        <div style="font-weight:bold; color:#0369a1;">${item.nama_istri} (${item.nik_istri || '-'})</div>
+        <div style="color:#64748b; font-size:11px;">Suami: ${item.nama_suami || '-'} | ID: ${item.id_pus} | RT ${item.kode_rt || '-'} / DSN ${item.dusun_nama || '-'}</div>
       `;
-      itemDiv.onclick = () => pilihPusUntukLayanan(item);
-      resultBox.appendChild(itemDiv);
+      row.onclick = () => pilihPusUntukLayanan(item);
+      hasilContainer.appendChild(row);
     });
   }
 
   function pilihPusUntukLayanan(item) {
     pusTerpilihDataLayanan = item;
-    const resultBox = document.getElementById("hasilPencarianPusLayanan");
-    if (resultBox) resultBox.style.display = "none";
-    
-    document.getElementById("cariPusLayananInput").value = item.nama_istri || "";
+    const hasilContainer = document.getElementById("hasilPencarianPusLayanan");
+    if (hasilContainer) hasilContainer.style.display = "none";
+
     document.getElementById("reg_id_pus").value = item.id_pus || "";
-    document.getElementById("reg_tahun").value = item.tahun || "";
+    document.getElementById("reg_tahun").value = item.tahun || new Date().getFullYear();
     document.getElementById("reg_kode_prov").value = item.kode_prov || userKodeProv || "52";
     document.getElementById("reg_kode_kab").value = item.kode_kab || "";
     document.getElementById("reg_kode_kec").value = item.kode_kec || "";
@@ -10369,373 +10606,193 @@ function onUserKabChange() {
     document.getElementById("reg_nik_suami").value = item.nik_suami || "";
 
     document.getElementById("reg_nama_istri").value = item.nama_istri || "";
-    document.getElementById("reg_nik_istri").value = item.nik_istri || "";
-    document.getElementById("reg_nama_suami").value = item.nama_suami || "";
-    document.getElementById("reg_info_wilayah").value = `Kab. ${item.kabupaten_nama || '-'}, Kec. ${item.kecamatan_nama || '-'}, Desa ${item.desa_nama || '-'}, Dsn. ${item.dusun_nama || '-'} (RT ${item.kode_rt || '-'})`;
+    document.getElementById("reg_nik_istri").value = item.nik_istri || "-";
+    document.getElementById("reg_nama_suami").value = item.nama_suami || "-";
+    document.getElementById("reg_info_wilayah").value = `RT ${item.kode_rt || '-'}, DSN ${item.dusun_nama || '-'}, DESA ${item.desa_nama || '-'}`;
 
-    document.getElementById("reg_rencana_metode").value = "";
-    document.getElementById("reg_jenis_akseptor").value = "";
-    const infoText = document.getElementById("infoRiwayatKb");
-    if (infoText) infoText.innerText = "Silakan tentukan jenis pelayanan & metode di bawah...";
+    const curMetode = document.getElementById("reg_rencana_metode");
+    if (curMetode && curMetode.value) {
+      evaluasiOtomatisJenisAkseptor();
+    }
   }
 
   function onJenisPelayananChange() {
-    const jenisLayanan = document.getElementById("reg_jenis_pelayanan").value;
+    const jnsLayanan = document.getElementById("reg_jenis_pelayanan")?.value;
     const selMetode = document.getElementById("reg_rencana_metode");
+    if (!selMetode) return;
 
-    if (!jenisLayanan) {
+    selMetode.innerHTML = '<option value="">-- PILIH ALKON --</option>';
+
+    if (!jnsLayanan) {
       selMetode.disabled = true;
-      selMetode.style.backgroundColor = "#e9ecef";
-      selMetode.innerHTML = '<option value=""></option>'; // Benar-benar kosong tanpa teks
       evaluasiOtomatisJenisAkseptor();
       return;
     }
 
-    // Ketika jenis pelayanan dipilih, buka kunci dan tampilkan opsi pilihan
     selMetode.disabled = false;
-    selMetode.style.backgroundColor = "#ffffff";
-    selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
 
-    let opsiMetode = (jenisLayanan === "CABUT/LEPAS" || jenisLayanan === "BONGKAR PASANG")
-      ? ["IMPLAN", "IUD", "MOW", "MOP"]
-      : ["IMPLAN", "IUD", "SUNTIK", "PIL", "KONDOM", "MOW", "MOP"];
+    if (jnsLayanan === "CABUT/LEPAS" || jnsLayanan === "BONGKAR PASANG") {
+      selMetode.add(new Option("IMPLAN", "IMPLAN"));
+      selMetode.add(new Option("IUD", "IUD"));
+    } else {
+      // PEMASANGAN/PEMAKAIAN
+      selMetode.add(new Option("SUNTIK", "SUNTIK"));
+      selMetode.add(new Option("PIL", "PIL"));
+      selMetode.add(new Option("KONDOM", "KONDOM"));
+      selMetode.add(new Option("IMPLAN", "IMPLAN"));
+      selMetode.add(new Option("IUD", "IUD"));
+      selMetode.add(new Option("MOW", "MOW"));
+      selMetode.add(new Option("MOP", "MOP"));
+    }
 
-    opsiMetode.forEach(m => selMetode.add(new Option(m, m)));
     evaluasiOtomatisJenisAkseptor();
   }
 
   function evaluasiOtomatisJenisAkseptor() {
-    const jenisLayanan = (document.getElementById("reg_jenis_pelayanan")?.value || "").trim();
-    const metodeBaru = (document.getElementById("reg_rencana_metode")?.value || "").trim().toUpperCase();
-    const jenisInput = document.getElementById("reg_jenis_akseptor");
-    const badgeDisplay = document.getElementById("badgeJenisAkseptorDisplay");
-    const infoText = document.getElementById("infoRiwayatKb");
+    const alkon = document.getElementById("reg_rencana_metode")?.value;
+    const badgeEl = document.getElementById("badgeJenisAkseptorDisplay");
+    const inputHidden = document.getElementById("reg_jenis_akseptor");
+    const infoRiwayat = document.getElementById("infoRiwayatKb");
 
-    if (!jenisLayanan || !metodeBaru) {
-      if (jenisInput) jenisInput.value = "";
-      if (badgeDisplay) {
-        badgeDisplay.innerText = "";
-        badgeDisplay.style.background = "#f1f5f9";
-        badgeDisplay.style.color = "#64748b";
-        badgeDisplay.style.borderColor = "#cbd5e1";
+    if (!alkon) {
+      if (badgeEl) {
+        badgeEl.innerText = "Menunggu metode...";
+        badgeEl.style.color = "#64748b";
+        badgeEl.style.backgroundColor = "#f8fafc";
       }
-      if (infoText) infoText.innerText = "";
+      if (inputHidden) inputHidden.value = "";
+      if (infoRiwayat) infoRiwayat.innerText = "";
       return;
     }
 
     if (!pusTerpilihDataLayanan) {
-      if (jenisInput) jenisInput.value = "";
-      if (badgeDisplay) {
-        badgeDisplay.innerText = "Pilih Calon PUS terlebih dahulu";
-        badgeDisplay.style.background = "#fef2f2";
-        badgeDisplay.style.color = "#dc2626";
+      if (badgeEl) {
+        badgeEl.innerText = "BARU MURNI";
+        badgeEl.style.color = "#059669";
+        badgeEl.style.backgroundColor = "#ecfdf5";
       }
+      if (inputHidden) inputHidden.value = "BARU MURNI";
       return;
     }
 
-    const bulanRencana = parseInt(document.getElementById("reg_bulan_rencana")?.value || (new Date().getMonth() + 1), 10);
+    const blnRencana = parseInt(document.getElementById("reg_bulan_rencana")?.value || 1, 10);
     const mKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
+    const prevKey = blnRencana > 1 ? mKeys[blnRencana - 2] : null;
+    const prevStatus = prevKey ? String(pusTerpilihDataLayanan[prevKey] || "").toUpperCase().trim() : "";
 
-    let statusTerakhirRaw = "";
-    for (let i = bulanRencana - 2; i >= 0; i--) {
-      let val = String(pusTerpilihDataLayanan[mKeys[i]] || "").trim().toUpperCase();
-      if (val && val !== "-" && val !== "--KOSONG--") {
-        statusTerakhirRaw = val;
-        break;
-      }
-    }
+    let jenisHasil = "BARU MURNI";
+    let riwayatTeks = "";
 
-    const parsed = evaluateKbStatus(statusTerakhirRaw);
-    let hasilDeteksi = "KB BARU (MURNI)";
-    let keterangan = statusTerakhirRaw ? `Alkon sebelumnya: ${statusTerakhirRaw}` : "Belum ada riwayat KB tercatat";
-
-    if (jenisLayanan === "CABUT/LEPAS") {
-      hasilDeteksi = "CABUT/LEPAS";
-      keterangan = `Pencabutan alkon ${metodeBaru}`;
-    } else if (jenisLayanan === "BONGKAR PASANG") {
-      if (parsed.type === "PESERTA_KB" && parsed.method === metodeBaru) {
-        hasilDeteksi = "KB ULANGAN";
-        keterangan = `Bongkar pasang alkon yang sama (${metodeBaru})`;
+    if (prevStatus.includes("HAMIL")) {
+      jenisHasil = "PASCA PERSALINAN (KBPP)";
+      riwayatTeks = `Terdeteksi berstatus HAMIL pada bulan sebelumnya.`;
+    } else if (prevStatus && !prevStatus.includes("KOSONG") && prevStatus !== "-" && prevStatus !== "") {
+      const isAlkonSebelumnya = ["SUNTIK", "PIL", "KONDOM", "IMPLAN", "IUD", "MOW", "MOP"].some(m => prevStatus.includes(m));
+      if (isAlkonSebelumnya) {
+        jenisHasil = (prevStatus.includes(alkon)) ? "ULANGAN" : "GANTI CARA";
+        riwayatTeks = `Status bulan sebelumnya: ${prevStatus}.`;
       } else {
-        hasilDeteksi = "GANTI CARA";
-        keterangan = `Bongkar pasang ganti alkon (sebelumnya: ${parsed.method || statusTerakhirRaw || 'Non-KB'})`;
+        jenisHasil = "PASCA DO";
+        riwayatTeks = `Sebelumnya tidak ber-KB (${prevStatus}).`;
       }
     } else {
-      let pernahKbSebelumnya = false;
-      for (let i = 0; i < 12; i++) {
-        let val = String(pusTerpilihDataLayanan[mKeys[i]] || "").trim().toUpperCase();
-        if (evaluateKbStatus(val).type === "PESERTA_KB") { pernahKbSebelumnya = true; break; }
-      }
-
-      if (statusTerakhirRaw) {
-        if (parsed.type === "PESERTA_KB") {
-          hasilDeteksi = (metodeBaru === parsed.method) ? "KB ULANGAN" : "GANTI CARA";
-        } else if (parsed.type === "BUKAN_PESERTA") {
-          if (parsed.reason === "HAMIL") hasilDeteksi = "KB BARU (KBPP)";
-          else if (pernahKbSebelumnya) hasilDeteksi = "KB BARU (PASCA DO)";
-          else hasilDeteksi = "KB BARU (MURNI)";
-        }
-      }
+      jenisHasil = "BARU MURNI";
+      riwayatTeks = "Belum memiliki riwayat kesertaan KB pada bulan sebelumnya.";
     }
 
-    if (jenisInput) jenisInput.value = hasilDeteksi;
-    if (badgeDisplay) {
-      badgeDisplay.innerText = hasilDeteksi;
-      badgeDisplay.style.background = "#f0fdf4";
-      badgeDisplay.style.color = "#166534";
-      badgeDisplay.style.borderColor = "#86efac";
+    if (badgeEl) {
+      badgeEl.innerText = jenisHasil;
+      badgeEl.style.color = jenisHasil.includes("GANTI") ? "#d97706" : (jenisHasil.includes("KBPP") ? "#0284c7" : "#059669");
+      badgeEl.style.backgroundColor = "#f0f9ff";
     }
-    if (infoText) infoText.innerText = `💡 Terdeteksi: ${hasilDeteksi} (${keterangan})`;
+    if (inputHidden) inputHidden.value = jenisHasil;
+    if (infoRiwayat) infoRiwayat.innerText = `💡 ${riwayatTeks}`;
   }
 
   function resetFormPendaftaranLayanan() {
     const f = document.getElementById("formPendaftaranLayanan");
     if (f) f.reset();
+    pusTerpilihDataLayanan = null;
 
-    document.getElementById("reg_id_pus").value = "";
-    document.getElementById("reg_tahun").value = "";
-    document.getElementById("reg_kode_prov").value = "";
-    document.getElementById("reg_kode_kab").value = "";
-    document.getElementById("reg_kode_kec").value = "";
-    document.getElementById("reg_kode_desa").value = "";
-    document.getElementById("reg_kode_dusun").value = "";
-    document.getElementById("reg_kode_rt").value = "";
-    document.getElementById("reg_nik_suami").value = "";
+    const badgeEl = document.getElementById("badgeJenisAkseptorDisplay");
+    if (badgeEl) {
+      badgeEl.innerText = "Menunggu metode...";
+      badgeEl.style.color = "#64748b";
+      badgeEl.style.backgroundColor = "#f8fafc";
+    }
+    const infoRiwayat = document.getElementById("infoRiwayatKb");
+    if (infoRiwayat) infoRiwayat.innerText = "";
 
-    document.getElementById("reg_nama_istri").value = "";
-    document.getElementById("reg_nik_istri").value = "";
-    document.getElementById("reg_nama_suami").value = "";
-    document.getElementById("reg_info_wilayah").value = "";
+    const hasilCari = document.getElementById("hasilPencarianPusLayanan");
+    if (hasilCari) hasilCari.style.display = "none";
 
     const selMetode = document.getElementById("reg_rencana_metode");
     if (selMetode) {
       selMetode.innerHTML = '<option value=""></option>';
       selMetode.disabled = true;
-      selMetode.style.backgroundColor = "#e9ecef";
     }
-
-    const jenisAkseptor = document.getElementById("reg_jenis_akseptor");
-    if (jenisAkseptor) jenisAkseptor.value = "";
-
-    const badge = document.getElementById("badgeJenisAkseptorDisplay");
-    if (badge) {
-      badge.innerText = "";
-      badge.style.background = "#f8fafc";
-      badge.style.color = "#94a3b8";
-      badge.style.borderColor = "#e2e8f0";
-    }
-
-    const info = document.getElementById("infoRiwayatKb");
-    if (info) info.innerText = "";
-
-    const hasilBox = document.getElementById("hasilPencarianPusLayanan");
-    if (hasilBox) hasilBox.style.display = "none";
-
-    pusTerpilihDataLayanan = null;
   }
 
   async function handleSimpanPendaftaranLayanan(event) {
-      event.preventDefault();
+    event.preventDefault();
+    const btn = document.getElementById("btnSimpanPendaftaranLayanan");
+    const idPus = document.getElementById("reg_id_pus")?.value;
 
-      const errors = [];
-      
-      const idPus = (document.getElementById("reg_id_pus")?.value || "").trim();
-      const namaIstri = (document.getElementById("reg_nama_istri")?.value || "").trim();
-      const nikIstri = (document.getElementById("reg_nik_istri")?.value || "").trim();
+    if (!idPus) {
+      Swal.fire("Perhatian", "Silakan cari dan pilih data Calon Akseptor terlebih dahulu!", "warning");
+      return;
+    }
 
-      if (!idPus || !namaIstri || !nikIstri) {
-        errors.push("Calon Akseptor belum dipilih (Lakukan pencarian dan klik salah satu PUS pada Langkah 1)");
-      }
+    btn.disabled = true;
+    btn.innerText = "Mendaftarkan...";
 
-      const jenisPelayanan = (document.getElementById("reg_jenis_pelayanan")?.value || "").trim();
-      if (!jenisPelayanan) {
-        errors.push("Jenis Pelayanan belum dipilih");
-      }
-      
-      const rencanaMetode = (document.getElementById("reg_rencana_metode")?.value || "").trim();
-      const jenisAkseptor = (document.getElementById("reg_jenis_akseptor")?.value || "").trim();
-      const bulanRencana = (document.getElementById("reg_bulan_rencana")?.value || "").trim();
-      const tglRencana = (document.getElementById("reg_tgl_rencana")?.value || "").trim();
-      const faskesTujuan = (document.getElementById("reg_faskes_tujuan")?.value || "").trim();
-      const namaKader = (document.getElementById("reg_nama_kader")?.value || "").trim();
-
-      if (!rencanaMetode) {
-        errors.push("Metode Kontrasepsi belum dipilih");
-      }
-      if (!jenisAkseptor) {
-        errors.push("Jenis Akseptor belum dipilih");
-      }
-      if (!bulanRencana) {
-        errors.push("Bulan Pelayanan belum dipilih");
-      }      
-      if (!tglRencana) {
-        errors.push("Tanggal Rencana Tindakan wajib diisi");
-      }
-      if (!faskesTujuan) {
-        errors.push("Tempat / Fasilitas Pelayanan wajib diisi");
-      }
-      if (!namaKader) {
-        errors.push("Nama Kader / Petugas Pendamping wajib diisi");
-      }
-
-      if (errors.length > 0) {
-        const errorListHtml = errors.map(err => `<li style="margin-bottom: 5px;">${err}</li>`).join("");
-        Swal.fire({
-          icon: 'warning',
-          title: 'Form Belum Lengkap!',
-          html: `
-            <div style="text-align: left; font-size: 13px; color: #333;">
-              <p style="margin-bottom: 8px;">Silakan lengkapi bagian berikut sebelum menyimpan pendaftaran:</p>
-              <ul style="margin: 0; padding-left: 20px; color: #dc2626; font-weight: 600;">
-                ${errorListHtml}
-              </ul>
-            </div>
-          `,
-          confirmButtonColor: '#0284c7'
-        });
-        return;
-      }
-
-      const btn = document.getElementById("btnSimpanPendaftaranLayanan");
-      btn.disabled = true;
-      btn.innerText = "Memeriksa data & mendaftarkan...";
-
-      const targetTahun = parseInt(document.getElementById("reg_tahun").value, 10);
-      const targetBulan = parseInt(bulanRencana, 10);
-
-      try {        
-        const { data: antreanExisting, error: errCheck } = await db
-          .from('pendaftaran_layanan_kb')
-          .select('id, status, rencana_metode, faskes_tujuan')
-          .eq('nik_istri', nikIstri)
-          .eq('tahun', targetTahun)
-          .eq('bulan_rencana', targetBulan)
-          .in('status', ['TERDAFTAR', 'SELESAI']);
-
-        if (errCheck) throw errCheck;
-
-        if (antreanExisting && antreanExisting.length > 0) {
-          const itemLama = antreanExisting[0];
-          const statusTeks = itemLama.status === 'TERDAFTAR' ? 'masih dalam antrean' : 'telah selesai dilayani';
-          
-          btn.disabled = false;
-          btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
-
-          Swal.fire({
-            icon: 'warning',
-            title: 'Pendaftaran Duplikat!',
-            html: `
-              <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.45;">
-                PUS atas nama <b>${namaIstri}</b> (NIK: <code>${nikIstri}</code>) <b>sudah didaftarkan</b> pada bulan yang sama.<br><br>
-                <b>Detail data sebelumnya:</b><br>
-                • Status: <span style="color:#0284c7; font-weight:bold;">${statusTeks.toUpperCase()}</span><br>
-                • Metode: <b>${itemLama.rencana_metode || '-'}</b><br>
-                • Tempat: <b>${itemLama.faskes_tujuan || '-'}</b><br><br>
-                <small style="color:#64748b;">*Satu akseptor tidak dapat didaftarkan lebih dari satu kali pada bulan pelayanan yang sama kecuali pendaftaran sebelumnya dibatalkan.</small>
-              </div>
-            `,
-            confirmButtonColor: '#0284c7'
-          });
-          return;
-        }
-        
-        const payload = {
-          id_pus: idPus,
-          tahun: targetTahun,
-          bulan_rencana: targetBulan,
-          tgl_rencana_layanan: tglRencana,
-          nama_istri: namaIstri,
-          nik_istri: nikIstri,
-          nama_suami: document.getElementById("reg_nama_suami").value,
-          nik_suami: document.getElementById("reg_nik_suami").value || null,
-          kode_kab: document.getElementById("reg_kode_kab")?.value || userKodeKab || "01",
-          kode_kec: document.getElementById("reg_kode_kec").value,
-          kode_desa: document.getElementById("reg_kode_desa").value,
-          kode_dusun: document.getElementById("reg_kode_dusun").value,
-          kode_rt: document.getElementById("reg_kode_rt").value || null,
-          jenis_pelayanan: jenisPelayanan,
-          rencana_metode: rencanaMetode,
-          jenis_akseptor: jenisAkseptor,
-          faskes_tujuan: faskesTujuan,
-          nama_kader: namaKader.toUpperCase(),
-          catatan: document.getElementById("reg_catatan").value.trim() || null,
-          status: 'TERDAFTAR',
-          created_by: currentUser || "Kader"
-        };
-
-        const { error: insertErr } = await db.from('pendaftaran_layanan_kb').insert([payload]);
-        if (insertErr) throw insertErr;
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Calon Akseptor Terdaftar!',
-          text: `PUS [${payload.nama_istri}] berhasil didaftarkan oleh Kader ${payload.nama_kader}.`,
-          timer: 1600,
-          showConfirmButton: false
-        });
-
-        resetFormPendaftaranLayanan();
-        switchLayananTab('antrean');
-        if (typeof updateDashboardBadgeLayanan === "function") updateDashboardBadgeLayanan();
-
-      } catch (err) {
-        Swal.fire("Gagal Mendaftar", err.message, "error");
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
-      }
-    }  
-
-  async function eksekusiUpdateDataPusPelayanan(tiketId, idPus, tahun, bulan, metode, tgl) {
-    const monthColumns = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
-    const targetCol = monthColumns[bulan - 1];
-
-    Swal.fire({
-      title: 'Memproses...',
-      text: 'Menyimpan realisasi & memperbarui status data PUS...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
-    });
+    const payload = {
+      id_pus: idPus,
+      tahun: parseInt(document.getElementById("reg_tahun")?.value || new Date().getFullYear(), 10),
+      kode_prov: document.getElementById("reg_kode_prov")?.value || userKodeProv || "52",
+      kode_kab: document.getElementById("reg_kode_kab")?.value || userKodeKab,
+      kode_kec: document.getElementById("reg_kode_kec")?.value || "",
+      kode_desa: document.getElementById("reg_kode_desa")?.value || "",
+      kode_dusun: document.getElementById("reg_kode_dusun")?.value || "",
+      kode_rt: document.getElementById("reg_kode_rt")?.value || "",
+      nama_suami: document.getElementById("reg_nama_suami")?.value || "",
+      nik_suami: document.getElementById("reg_nik_suami")?.value || "",
+      nama_istri: document.getElementById("reg_nama_istri")?.value || "",
+      nik_istri: document.getElementById("reg_nik_istri")?.value || "",
+      jenis_pelayanan: document.getElementById("reg_jenis_pelayanan")?.value || "",
+      rencana_metode: document.getElementById("reg_rencana_metode")?.value || "",
+      jenis_akseptor: document.getElementById("reg_jenis_akseptor")?.value || "BARU MURNI",
+      bulan_rencana: parseInt(document.getElementById("reg_bulan_rencana")?.value || 1, 10),
+      tgl_rencana_layanan: document.getElementById("reg_tgl_rencana")?.value || null,
+      faskes_tujuan: document.getElementById("reg_faskes_tujuan")?.value || "",
+      nama_kader: document.getElementById("reg_nama_kader")?.value || "",
+      catatan: document.getElementById("reg_catatan")?.value || "",
+      status: 'TERDAFTAR',
+      created_at: new Date().toISOString()
+    };
 
     try {
-      // 1. Update status di tabel pendaftaran_layanan_kb menjadi SELESAI
-      const { error: errTiket } = await db.from('pendaftaran_layanan_kb')
-        .update({
-          status: 'SELESAI',
-          metode_realisasi: metode,
-          tgl_layanan_realisasi: tgl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', tiketId);
-
-      if (errTiket) throw errTiket;
-
-      // 2. Otomatis mutakhirkan kolom bulan bersangkutan di tabel data_pus
-      const updateDataPus = {};
-      updateDataPus[targetCol] = metode;
-      updateDataPus['timestamp'] = new Date().toISOString();
-
-      const { error: errPus } = await db.from('data_pus')
-        .update(updateDataPus)
-        .eq('id_pus', idPus)
-        .eq('tahun', tahun);
-
-      if (errPus) throw errPus;
+      const { error } = await db.from('pendaftaran_layanan_kb').insert([payload]);
+      if (error) throw error;
 
       Swal.fire({
         icon: 'success',
-        title: 'Pelayanan Berhasil Dicatat!',
-        text: `Status PUS [${idPus}] otomatis terisi "${metode}" pada bulan ${monthColumns[bulan-1].replace('kb_', '').toUpperCase()}.`
+        title: 'Akseptor Terdaftar!',
+        text: `Data calon akseptor [${payload.nama_istri}] berhasil didaftarkan ke antrean pelayanan.`,
+        timer: 1500,
+        showConfirmButton: false
       });
 
-      loadAntreanLayananTable();
-      if (typeof updateDashboardBadgeLayanan === "function") updateDashboardBadgeLayanan();
+      resetFormPendaftaranLayanan();
+      switchLayananTab('antrean');
 
     } catch (err) {
-      console.error("Gagal realisasi layanan:", err);
-      Swal.fire("Gagal", "Terjadi kesalahan sistem: " + err.message, "error");
+      Swal.fire("Gagal Mendaftar", err.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
     }
-  }  
+  }
   
   function getCleanLayananExportData() {
     if (!cachedAntreanLayanan || cachedAntreanLayanan.length === 0) {
@@ -10859,49 +10916,6 @@ function onUserKabChange() {
   function exportLayananToPDF() {
     const data = getCleanLayananExportData();
     if (!data) {
-      Swal.fire("Data Kosong", "Tidak ada data antrean/pelayanan untuk diunduh.", "warning");
-      return;
-    }
-
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a4');
-
-      doc.setFontSize(13);
-      doc.setTextColor(31, 78, 120);
-      doc.setFont(undefined, 'bold');
-      doc.text(data.judulTabel, 40, 32);
-
-      doc.setFontSize(8.5);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(100);
-      doc.text(`Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`, 40, 46);
-
-      doc.autoTable({
-        head: [data.headers],
-        body: data.rows,
-        startY: 56,
-        styles: { fontSize: 7, cellPadding: 3, halign: 'center', textColor: 50 },
-        headStyles: { fillColor: [31, 78, 120], textColor: 255, fontStyle: 'bold' },
-        columnStyles: {
-          0: { cellWidth: 24 },
-          6: { halign: 'left' },
-          8: { halign: 'left' }
-        },
-        theme: 'grid'
-      });
-
-      const fileName = `${data.filePrefix}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
-
-    } catch (err) {
-      Swal.fire("Error", "Gagal mengekspor file PDF: " + err.message, "error");
-    }
-  }
-
-  function exportLayananToPDF() {
-    const data = getCleanLayananExportData();
-    if (!data) {
       Swal.fire("Data Kosong", "Tidak ada data antrean/pelayanan untuk diekspor ke PDF.", "warning");
       return;
     }
@@ -10910,19 +10924,16 @@ function onUserKabChange() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('landscape', 'pt', 'a4');
 
-      // Judul Utama Tabel
       doc.setFontSize(14);
       doc.setTextColor(31, 78, 120);
       doc.setFont(undefined, 'bold');
       doc.text(data.judulTabel, 40, 35);
 
-      // Sub-judul
       doc.setFontSize(9);
       doc.setTextColor(100);
       doc.setFont(undefined, 'normal');
       doc.text(`Waktu Cetak: ${new Date().toLocaleString('id-ID')}`, 40, 50);
 
-      // Render Tabel
       doc.autoTable({
         head: [data.headers],
         body: data.rows,
@@ -10931,12 +10942,12 @@ function onUserKabChange() {
         headStyles: { fillColor: [31, 78, 120], textColor: 255, halign: 'center' },
         columnStyles: {
           0: { halign: 'center', cellWidth: 25 },
-          4: { halign: 'center', cellWidth: 25 },
-          6: { halign: 'center' },
-          8: { halign: 'center' },
-          9: { halign: 'center', fontStyle: 'bold' },
-          10: { halign: 'center' },
-          11: { halign: 'center' }
+          5: { halign: 'center', cellWidth: 25 },
+          7: { halign: 'center' },
+          9: { halign: 'center' },
+          10: { halign: 'center', fontStyle: 'bold' },
+          11: { halign: 'center' },
+          12: { halign: 'center' }
         },
         theme: 'grid'
       });
@@ -10947,20 +10958,41 @@ function onUserKabChange() {
     } catch (err) {
       Swal.fire("Error", "Gagal mengekspor PDF: " + err.message, "error");
     }
-  }
+  } 
   
   function exitApp() {
     Swal.fire({
-      title: 'Tutup Aplikasi?',
-      text: 'Anda akan keluar dari aplikasi ini.',
+      title: 'Konfirmasi Tutup Aplikasi',
+      text: 'Apakah Anda yakin ingin menutup dan keluar dari Aplikasi Register PUS?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Ya, Keluar'
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Keluar Aplikasi',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      focusCancel: true
     }).then((result) => {
       if (result.isConfirmed) {
+        // 1. Bersihkan listener realtime Supabase
+        if (realtimeLayananChannel) {
+          db.removeChannel(realtimeLayananChannel);
+          realtimeLayananChannel = null;
+        }
+
+        if (realtimeMutasiChannel) {
+          db.removeChannel(realtimeMutasiChannel);
+          realtimeMutasiChannel = null;
+        }
+
+        // 2. Hapus sesi login dari localStorage
+        localStorage.removeItem("pus_app_session");
+
+        // 3. Tutup jendela aplikasi
         window.close();
+        setTimeout(() => {
+          window.location.href = "about:blank";
+        }, 300);
       }
     });
   }
