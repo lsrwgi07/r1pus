@@ -4278,9 +4278,20 @@
   }
   
   function checkJumlahAnak() {
-    const val = parseInt(document.getElementById("jumlah_anak").value, 10);
+    const val = parseInt(document.getElementById("jumlah_anak")?.value, 10);
     const umur = document.getElementById("umur_anak_terkecil");
-    if (isNaN(val) || val <= 0) { umur.value = "0"; umur.disabled = true; } else { umur.disabled = false; }
+    if (!umur) return;
+
+    if (isNaN(val) || val <= 0) {
+      umur.value = "0";
+      umur.disabled = true;
+      umur.style.backgroundColor = "#e9ecef";
+      umur.style.cursor = "not-allowed";
+    } else {
+      umur.disabled = false;
+      umur.style.backgroundColor = "#ffffff";
+      umur.style.cursor = "auto";
+    }
   }
   
   // Fungsi menghapus data yang sedang dibuka di Form Input
@@ -7536,6 +7547,7 @@ function onUserKabChange() {
       resetDropdown("rt", "kode_rt");
     }
 
+    checkJumlahAnak();
     applyMutationAndAgeLocks();
 
     // Sembunyikan tombol hapus saat form di-reset ke data baru
