@@ -4641,7 +4641,8 @@
 
       // Tampilkan tombol Hapus Data
       const btnDel = document.getElementById("btnDeletePus");
-      if (delBtn = document.getElementById("btnDeletePus")) delBtn.style.display = "block";
+      const btnDel = document.getElementById("btnDeletePus");
+      if (btnDel) btnDel.style.display = "block";
 
       // Aktifkan navigasi RT
       const namaDsnText = document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex]?.text || "";
@@ -6780,32 +6781,27 @@
   }
 
   function onUserKecChange() {
-  const selKab = document.getElementById("user_kab_select");
-  const selKec = document.getElementById("user_kec_select");
-  const selDesa = document.getElementById("user_desa_select");
-  const roleVal = document.getElementById("user_role_select").value;
+    const selKab = document.getElementById("user_kab_select");
+    const selKec = document.getElementById("user_kec_select");
+    const selDesa = document.getElementById("user_desa_select");
+    const roleVal = document.getElementById("user_role_select").value;
 
-  if (roleVal !== "User Desa") return;
+    if (roleVal !== "User Desa") return;
 
-  const kdKab = isProvRole() ? (selKab ? selKab.value : "") : userKodeKab;
-  const kdKec = selKec ? selKec.value : "";
+    const kdKab = isProvRole() ? (selKab ? selKab.value : "") : userKodeKab;
+    const kdKec = selKec ? selKec.value : "";
 
-  if (selDesa) {
-    if (!kdKec) {
-      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
-    } else {
-      selDesa.disabled = false;
-      populateDesaByKec(kdKec, "user_desa_select", kdKab);
+    if (selDesa) {
+      if (!kdKec) {
+        selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+      } else {
+        selDesa.disabled = false;
+        populateDesaByKec(kdKec, "user_desa_select", kdKab);
+      }
+      // Kosongkan checklist dusun jika kecamatan berganti
+      renderUserDusunCheckboxes();
     }
-    // Kosongkan checklist dusun jika kecamatan berganti
-    renderUserDusunCheckboxes();
-  }
-}
-  
-  const elUserDesa = document.getElementById("user_desa_select");
-  if (elUserDesa) {
-    elUserDesa.addEventListener("change", () => renderUserDusunCheckboxes());
-  }
+  }  
 
   function renderUserDusunCheckboxes(selectedDusunArray = []) {
     const roleVal = document.getElementById("user_role_select").value;
@@ -7330,144 +7326,142 @@ function onUserKabChange() {
   }
 
   function showRecapView() {
-  document.getElementById("dashboardSection").style.display = "none";
-  document.getElementById("formSection").style.display = "none";
-  document.getElementById("recapSection").style.display = "block";
-  document.getElementById("bnbaSection").style.display = "none";
-  document.getElementById("chartSection").style.display = "none";
+    document.getElementById("dashboardSection").style.display = "none";
+    document.getElementById("formSection").style.display = "none";
+    document.getElementById("recapSection").style.display = "block";
+    document.getElementById("bnbaSection").style.display = "none";
+    document.getElementById("chartSection").style.display = "none";
 
-  const selTingkat = document.getElementById("recapTingkat");
-  if (!selTingkat) return;
+    const selTingkat = document.getElementById("recapTingkat");
+    if (!selTingkat) return;
 
-  if (isDesaRole()) {
-    selTingkat.innerHTML = `
-      <option value="Desa" selected>REKAP DESA</option>
-      <option value="Dusun">REKAP DUSUN</option>
-    `;
-  } else if (isKecRole()) {
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL REKAP --</option>
-      <option value="Kecamatan">REKAP KECAMATAN</option>
-      <option value="Desa">REKAP DESA</option>
-      <option value="Dusun">REKAP DUSUN</option>
-    `;
-  } else if (isKabRole()) {
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL REKAP --</option>
-      <option value="Kabupaten">REKAP KABUPATEN</option>
-      <option value="Kecamatan">REKAP KECAMATAN</option>
-      <option value="Desa">REKAP DESA</option>
-      <option value="Dusun">REKAP DUSUN</option>
-    `;
-  } else {
-    // Admin Prov
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL REKAP --</option>
-      <option value="Provinsi">REKAP PROVINSI</option>
-      <option value="Kabupaten">REKAP KABUPATEN</option>
-      <option value="Kecamatan">REKAP KECAMATAN</option>
-      <option value="Desa">REKAP DESA</option>
-      <option value="Dusun">REKAP DUSUN</option>
-    `;
+    if (isDesaRole()) {
+      selTingkat.innerHTML = `
+        <option value="Desa" selected>REKAP DESA</option>
+        <option value="Dusun">REKAP DUSUN</option>
+      `;
+    } else if (isKecRole()) {
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL REKAP --</option>
+        <option value="Kecamatan">REKAP KECAMATAN</option>
+        <option value="Desa">REKAP DESA</option>
+        <option value="Dusun">REKAP DUSUN</option>
+      `;
+    } else if (isKabRole()) {
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL REKAP --</option>
+        <option value="Kabupaten">REKAP KABUPATEN</option>
+        <option value="Kecamatan">REKAP KECAMATAN</option>
+        <option value="Desa">REKAP DESA</option>
+        <option value="Dusun">REKAP DUSUN</option>
+      `;
+    } else {
+      // Admin Prov
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL REKAP --</option>
+        <option value="Provinsi">REKAP PROVINSI</option>
+        <option value="Kabupaten">REKAP KABUPATEN</option>
+        <option value="Kecamatan">REKAP KECAMATAN</option>
+        <option value="Desa">REKAP DESA</option>
+        <option value="Dusun">REKAP DUSUN</option>
+      `;
+    }
+    
+    onRecapTingkatChange();
   }
-  
-  onRecapTingkatChange();
-}
 
   function showBnbaView() {
-  document.getElementById("dashboardSection").style.display = "none";
-  document.getElementById("formSection").style.display = "none";
-  document.getElementById("recapSection").style.display = "none";
-  document.getElementById("bnbaSection").style.display = "block";
-  document.getElementById("chartSection").style.display = "none";
+    document.getElementById("dashboardSection").style.display = "none";
+    document.getElementById("formSection").style.display = "none";
+    document.getElementById("recapSection").style.display = "none";
+    document.getElementById("bnbaSection").style.display = "block";
+    document.getElementById("chartSection").style.display = "none";
 
-  const selTingkat = document.getElementById("bnbaTingkat");
-  if (!selTingkat) return;
+    const selTingkat = document.getElementById("bnbaTingkat");
+    if (!selTingkat) return;
 
-  if (isDesaRole()) {
-    selTingkat.innerHTML = `
-      <option value="Desa" selected>BNBA DESA</option>
-      <option value="Dusun">BNBA DUSUN</option>
-      <option value="RT">BNBA RT</option>
-    `;
-  } else if (isKecRole()) {
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL BNBA --</option>
-      <option value="Kecamatan">BNBA KECAMATAN</option>
-      <option value="Desa">BNBA DESA</option>
-      <option value="Dusun">BNBA DUSUN</option>
-      <option value="RT">BNBA RT</option>
-    `;
-  } else if (isKabRole()) {
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL BNBA --</option>
-      <option value="Kabupaten">BNBA KABUPATEN</option>
-      <option value="Kecamatan">BNBA KECAMATAN</option>
-      <option value="Desa">BNBA DESA</option>
-      <option value="Dusun">BNBA DUSUN</option>
-      <option value="RT">BNBA RT</option>
-    `;
-  } else {
-    // Admin Prov
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL BNBA --</option>
-      <option value="Provinsi">BNBA PROVINSI</option>
-      <option value="Kabupaten">BNBA KABUPATEN</option>
-      <option value="Kecamatan">BNBA KECAMATAN</option>
-      <option value="Desa">BNBA DESA</option>
-      <option value="Dusun">BNBA DUSUN</option>
-      <option value="RT">BNBA RT</option>
-    `;
+    if (isDesaRole()) {
+      selTingkat.innerHTML = `
+        <option value="Desa" selected>BNBA DESA</option>
+        <option value="Dusun">BNBA DUSUN</option>
+        <option value="RT">BNBA RT</option>
+      `;
+    } else if (isKecRole()) {
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL BNBA --</option>
+        <option value="Kecamatan">BNBA KECAMATAN</option>
+        <option value="Desa">BNBA DESA</option>
+        <option value="Dusun">BNBA DUSUN</option>
+        <option value="RT">BNBA RT</option>
+      `;
+    } else if (isKabRole()) {
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL BNBA --</option>
+        <option value="Kabupaten">BNBA KABUPATEN</option>
+        <option value="Kecamatan">BNBA KECAMATAN</option>
+        <option value="Desa">BNBA DESA</option>
+        <option value="Dusun">BNBA DUSUN</option>
+        <option value="RT">BNBA RT</option>
+      `;
+    } else {
+      // Admin Prov
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL BNBA --</option>
+        <option value="Provinsi">BNBA PROVINSI</option>
+        <option value="Kabupaten">BNBA KABUPATEN</option>
+        <option value="Kecamatan">BNBA KECAMATAN</option>
+        <option value="Desa">BNBA DESA</option>
+        <option value="Dusun">BNBA DUSUN</option>
+        <option value="RT">BNBA RT</option>
+      `;
+    }
+    onBnbaTingkatChange();
   }
-  onBnbaTingkatChange();
-}
 
   function showChartAnalyticsView() {
-  document.getElementById("dashboardSection").style.display = "none";
-  document.getElementById("formSection").style.display = "none";
-  document.getElementById("recapSection").style.display = "none";
-  document.getElementById("bnbaSection").style.display = "none";
-  document.getElementById("chartSection").style.display = "block";
+    document.getElementById("dashboardSection").style.display = "none";
+    document.getElementById("formSection").style.display = "none";
+    document.getElementById("recapSection").style.display = "none";
+    document.getElementById("bnbaSection").style.display = "none";
+    document.getElementById("chartSection").style.display = "block";
 
-  const selTingkat = document.getElementById("chartTingkat");
-  if (!selTingkat) return;
+    const selTingkat = document.getElementById("chartTingkat");
+    if (!selTingkat) return;
 
-  if (isDesaRole()) {
-    selTingkat.innerHTML = `
-      <option value="Desa" selected>GRAFIK DESA</option>
-      <option value="Dusun">GRAFIK DUSUN</option>
-    `;
-  } else if (isKecRole()) {
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL GRAFIK --</option>
-      <option value="Kecamatan">GRAFIK KECAMATAN</option>
-      <option value="Desa">GRAFIK DESA</option>
-      <option value="Dusun">GRAFIK DUSUN</option>
-    `;
-  } else if (isKabRole()) {
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL GRAFIK --</option>
-      <option value="Kabupaten">GRAFIK KABUPATEN</option>
-      <option value="Kecamatan">GRAFIK KECAMATAN</option>
-      <option value="Desa">GRAFIK DESA</option>
-      <option value="Dusun">GRAFIK DUSUN</option>
-    `;
-  } else {
-    // Admin Prov
-    selTingkat.innerHTML = `
-      <option value="">-- PILIH LEVEL GRAFIK --</option>
-      <option value="Provinsi">GRAFIK PROVINSI</option>
-      <option value="Kabupaten">GRAFIK KABUPATEN</option>
-      <option value="Kecamatan">GRAFIK KECAMATAN</option>
-      <option value="Desa">GRAFIK DESA</option>
-      <option value="Dusun">GRAFIK DUSUN</option>
-    `;
+    if (isDesaRole()) {
+      selTingkat.innerHTML = `
+        <option value="Desa" selected>GRAFIK DESA</option>
+        <option value="Dusun">GRAFIK DUSUN</option>
+      `;
+    } else if (isKecRole()) {
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL GRAFIK --</option>
+        <option value="Kecamatan">GRAFIK KECAMATAN</option>
+        <option value="Desa">GRAFIK DESA</option>
+        <option value="Dusun">GRAFIK DUSUN</option>
+      `;
+    } else if (isKabRole()) {
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL GRAFIK --</option>
+        <option value="Kabupaten">GRAFIK KABUPATEN</option>
+        <option value="Kecamatan">GRAFIK KECAMATAN</option>
+        <option value="Desa">GRAFIK DESA</option>
+        <option value="Dusun">GRAFIK DUSUN</option>
+      `;
+    } else {
+      // Admin Prov
+      selTingkat.innerHTML = `
+        <option value="">-- PILIH LEVEL GRAFIK --</option>
+        <option value="Provinsi">GRAFIK PROVINSI</option>
+        <option value="Kabupaten">GRAFIK KABUPATEN</option>
+        <option value="Kecamatan">GRAFIK KECAMATAN</option>
+        <option value="Desa">GRAFIK DESA</option>
+        <option value="Dusun">GRAFIK DUSUN</option>
+      `;
+    }
+    onChartTingkatChange();
   }
-  onChartTingkatChange();
-}
 
-  function resetFormToNew() { resetInputForm(); }
-  
   function resetInputForm() {
     document.getElementById("pusForm").reset();
     document.getElementById("id_pus").value = "";
@@ -8389,6 +8383,16 @@ function onUserKabChange() {
       "Dusun", "Kode Dusun", "Jumlah RT"
     ];
 
+    const currentProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+    const currentProvName = dataProvinsi[currentProvKey] || "PROVINSI";
+    let sampleKabKey = "";
+    let sampleKabName = "";
+
+    if (dataKabupaten[currentProvKey]) {
+      sampleKabKey = Object.keys(dataKabupaten[currentProvKey])[0] || "01";
+      sampleKabName = dataKabupaten[currentProvKey][sampleKabKey] || "KABUPATEN/KOTA";
+    }
+
     const sampleRow = [
       currentProvName, currentProvKey, sampleKabName, sampleKabKey,
       "KECAMATAN CONTOH", "01", "DESA CONTOH", "0001",
@@ -8525,7 +8529,6 @@ function onUserKabChange() {
     // Jalankan pembacaan
     reader.readAsArrayBuffer(file);
   }
-
 
   // ==========================================
   // MODUL DOWNLOAD & UPLOAD EXCEL KELOLA LOGIN
