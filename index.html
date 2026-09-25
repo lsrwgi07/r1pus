@@ -9251,6 +9251,15 @@ function onUserKabChange() {
     const curDesa = String(item.kode_desa || "").padStart(4, '0');
     const curDsn = String(item.kode_dusun || "").padStart(4, '0');
 
+    const provKey = String(item.kode_prov || userKodeProv || "52").padStart(2, '0');
+    let nmKab = item.kabupaten_nama || "";
+    if (!nmKab && dataKabupaten[provKey] && dataKabupaten[provKey][curKab]) {
+      nmKab = dataKabupaten[provKey][curKab];
+    }
+    nmKab = nmKab || "KABUPATEN";
+
+    let nmProv = item.provinsi_nama || dataProvinsi[provKey] || "NUSA TENGGARA BARAT";
+
     const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || '-');
     const compositeDesaKey = curKab + "_" + curKec;
     let desasMap = dataDesa[compositeDesaKey] || dataDesa[curKec] || {};
@@ -9619,6 +9628,11 @@ function onUserKabChange() {
     }
 
     const curKab = String(item.kode_kab || userKodeKab || "01").padStart(2, '0');
+    const provKey = String(item.kode_prov || userKodeProv || "52").padStart(2, '0');
+    let nmKab = item.kabupaten_nama || "";
+    if (!nmKab && dataKabupaten[provKey] && dataKabupaten[provKey][curKab]) {
+      nmKab = dataKabupaten[provKey][curKab];
+    }
     const curKec = String(item.kode_kec || "").padStart(2, '0');
     const curDesa = String(item.kode_desa || "").padStart(4, '0');
     const curDsn = String(item.kode_dusun || "").padStart(4, '0');
@@ -10048,10 +10062,10 @@ function onUserKabChange() {
                 <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
                   <tr>
                     <td style="width: 50%;">Kecamatan <b>${nmKec || '...............................'}</b></td>
-                    <td style="width: 50%;">Kabupaten/Kota <b>${item.kabupaten_nama || 'LOMBOK BARAT'}</b></td>
+                    <td style="width: 50%;">Kabupaten/Kota <b>${nmKab}</b></td>
                   </tr>
                   <tr>
-                    <td>Provinsi <b>NUSA TENGGARA BARAT</b></td>
+                    <td>Provinsi <b>${nmProv}</b></td>
                     <td>Kode pos ....................</td>
                   </tr>
                 </table>
@@ -10115,10 +10129,10 @@ function onUserKabChange() {
                 <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
                   <tr>
                     <td style="width: 50%;">Kecamatan <b>${nmKec || '...............................'}</b></td>
-                    <td style="width: 50%;">Kabupaten/Kota <b>${item.kabupaten_nama || 'LOMBOK BARAT'}</b></td>
+                    <td style="width: 50%;">Kabupaten/Kota <b>${nmKab}</b></td>
                   </tr>
                   <tr>
-                    <td>Provinsi <b>NUSA TENGGARA BARAT</b></td>
+                    <td>Provinsi <b>${nmProv}</b></td>
                     <td>Kode pos ....................</td>
                   </tr>
                 </table>
@@ -10143,7 +10157,7 @@ function onUserKabChange() {
                 Klien
               </td>
               <td style="width: 35%; text-align: center; vertical-align: bottom;">
-                <div style="margin-bottom: 1.5mm;">${item.kabupaten_nama || 'Lombok Barat'}, ${dLayanan}-${mLayanan}-${yLayanan}</div>
+                <div style="margin-bottom: 1.5mm;">${nmKab}, ${dLayanan}-${mLayanan}-${yLayanan}</div>
                 Suami/Isteri Klien *)
               </td>
             </tr>
@@ -10751,6 +10765,11 @@ function onUserKabChange() {
       tahun: parseInt(document.getElementById("reg_tahun")?.value || new Date().getFullYear(), 10),
       kode_prov: document.getElementById("reg_kode_prov")?.value || userKodeProv || "52",
       kode_kab: document.getElementById("reg_kode_kab")?.value || userKodeKab,
+      kabupaten_nama: (() => {
+        const kId = document.getElementById("reg_kode_kab")?.value || userKodeKab;
+        const pKey = userKodeProv || "52";
+        return (dataKabupaten[pKey] && dataKabupaten[pKey][kId]) ? dataKabupaten[pKey][kId] : "";
+      })(),
       kode_kec: document.getElementById("reg_kode_kec")?.value || "",
       kode_desa: document.getElementById("reg_kode_desa")?.value || "",
       kode_dusun: document.getElementById("reg_kode_dusun")?.value || "",
