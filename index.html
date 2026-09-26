@@ -4053,7 +4053,7 @@
 
     const payloadData = typeof item.payload === "string" ? JSON.parse(item.payload) : item.payload;
 
-    // Bersihkan status mutasi dari riwayat bulan KB agar tidak terbawa ke wilayah baru
+    // 1. Bersihkan status mutasi bulan-bulan sebelumnya
     const monthPayloadKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
     monthPayloadKeys.forEach(mKey => {
       let val = String(payloadData[mKey] || "").toUpperCase();
@@ -4066,16 +4066,46 @@
     showFormView();
     resetInputForm();
 
-    // Reset ID PUS lama agar dibuatkan nomor urut baru di wilayah baru
+    // 2. Set State Form & Kosongkan ID PUS agar digenerate baru
     document.getElementById("id_mutasi_tiket").value = item.id;
     document.getElementById("id_pus").value = "";
-    if (document.getElementById("old_id_pus")) document.getElementById("old_id_pus").value = "";
-    if (document.getElementById("original_id_pus")) document.getElementById("original_id_pus").value = "";
+    document.getElementById("original_id_pus").value = "";
 
     if (document.getElementById("tahun_input")) {
       document.getElementById("tahun_input").value = payloadData.tahun || item.tahun;
     }
 
+    // 3. Sinkronisasi Wilayah Lengkap (Kabupaten -> Kecamatan -> Desa -> Dusun -> RT)
+    const targetKab  = String(item.kode_kab_tujuan || userKodeKab || "").trim().padStart(2, '0');
+    const targetKec  = String(item.kode_kec_tujuan || userKodeKec || "").trim().padStart(2, '0');
+    const targetDesa = String(item.kode_desa_tujuan || userKodeDesa || "").trim().padStart(4, '0');
+    const targetDsn  = String(item.kode_dusun_tujuan || "").trim().padStart(4, '0');
+
+    if (targetKab) {
+      setSelectValueCaseInsensitive("kabupaten", targetKab);
+      document.getElementById("kode_kab").value = targetKab;
+      updateKecamatan(targetKec);
+
+      if (targetKec) {
+        setSelectValueCaseInsensitive("kecamatan", targetKec);
+        document.getElementById("kode_kec").value = targetKec;
+        updateDesa(targetDesa);
+
+        if (targetDesa) {
+          setSelectValueCaseInsensitive("desa", targetDesa);
+          document.getElementById("kode_desa").value = targetDesa;
+          updateDusun(cleanTargetDusunValid(targetDsn) ? targetDsn : "");
+
+          if (cleanTargetDusunValid(targetDsn)) {
+            setSelectValueCaseInsensitive("dusun", targetDsn);
+            document.getElementById("kode_dusun").value = targetDsn;
+            updateRT();
+          }
+        }
+      }
+    }
+
+    // 4. Salin Identitas PUS
     document.getElementById("nama_suami").value = payloadData.nama_suami || "";
     document.getElementById("nik_suami").value = payloadData.nik_suami || "";
     document.getElementById("nama_istri").value = payloadData.nama_istri || "";
@@ -4098,19 +4128,12 @@
       }
     }
 
-    // Set dusun otomatis menggunakan validasi aman cleanTargetDusunValid
-    const targetDsn = String(item.kode_dusun_tujuan || "").trim().padStart(4, '0');
-    if (cleanTargetDusunValid(targetDsn)) {
-      setSelectValueCaseInsensitive("dusun", targetDsn);
-      updateRT();
-    }
-
     applyMutationAndAgeLocks();
 
     Swal.fire({
       icon: 'info',
       title: 'Data Mutasi Dimuat!',
-      text: `Data PUS [${item.nama_istri}] berhasil disalin (riwayat mutasi lama telah dibersihkan). Silakan periksa atau lengkapi DUSUN dan RT di wilayah Anda, lalu klik SIMPAN DATA.`
+      text: `Data PUS [${item.nama_istri}] berhasil disalin. Silakan periksa atau lengkapi Dusun dan RT, lalu klik SIMPAN DATA.`
     });
   }
 
@@ -5729,91 +5752,118 @@
     }
 
     // 1. Chart Proporsi Kesertaan KB
-    if (chartStatusPropInstance) chartStatusPropInstance.destroy();
-    chartStatusPropInstance = new Chart(document.getElementById('chartStatusProp').getContext('2d'), {
-      type: 'doughnut',
-      data: { labels: ['Peserta KB', 'Bukan Peserta'], datasets: [{ data: [t.ber_kb, t.tidak_kb], backgroundColor: ['#28a745', '#dc3545'] }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
-    });
+    const canvasStatusProp = document.getElementById('chartStatusProp');
+    if (canvasStatusProp) {
+      if (chartStatusPropInstance) chartStatusPropInstance.destroy();
+      chartStatusPropInstance = new Chart(canvasStatusProp.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['Peserta KB', 'Bukan Peserta'], datasets: [{ data: [t.ber_kb, t.tidak_kb], backgroundColor: ['#28a745', '#dc3545'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+      });
+    }
 
     // 2. Chart Rasio MKJP vs Non-MKJP
-    if (chartMkjpRasioInstance) chartMkjpRasioInstance.destroy();
-    chartMkjpRasioInstance = new Chart(document.getElementById('chartMkjpRasio').getContext('2d'), {
-      type: 'doughnut',
-      data: { labels: ['MKJP', 'Non-MKJP'], datasets: [{ data: [t.mkjp, t.non_mkjp], backgroundColor: ['#0d9488', '#38bdf8'] }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
-    });
+    const canvasMkjpRasio = document.getElementById('chartMkjpRasio');
+    if (canvasMkjpRasio) {
+      if (chartMkjpRasioInstance) chartMkjpRasioInstance.destroy();
+      chartMkjpRasioInstance = new Chart(canvasMkjpRasio.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['MKJP', 'Non-MKJP'], datasets: [{ data: [t.mkjp, t.non_mkjp], backgroundColor: ['#0d9488', '#38bdf8'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+      });
+    }
 
     // 3. Chart JKN
-    if (chartJknInstance) chartJknInstance.destroy();
-    chartJknInstance = new Chart(document.getElementById('chartJkn').getContext('2d'), {
-      type: 'doughnut',
-      data: { labels: ['PBI', 'Non-PBI', 'Swasta', 'Tidak Memiliki'], datasets: [{ data: [t.jkn_pbi, t.jkn_non_pbi, t.jkn_swasta, t.jkn_none], backgroundColor: ['#10b981', '#0284c7', '#8b5cf6', '#ef4444'] }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
-    });
+    const canvasJkn = document.getElementById('chartJkn');
+    if (canvasJkn) {
+      if (chartJknInstance) chartJknInstance.destroy();
+      chartJknInstance = new Chart(canvasJkn.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['PBI', 'Non-PBI', 'Swasta', 'Tidak Memiliki'], datasets: [{ data: [t.jkn_pbi, t.jkn_non_pbi, t.jkn_swasta, t.jkn_none], backgroundColor: ['#10b981', '#0284c7', '#8b5cf6', '#ef4444'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+      });
+    }
 
     // 4. Chart Umur Istri
-    if (chartUmurIstriInstance) chartUmurIstriInstance.destroy();
-    chartUmurIstriInstance = new Chart(document.getElementById('chartUmurIstri').getContext('2d'), {
-      type: 'bar',
-      data: { labels: ['< 20 Th', '20-34 Th', '35-49 Th'], datasets: [{ label: 'Jumlah Istri', data: [t.umur_u20, t.umur_20_34, t.umur_35_49], backgroundColor: ['#f59e0b', '#10b981', '#ef4444'] }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
+    const canvasUmurIstri = document.getElementById('chartUmurIstri');
+    if (canvasUmurIstri) {
+      if (chartUmurIstriInstance) chartUmurIstriInstance.destroy();
+      chartUmurIstriInstance = new Chart(canvasUmurIstri.getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['< 20 Th', '20-34 Th', '35-49 Th'], datasets: [{ label: 'Jumlah Istri', data: [t.umur_u20, t.umur_20_34, t.umur_35_49], backgroundColor: ['#f59e0b', '#10b981', '#ef4444'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
 
     // 5. Chart Komposisi KB Baru
-    if (chartKbBaruCompInstance) chartKbBaruCompInstance.destroy();
-    chartKbBaruCompInstance = new Chart(document.getElementById('chartKbBaruComp').getContext('2d'), {
-      type: 'bar',
-      data: { labels: ['KBPP', 'Pasca DO', 'Baru Murni'], datasets: [{ label: 'Jumlah', data: [t.kb_baru_kbpp, t.kb_baru_pasca_do, t.kb_baru_murni], backgroundColor: ['#0284c7', '#f59e0b', '#10b981'] }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
+    const canvasKbBaruComp = document.getElementById('chartKbBaruComp');
+    if (canvasKbBaruComp) {
+      if (chartKbBaruCompInstance) chartKbBaruCompInstance.destroy();
+      chartKbBaruCompInstance = new Chart(canvasKbBaruComp.getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['KBPP', 'Pasca DO', 'Baru Murni'], datasets: [{ label: 'Jumlah', data: [t.kb_baru_kbpp, t.kb_baru_pasca_do, t.kb_baru_murni], backgroundColor: ['#0284c7', '#f59e0b', '#10b981'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
 
     // 6. Chart Mix Kontrasepsi
-    if (chartMixKontrasepsiInstance) chartMixKontrasepsiInstance.destroy();
-    chartMixKontrasepsiInstance = new Chart(document.getElementById('chartMixKontrasepsi').getContext('2d'), {
-      type: 'bar',
-      data: { labels: ['Suntik', 'Pil', 'Kondom', 'Implan', 'IUD', 'MOW', 'MOP'], datasets: [{ label: 'Peserta', data: [t.stk, t.pil, t.kdm, t.imp, t.iud, t.mow, t.mop], backgroundColor: '#3b82f6' }] },
-      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
+    const canvasMix = document.getElementById('chartMixKontrasepsi');
+    if (canvasMix) {
+      if (chartMixKontrasepsiInstance) chartMixKontrasepsiInstance.destroy();
+      chartMixKontrasepsiInstance = new Chart(canvasMix.getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['Suntik', 'Pil', 'Kondom', 'Implan', 'IUD', 'MOW', 'MOP'], datasets: [{ label: 'Peserta', data: [t.stk, t.pil, t.kdm, t.imp, t.iud, t.mow, t.mop], backgroundColor: '#3b82f6' }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
 
     // 7. Chart Alasan Tidak KB
-    if (chartAlasanTidakKbInstance) chartAlasanTidakKbInstance.destroy();
-    chartAlasanTidakKbInstance = new Chart(document.getElementById('chartAlasanTidakKb').getContext('2d'), {
-      type: 'bar',
-      data: { labels: ['IAT', 'TIAL', 'IAS', 'Hamil', 'TKI'], datasets: [{ label: 'Jumlah', data: [t.iat, t.tial, t.ias, t.hamil, t.tki], backgroundColor: ['#f59e0b', '#d97706', '#94a3b8', '#ec4899', '#64748b'] }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
+    const canvasAlasan = document.getElementById('chartAlasanTidakKb');
+    if (canvasAlasan) {
+      if (chartAlasanTidakKbInstance) chartAlasanTidakKbInstance.destroy();
+      chartAlasanTidakKbInstance = new Chart(canvasAlasan.getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['IAT', 'TIAL', 'IAS', 'Hamil', 'TKI'], datasets: [{ label: 'Jumlah', data: [t.iat, t.tial, t.ias, t.hamil, t.tki], backgroundColor: ['#f59e0b', '#d97706', '#94a3b8', '#ec4899', '#64748b'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
 
     // 8. Chart Perbandingan Wilayah
-    const wilLabels = Object.keys(perWilayahMap);
-    if (chartWilayahInstance) chartWilayahInstance.destroy();
-    chartWilayahInstance = new Chart(document.getElementById('chartWilayah').getContext('2d'), {
-      type: 'bar',
-      data: {
-        labels: wilLabels,
-        datasets: [
-          { label: 'MKJP', data: wilLabels.map(k => perWilayahMap[k].mkjp), backgroundColor: '#0d9488' },
-          { label: 'Peserta KB', data: wilLabels.map(k => perWilayahMap[k].ber_kb), backgroundColor: '#28a745' },
-          { label: 'Total PUS', data: wilLabels.map(k => perWilayahMap[k].total_pus), backgroundColor: '#cbd5e1' }
-        ]
-      },
-      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-    });
+    const canvasWilayah = document.getElementById('chartWilayah');
+    if (canvasWilayah) {
+      const wilLabels = Object.keys(perWilayahMap);
+      if (chartWilayahInstance) chartWilayahInstance.destroy();
+      chartWilayahInstance = new Chart(canvasWilayah.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: wilLabels,
+          datasets: [
+            { label: 'MKJP', data: wilLabels.map(k => perWilayahMap[k].mkjp), backgroundColor: '#0d9488' },
+            { label: 'Peserta KB', data: wilLabels.map(k => perWilayahMap[k].ber_kb), backgroundColor: '#28a745' },
+            { label: 'Total PUS', data: wilLabels.map(k => perWilayahMap[k].total_pus), backgroundColor: '#cbd5e1' }
+          ]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+      });
+    }
 
     // 9. Chart Tren Bulanan
-    const trendLabels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-    if (chartTrendBulananInstance) chartTrendBulananInstance.destroy();
-    chartTrendBulananInstance = new Chart(document.getElementById('chartTrendBulanan').getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: trendLabels,
-        datasets: [
-          { label: 'Peserta KB Aktif', data: t.trend_ber_kb, borderColor: '#28a745', backgroundColor: 'rgba(40, 167, 69, 0.1)', fill: true, tension: 0.3 },
-          { label: 'Bukan Peserta KB', data: t.trend_tidak_kb, borderColor: '#dc3545', backgroundColor: 'rgba(220, 53, 69, 0.1)', fill: true, tension: 0.3 }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-    });
+    const canvasTrend = document.getElementById('chartTrendBulanan');
+    if (canvasTrend) {
+      const trendLabels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+      if (chartTrendBulananInstance) chartTrendBulananInstance.destroy();
+      chartTrendBulananInstance = new Chart(canvasTrend.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: trendLabels,
+          datasets: [
+            { label: 'Peserta KB Aktif', data: t.trend_ber_kb, borderColor: '#28a745', backgroundColor: 'rgba(40, 167, 69, 0.1)', fill: true, tension: 0.3 },
+            { label: 'Bukan Peserta KB', data: t.trend_tidak_kb, borderColor: '#dc3545', backgroundColor: 'rgba(220, 53, 69, 0.1)', fill: true, tension: 0.3 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
+      });
+    }
   }
 
   // =========================================================================
@@ -8184,7 +8234,6 @@ function onUserKabChange() {
       const mKeys = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
       
       dbExistingRows.forEach(row => {
-        // A. Cek NIK Istri Aktif
         let nik = String(row.nik_istri || "").trim();
         if (nik && nik !== "9999999999999999") {
           let isMutasi = false;
@@ -8208,7 +8257,6 @@ function onUserKabChange() {
           }
         }
 
-        // B. Ambil nomor urut tertinggi yang sudah ada di database per RT
         const kdProv = String(row.kode_prov || "").padStart(2, '0');
         const kdKab  = String(row.kode_kab || "").padStart(2, '0');
         const kdKec  = String(row.kode_kec || "").padStart(2, '0');
@@ -8253,17 +8301,41 @@ function onUserKabChange() {
         const seenIstriNiksInExcel = new Map();
         lastSkippedRowsData = [];
 
+        // Fallback Dinamis Provinsi & Kabupaten
+        const fallbackProvKey = Object.keys(dataProvinsi)[0] || userKodeProv || document.getElementById("kode_prov")?.value || "";
+        const fallbackProvName = (fallbackProvKey && dataProvinsi[fallbackProvKey])
+          ? dataProvinsi[fallbackProvKey]
+          : (document.getElementById("provinsi")?.options[document.getElementById("provinsi")?.selectedIndex]?.text || "PROVINSI");
+
+        const fallbackKabKey = userKodeKab || document.getElementById("kode_kab")?.value || "";
+
         dataRows.forEach((r, idx) => {
-          // Lewati jika nama suami & nama istri dua-duanya kosong
           if (!r[15] && !r[17]) return;
 
+          // 1. Deklarasi Kode Wilayah Di Atas
+          let kdProv = String(r[4] || fallbackProvKey).trim().padStart(2, '0');
+          let kdKab  = String(r[6] || fallbackKabKey).trim().padStart(2, '0');
+          let kdKec  = String(r[8] || userKodeKec || "").trim().padStart(2, '0');
+          let kdDesa = String(r[10] || userKodeDesa || "").trim().padStart(4, '0');
+          let kdDsn  = String(r[12] || "").trim().padStart(4, '0');
+          let kdRt   = String(r[14] || "").trim().padStart(3, '0');
+
+          // 2. Deklarasi Identitas
           let rawNikIstri = String(r[18] || "").replace(/[^0-9]/g, "").trim();
           let nikIstri = (rawNikIstri.length === 16) ? rawNikIstri : "9999999999999999";
 
           let rawNikSuami = String(r[16] || "").replace(/[^0-9]/g, "").trim();
           let nikSuami = (rawNikSuami.length === 16) ? rawNikSuami : "9999999999999999";
 
-          // Cek mutasi pada data file Excel
+          let isDummy = (nikIstri === "9999999999999999" || /^9{10,}$/.test(rawNikIstri) || rawNikIstri === "10000000000000000");
+          if (isDummy) {
+            nikIstri = "9999999999999999";
+          }
+          let namaIstriVal = String(r[17] || "").toUpperCase().trim();
+          let namaSuamiVal = String(r[15] || "").toUpperCase().trim();
+          let idPus = String(r[0] || "").trim();
+
+          // 3. Status Mutasi Baris Excel
           let isMutasi = false;
           for (let col = 24; col <= 35; col++) {
             let val = String(r[col] || "").toUpperCase();
@@ -8273,17 +8345,8 @@ function onUserKabChange() {
             }
           }
 
-          let idPus = String(r[0] || "").trim();
-          let isDummy = (nikIstri === "9999999999999999" || /^9{10,}$/.test(rawNikIstri) || rawNikIstri === "10000000000000000");
-          if (isDummy) {
-            nikIstri = "9999999999999999";
-          }
-          let namaIstriVal = String(r[17] || "").toUpperCase().trim();
-          let namaSuamiVal = String(r[15] || "").toUpperCase().trim();
-
-          // Evaluasi Duplikat NIK Istri
+          // 4. Deteksi Duplikat NIK
           if (!idPus && !isDummy && !isMutasi && nikIstri) {
-            // 1. Cek apakah sudah terdaftar aktif di database Supabase
             if (dbActiveIstriNiks.has(nikIstri)) {
               const pemilikDb = dbActiveIstriNiks.get(nikIstri);
               lastSkippedRowsData.push({
@@ -8302,7 +8365,6 @@ function onUserKabChange() {
               return;
             }
 
-            // 2. Cek apakah ganda sesama baris di dalam file Excel yang sedang diunggah
             if (seenIstriNiksInExcel.has(nikIstri)) {
               const prevRow = seenIstriNiksInExcel.get(nikIstri);
               lastSkippedRowsData.push({
@@ -8324,17 +8386,8 @@ function onUserKabChange() {
             seenIstriNiksInExcel.set(nikIstri, { nama: namaIstriVal, desa: r[9] || "", baris: idx + 2 });
           }
 
-          // Format Kode Wilayah Baku
-          let kdProv = String(r[4] || userKodeProv || "52").trim().padStart(2, '0');
-          let kdKab  = String(r[6] || userKodeKab || "").trim().padStart(2, '0');
-          let kdKec  = String(r[8] || "").trim().padStart(2, '0');
-          let kdDesa = String(r[10] || "").trim().padStart(4, '0');
-          let kdDsn  = String(r[12] || "").trim().padStart(4, '0');
-          let kdRt   = String(r[14] || "").trim().padStart(3, '0');
-          
+          // 5. Sequence ID PUS
           const rtKey = `${kdProv}${kdKab}${kdKec}${kdDesa} ${kdDsn}${kdRt}`;
-
-          // GENERATE ID PUS: Selalu mulai dari urutan 001 di setiap RT
           if (!idPus) {
             let curSeq = rtSequenceTracker.get(rtKey) || 0;
             curSeq += 1;
@@ -8342,38 +8395,44 @@ function onUserKabChange() {
             idPus = `${rtKey}${String(curSeq).padStart(3, '0')}`;
           }
 
-          // Sanitasi status KB bulanan (hanya muncul 1 kali mutasi, bulan setelahnya dikosongkan)
-          let firstMutationIndex = -1;
-          const rawMonths = [];
+          // 6. Normalisasi KB Bulanan
+          let cleanedKb = [];
+          let mutasiSudahTerjadi = false;
           for (let col = 24; col <= 35; col++) {
-            rawMonths.push(String(r[col] || "").trim().toUpperCase());
-          }
+            let rawVal = String(r[col] || "").trim().toUpperCase();
 
-          const cleanMonths = rawMonths.map((val, mIdx) => {
-            if (firstMutationIndex !== -1) {
-              return "";
+            if (mutasiSudahTerjadi) {
+              cleanedKb.push("");
+            } else {
+              if (rawVal.includes("CERAI") || rawVal.includes("MENINGGAL") || rawVal.includes("PINDAH")) {
+                cleanedKb.push(rawVal);
+                mutasiSudahTerjadi = true;
+              } else {
+                cleanedKb.push(rawVal);
+              }
             }
-            if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
-              firstMutationIndex = mIdx;
-              return val;
-            }
-            return val;
-          });
+          }
           
           let parsedTglLahir = parseExcelDate(r[19]);
           let umurFromExcel = hitungUmurPresisi(parsedTglLahir, targetTahun);
-          
           if (umurFromExcel === 0 && r[20]) {
             umurFromExcel = parseInt(r[20] || 0, 10);
+          }
+
+          // 7. Resolusi Nama Wilayah Dinamis
+          const namaProv = String(r[3] || dataProvinsi[kdProv] || fallbackProvName).trim().toUpperCase();
+          let namaKab = String(r[5] || "").trim().toUpperCase();
+          if (!namaKab && dataKabupaten[kdProv]?.[kdKab]) {
+            namaKab = String(dataKabupaten[kdProv][kdKab]).trim().toUpperCase();
           }
 
           payloadList.push({
             id_pus: idPus,
             tahun: parseInt(r[1] || targetTahun, 10),
             timestamp: new Date().toISOString(),
-            provinsi_nama: String(r[3] || "NUSA TENGGARA BARAT").toUpperCase().trim(),
+            provinsi_nama: namaProv,
             kode_prov: kdProv,
-            kabupaten_nama: String(r[5] || "").toUpperCase().trim(),
+            kabupaten_nama: namaKab,
             kode_kab: kdKab,
             kecamatan_nama: String(r[7] || "").toUpperCase().trim(),
             kode_kec: kdKec,
@@ -8392,22 +8451,21 @@ function onUserKabChange() {
             jumlah_anak: parseInt(r[21] || 0, 10),
             umur_anak_terkecil: parseInt(r[22] || 0, 10),
             peserta_jkn: String(r[23] || "TIDAK MEMILIKI").toUpperCase().trim(),
-            kb_jan: cleanMonths[0],
-            kb_feb: cleanMonths[1],
-            kb_mar: cleanMonths[2],
-            kb_apr: cleanMonths[3],
-            kb_mei: cleanMonths[4],
-            kb_jun: cleanMonths[5],
-            kb_jul: cleanMonths[6],
-            kb_agu: cleanMonths[7],
-            kb_sep: cleanMonths[8],
-            kb_okt: cleanMonths[9],
-            kb_nov: cleanMonths[10],
-            kb_des: cleanMonths[11]
+            kb_jan: cleanedKb[0],
+            kb_feb: cleanedKb[1],
+            kb_mar: cleanedKb[2],
+            kb_apr: cleanedKb[3],
+            kb_mei: cleanedKb[4],
+            kb_jun: cleanedKb[5],
+            kb_jul: cleanedKb[6],
+            kb_agu: cleanedKb[7],
+            kb_sep: cleanedKb[8],
+            kb_okt: cleanedKb[9],
+            kb_nov: cleanedKb[10],
+            kb_des: cleanedKb[11]
           });
         });
 
-        // Template HTML pesan jika ada data yang dilewati
         const buildSkippedHtml = () => {
           if (lastSkippedRowsData.length === 0) return "";
 
@@ -8442,7 +8500,6 @@ function onUserKabChange() {
           return;
         }
 
-        // Upload massal bertahap per 500 baris agar tidak membebani koneksi Supabase
         const CHUNK_SIZE = 500;
         for (let i = 0; i < payloadList.length; i += CHUNK_SIZE) {
           const chunk = payloadList.slice(i, i + CHUNK_SIZE);
@@ -8485,22 +8542,35 @@ function onUserKabChange() {
     ];
 
     const currentProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-    const currentProvName = dataProvinsi[currentProvKey] || "PROVINSI";
-    let sampleKabKey = "";
+    const currentProvName = dataProvinsi[currentProvKey] || document.getElementById("provinsi")?.options[document.getElementById("provinsi")?.selectedIndex]?.text || "PROVINSI";
+    
+    let sampleKabKey = userKodeKab || "";
     let sampleKabName = "";
 
     if (dataKabupaten[currentProvKey]) {
-      sampleKabKey = Object.keys(dataKabupaten[currentProvKey])[0] || "01";
+      sampleKabKey = sampleKabKey || Object.keys(dataKabupaten[currentProvKey])[0] || "01";
       sampleKabName = dataKabupaten[currentProvKey][sampleKabKey] || "KABUPATEN/KOTA";
     }
 
     const sampleRow = [
-      currentProvName, currentProvKey, sampleKabName, sampleKabKey,
+      String(currentProvName).toUpperCase(),
+      String(currentProvKey).padStart(2, '0'),
+      String(sampleKabName).toUpperCase(),
+      String(sampleKabKey).padStart(2, '0'),
       "KECAMATAN CONTOH", "01", "DESA CONTOH", "0001",
       "DUSUN SATU", "0001", "5"
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+    
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:K2');
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C of [1, 3, 5, 7, 9]) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cellRef] && typeof ws[cellRef].v === 'string') ws[cellRef].t = 's';
+      }
+    }
+
     ws['!cols'] = headers.map(() => ({ wch: 20 }));
 
     const wb = XLSX.utils.book_new();
@@ -8517,7 +8587,6 @@ function onUserKabChange() {
       return;
     }
 
-    // Tampilkan dialog loading
     Swal.fire({
       title: 'Membaca Berkas...',
       text: 'Sedang mengekstrak lembar kerja Excel...',
@@ -8526,16 +8595,9 @@ function onUserKabChange() {
     });
 
     const reader = new FileReader();
-
-    reader.onerror = function(err) {
-      console.error("FileReader Error:", err);
-      Swal.fire("Gagal", "Berkas Excel tidak dapat dibaca. Pastikan berkas tidak sedang terbuka di aplikasi lain atau gunakan format .xlsx murni.", "error");
-    };
-
     reader.onload = async function(e) {
       try {
         const buffer = e.target.result;
-        // Baca workbook dengan opsi type binary / array
         const workbook = XLSX.read(buffer, { type: 'array', cellDates: false });
         
         if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
@@ -8551,7 +8613,12 @@ function onUserKabChange() {
           return;
         }
 
-        Swal.update({ text: `Menyiapkan ${rows.length - 1} baris wilayah...` });
+        const fallbackProvKey = Object.keys(dataProvinsi)[0] || userKodeProv || document.getElementById("kode_prov")?.value || "";
+        const fallbackProvName = (fallbackProvKey && dataProvinsi[fallbackProvKey])
+          ? dataProvinsi[fallbackProvKey]
+          : (document.getElementById("provinsi")?.options[document.getElementById("provinsi")?.selectedIndex]?.text || "PROVINSI");
+
+        const fallbackKabKey = userKodeKab || document.getElementById("kode_kab")?.value || "";
 
         const payloadList = [];
         const seenKeys = new Set();
@@ -8561,23 +8628,29 @@ function onUserKabChange() {
           const dusunNama = String(r[8] || "").trim().toUpperCase();
           const rawDsn = String(r[9] || "").trim();
 
-          // Lewati baris jika nama dusun dan kode dusun kosong
           if (!dusunNama && !rawDsn) continue;
 
-          const kdProv = String(r[1] || userKodeProv || "52").trim().padStart(2, '0');
-          const kdKab  = String(r[3] || userKodeKab || "").trim().padStart(2, '0');
+          const kdProv = String(r[1] || fallbackProvKey).trim().padStart(2, '0');
+          const kdKab  = String(r[3] || fallbackKabKey).trim().padStart(2, '0');
           const kdKec  = String(r[5] || "").trim().padStart(2, '0');
           const kdDesa = String(r[7] || "").trim().padStart(4, '0');
           const kdDsn  = rawDsn.padStart(4, '0');
+
+          if (!kdKab || !kdKec || !kdDesa || !kdDsn) continue;
 
           const uniqueKey = `${kdKab}_${kdKec}_${kdDesa}_${kdDsn}`;
           if (seenKeys.has(uniqueKey)) continue;
           seenKeys.add(uniqueKey);
 
+          let namaKab = String(r[2] || "").trim().toUpperCase();
+          if (!namaKab && dataKabupaten[kdProv]?.[kdKab]) {
+            namaKab = String(dataKabupaten[kdProv][kdKab]).trim().toUpperCase();
+          }
+
           payloadList.push({
-            provinsi: String(r[0] || dataProvinsi[kdProv] || "PROVINSI").trim().toUpperCase(),
+            provinsi: String(r[0] || dataProvinsi[kdProv] || fallbackProvName).trim().toUpperCase(),
             kode_prov: kdProv,
-            kabupaten: String(r[2] || "").trim().toUpperCase(),
+            kabupaten: namaKab || "KABUPATEN/KOTA",
             kode_kab: kdKab,
             kecamatan: String(r[4] || "").trim().toUpperCase(),
             kode_kec: kdKec,
@@ -8590,13 +8663,10 @@ function onUserKabChange() {
         }
 
         if (payloadList.length === 0) {
-          Swal.fire("Data Tidak Lengkap", "Pastikan kolom nama dusun dan kode dusun terisi dengan benar.", "warning");
+          Swal.fire("Data Tidak Lengkap", "Pastikan kolom Kabupaten, Kecamatan, Desa, dan Dusun terisi dengan benar.", "warning");
           return;
         }
 
-        Swal.update({ text: `Menyimpan ${payloadList.length} wilayah ke database Supabase...` });
-
-        // Batch upload per 100 baris
         const CHUNK_SIZE = 100;
         for (let i = 0; i < payloadList.length; i += CHUNK_SIZE) {
           const chunk = payloadList.slice(i, i + CHUNK_SIZE);
@@ -8609,13 +8679,10 @@ function onUserKabChange() {
         Swal.fire({
           icon: 'success',
           title: 'Berhasil!',
-          text: `Sebanyak ${payloadList.length} data wilayah berhasil diunggah.`
+          text: `Sebanyak ${payloadList.length} data wilayah berhasil disinkronkan ke database.`
         });
 
-        // Reset input file
         fileInput.value = "";
-
-        // Segarkan data
         await loadMasterWilayahFromDB();
         if (typeof loadRegisteredWilayahList === "function") {
           loadRegisteredWilayahList();
@@ -8626,8 +8693,6 @@ function onUserKabChange() {
         Swal.fire("Gagal Memproses", err.message || "Format data tidak sesuai template.", "error");
       }
     };
-
-    // Jalankan pembacaan
     reader.readAsArrayBuffer(file);
   }
 
@@ -9561,21 +9626,33 @@ function onUserKabChange() {
 
   function renderSatuKartuBelakang(item) {
     const alkon = String(item.rencana_metode || item.metode_realisasi || '-').toUpperCase();
-    const tglRef = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
-    const [yLayanan, mLayanan, dLayanan] = tglRef.split('-');
+    
+    // 1. Sanitasi format tanggal rencana layanan
+    const rawTglRef = String(item.tgl_rencana_layanan || new Date().toISOString().split('T')[0]).replace(/\//g, '-').trim();
+    const pTgl = rawTglRef.split('-');
+    let yLayanan = String(new Date().getFullYear()), mLayanan = "01", dLayanan = "01";
+
+    if (pTgl.length === 3) {
+      if (pTgl[0].length === 4) { // Format: YYYY-MM-DD
+        yLayanan = pTgl[0];
+        mLayanan = pTgl[1].padStart(2, '0');
+        dLayanan = pTgl[2].padStart(2, '0');
+      } else { // Format: DD-MM-YYYY
+        dLayanan = pTgl[0].padStart(2, '0');
+        mLayanan = pTgl[1].padStart(2, '0');
+        yLayanan = pTgl[2];
+      }
+    }
     const yShort = yLayanan.slice(-2);
 
+    // 2. Perhitungan Tanggal Cabut Tanpa Objek Date
     let dCabut = "", mCabut = "", yCabutShort = "";
-    if (alkon.includes("IMPLAN") || alkon.includes("IMP") || alkon.includes("IUD")) {
-      const tglPasang = new Date(tglRef);
-      if (!isNaN(tglPasang.getTime())) {
-        const tambahTahun = (alkon.includes("IMPLAN") || alkon.includes("IMP")) ? 3 : 8;
-        tglPasang.setFullYear(tglPasang.getFullYear() + tambahTahun);
-        const yC = String(tglPasang.getFullYear());
-        mCabut = String(tglPasang.getMonth() + 1).padStart(2, '0');
-        dCabut = String(tglPasang.getDate()).padStart(2, '0');
-        yCabutShort = yC.slice(-2);
-      }
+    if (alkon.includes("IMPLAN") || alkon.includes("IMP") || alkon.includes("IUD") || alkon.includes("SUSUK")) {
+      const tambahTahun = (alkon.includes("IMPLAN") || alkon.includes("IMP") || alkon.includes("SUSUK")) ? 3 : 8;
+      dCabut = dLayanan;
+      mCabut = mLayanan;
+      const thnCabutFull = String(parseInt(yLayanan, 10) + tambahTahun);
+      yCabutShort = thnCabutFull.slice(-2);
     }
 
     return `
@@ -9767,11 +9844,20 @@ function onUserKabChange() {
   }
 
   function renderSatuFormKIV(item) {
-    const tglFormatted = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
-    const pTgl = tglFormatted.split('-');
-    const dLayanan = pTgl[2] || "01";
-    const mLayanan = pTgl[1] || "01";
-    const yLayanan = pTgl[0] || "2026";
+    const cleanTglFormatted = String(item.tgl_rencana_layanan || new Date().toISOString().split('T')[0]).replace(/\//g, '-').trim();
+    const pTgl = cleanTglFormatted.split('-');
+    let yLayanan = String(new Date().getFullYear()), mLayanan = "01", dLayanan = "01";
+    if (pTgl.length === 3) {
+      if (pTgl[0].length === 4) {        
+        yLayanan = pTgl[0];
+        mLayanan = pTgl[1].padStart(2, '0');
+        dLayanan = pTgl[2].padStart(2, '0');
+      } else {        
+        dLayanan = pTgl[0].padStart(2, '0');
+        mLayanan = pTgl[1].padStart(2, '0');
+        yLayanan = pTgl[2];
+      }
+    }
 
     let dLahir = "", mLahir = "", yLahir = "";
     if (item.tgl_lahir_istri) {
@@ -9792,6 +9878,7 @@ function onUserKabChange() {
     
     let parsedUmurDb = parseInt(item.umur_istri, 10);
     let umurIstriVal = "";
+
     if (!isNaN(parsedUmurDb) && parsedUmurDb > 0) {
       umurIstriVal = parsedUmurDb;
     } else if (item.tgl_lahir_istri) {      
@@ -9799,15 +9886,11 @@ function onUserKabChange() {
       const umurDihitung = (typeof hitungUmurPresisi === "function") 
         ? hitungUmurPresisi(item.tgl_lahir_istri, thnRef)
         : (yLahir ? (thnRef - parseInt(yLahir, 10)) : 0);
+
       umurIstriVal = umurDihitung > 0 ? umurDihitung : "";
     }
 
-    const curKab = String(item.kode_kab || userKodeKab || "01").padStart(2, '0');
-    const provKey = String(item.kode_prov || userKodeProv || "52").padStart(2, '0');
-    let nmKab = item.kabupaten_nama || "";
-    if (!nmKab && dataKabupaten[provKey] && dataKabupaten[provKey][curKab]) {
-      nmKab = dataKabupaten[provKey][curKab];
-    }
+    const curKab = String(item.kode_kab || userKodeKab || "").padStart(2, '0');
     const curKec = String(item.kode_kec || "").padStart(2, '0');
     const curDesa = String(item.kode_desa || "").padStart(4, '0');
     const curDsn = String(item.kode_dusun || "").padStart(4, '0');
@@ -9834,16 +9917,13 @@ function onUserKabChange() {
     else if (alkon.includes("MOW") || alkon.includes("TUBEKTOMI")) kdAlkon = "9";
     else if (alkon.includes("MOP") || alkon.includes("VASEKTOMI")) kdAlkon = "10";
 
+    // Perhitungan Tanggal Cabut Implan (3 Thn) & IUD (8 Thn) Tanpa Objek Date
     let dCabut = "", mCabut = "", yCabut = "";
-    if (tglFormatted && (alkon.includes("IMPLAN") || alkon.includes("IUD") || alkon.includes("SUSUK"))) {
-      const tglPasangObj = new Date(tglFormatted);
-      if (!isNaN(tglPasangObj.getTime())) {
-        const addYears = alkon.includes("IUD") ? 8 : 3;
-        tglPasangObj.setFullYear(tglPasangObj.getFullYear() + addYears);
-        dCabut = String(tglPasangObj.getDate()).padStart(2, '0');
-        mCabut = String(tglPasangObj.getMonth() + 1).padStart(2, '0');
-        yCabut = String(tglPasangObj.getFullYear());
-      }
+    if (alkon.includes("IMPLAN") || alkon.includes("IMP") || alkon.includes("IUD") || alkon.includes("SUSUK")) {
+      const addYears = alkon.includes("IUD") ? 8 : 3;
+      dCabut = dLayanan;
+      mCabut = mLayanan;
+      yCabut = String(parseInt(yLayanan, 10) + addYears);
     }
 
     const jnsAkseptor = String(item.jenis_akseptor || "").toUpperCase();
