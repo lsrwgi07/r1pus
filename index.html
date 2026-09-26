@@ -14,8 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
   
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px; background-color: #f0f2f5; color: #333; margin: 0; }
@@ -3517,6 +3516,9 @@
     const tingkat = document.getElementById("bnbaTingkat");
     if (tingkat && !isDesaRole()) tingkat.value = "";
 
+    const kab = document.getElementById("bnbaKabupaten");
+    if (kab) kab.value = "";
+
     const kec = document.getElementById("bnbaKecamatan");
     if (kec) kec.value = "";
     
@@ -3524,20 +3526,15 @@
     document.getElementById("bnbaDusun").innerHTML = '<option value="">-- PILIH DUSUN --</option>';
     document.getElementById("bnbaRt").innerHTML = '<option value="">-- PILIH RT --</option>';
 
-    // Reset Dropdown Lanjutan & Bulan
+    const advCat = document.getElementById("bnbaFilterAdvCategory");
+    if (advCat) advCat.value = "";
+    onBnbaAdvCategoryChange();
+
     const bln = document.getElementById("bnbaBulan");
     if (bln) {
       bln.value = "";
       bln.style.border = "1px solid #ccc";
     }
-
-    const advCat = document.getElementById("bnbaFilterAdvCategory");
-    if (advCat) advCat.value = "";
-
-    const panel = document.getElementById("bnbaAdvCheckboxPanel");
-    if (panel) panel.style.display = "none";
-    const grid = document.getElementById("bnbaAdvCheckboxGrid");
-    if (grid) grid.innerHTML = "";
 
     const thead = document.getElementById("bnbaTableHeader");
     const tbody = document.getElementById("bnbaTableBody");
@@ -7821,8 +7818,119 @@ function onUserKabChange() {
       }
     });
   }
+
+  function getWilayahSampleRiil() {
+    const curProv = String(userKodeProv || Object.keys(dataProvinsi)[0] || "").trim().padStart(2, '0');
+    const curKab  = String(userKodeKab || "").trim().padStart(2, '0');
+    const curKec  = String(userKodeKec || "").trim().padStart(2, '0');
+    const curDesa = String(userKodeDesa || "").trim().padStart(4, '0');
+
+    let targetProv = curProv;
+    let targetKab = "";
+    let targetKec = "";
+    let targetDesa = "";
+    let targetDusun = "";
+    let infoDusun = null;
+    
+    if (curKab && curKec && curDesa) {
+      const keyDsn = `${curKab}_${curKec}_${curDesa}`;
+      if (dataDusun[keyDsn] && Object.keys(dataDusun[keyDsn]).length > 0) {
+        targetKab = curKab;
+        targetKec = curKec;
+        targetDesa = curDesa;
+        if (userAllowedDusun && userAllowedDusun.length > 0 && dataDusun[keyDsn][userAllowedDusun[0]]) {
+          targetDusun = userAllowedDusun[0];
+        } else {
+          targetDusun = Object.keys(dataDusun[keyDsn])[0];
+        }
+        infoDusun = dataDusun[keyDsn][targetDusun];
+      }
+    }
+    
+    if (!infoDusun && curKab && curKec) {
+      for (let dsnKey in dataDusun) {
+        if (dsnKey.startsWith(`${curKab}_${curKec}_`)) {
+          const parts = dsnKey.split('_');
+          if (dataDusun[dsnKey] && Object.keys(dataDusun[dsnKey]).length > 0) {
+            targetKab = curKab;
+            targetKec = curKec;
+            targetDesa = parts[2];
+            targetDusun = Object.keys(dataDusun[dsnKey])[0];
+            infoDusun = dataDusun[dsnKey][targetDusun];
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!infoDusun && curKab) {
+      for (let dsnKey in dataDusun) {
+        if (dsnKey.startsWith(`${curKab}_`)) {
+          const parts = dsnKey.split('_');
+          if (dataDusun[dsnKey] && Object.keys(dataDusun[dsnKey]).length > 0) {
+            targetKab = curKab;
+            targetKec = parts[1];
+            targetDesa = parts[2];
+            targetDusun = Object.keys(dataDusun[dsnKey])[0];
+            infoDusun = dataDusun[dsnKey][targetDusun];
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!infoDusun) {
+      for (let dsnKey in dataDusun) {
+        if (dataDusun[dsnKey] && Object.keys(dataDusun[dsnKey]).length > 0) {
+          const parts = dsnKey.split('_');
+          targetKab = parts[0];
+          targetKec = parts[1];
+          targetDesa = parts[2];
+          targetDusun = Object.keys(dataDusun[dsnKey])[0];
+          infoDusun = dataDusun[dsnKey][targetDusun];
+          break;
+        }
+      }
+    }
+    
+    if (!targetProv) {
+      for (let p in dataKabupaten) {
+        if (dataKabupaten[p] && dataKabupaten[p][targetKab]) {
+          targetProv = p;
+          break;
+        }
+      }
+    }
+    if (!targetProv) targetProv = Object.keys(dataProvinsi)[0] || "52";
+
+    const namaProv = dataProvinsi[targetProv] || "PROVINSI";
+    const namaKab  = (dataKabupaten[targetProv] && dataKabupaten[targetProv][targetKab]) ? dataKabupaten[targetProv][targetKab] : "KABUPATEN";
+    const namaKec  = (dataKecamatan[targetKab] && dataKecamatan[targetKab][targetKec]) ? dataKecamatan[targetKab][targetKec] : "KECAMATAN";
+
+    const keyDesa = `${targetKab}_${targetKec}`;
+    const desas = dataDesa[keyDesa] || dataDesa[targetKec] || {};
+    const namaDesa = desas[targetDesa] || "DESA";
+
+    const namaDusun = infoDusun ? infoDusun.nama : "DUSUN";
+    const jmlRt = infoDusun ? (infoDusun.jumlah_rt || 1) : 1;
+    const isTotalEmpty = !infoDusun;
+
+    return {
+      isDefault: isTotalEmpty,
+      kode_prov: String(targetProv).padStart(2, '0'),
+      provinsi: String(namaProv).toUpperCase(),
+      kode_kab: String(targetKab || "01").padStart(2, '0'),
+      kabupaten: String(namaKab).toUpperCase(),
+      kode_kec: String(targetKec || "01").padStart(2, '0'),
+      kecamatan: String(namaKec).toUpperCase(),
+      kode_desa: String(targetDesa || "0001").padStart(4, '0'),
+      desa: String(namaDesa).toUpperCase(),
+      kode_dusun: String(targetDusun || "0001").padStart(4, '0'),
+      dusun: String(namaDusun).toUpperCase(),
+      jumlah_rt: jmlRt
+    };
+  }  
   
-  // FUNGSI DOWNLOAD TEMPLATE EXCEL BAKU BESERTA PETUNJUKNYA
   function downloadEmptyExcelTemplate() {
     const headers = [
       "ID_PUS", "Tahun", "Timestamp", "Provinsi", "Kode Provinsi", "Kabupaten", "Kode Kabupaten",
@@ -7833,21 +7941,14 @@ function onUserKabChange() {
       "KB_Juni", "KB_Juli", "KB_Agustus", "KB_September", "KB_Oktober", "KB_November", "KB_Desember"
     ];
 
-    const currentProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-    const currentProvName = dataProvinsi[currentProvKey] || "PROVINSI";
-    let sampleKabKey = "";
-    let sampleKabName = "";
-
-    if (dataKabupaten[currentProvKey]) {
-      sampleKabKey = Object.keys(dataKabupaten[currentProvKey])[0] || "01";
-      sampleKabName = dataKabupaten[currentProvKey][sampleKabKey] || "KABUPATEN/KOTA";
-    }
+    const w = getWilayahSampleRiil();
+    const tahunAktif = String(new Date().getFullYear());
 
     const sampleRow = [
-      "", String(new Date().getFullYear()), "", currentProvName, currentProvKey, sampleKabName, sampleKabKey,
-      "NAMA KECAMATAN", "01", "NAMA DESA", "0001", "NAMA DUSUN", "0001",
-      "RT 001", "001", "NAMA SUAMI", "16 DIGIT NIK SUAMI", "NAMA ISTRI", "16 DIGIT NIK ISTRI",
-      "1990-05-15", "36", "2", "3",
+      "", tahunAktif, "", w.provinsi, w.kode_prov, w.kabupaten, w.kode_kab,
+      w.kecamatan, w.kode_kec, w.desa, w.kode_desa, w.dusun, w.kode_dusun,
+      "RT 001", "001", "AHMAD SUAMI", "5201010101900001", "SRI ISTRI", "5201014101920002",
+      "1992-01-01", "34", "2", "3",
       "PBI", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN",
       "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN", "IMPLAN"
     ];
@@ -7895,15 +7996,14 @@ function onUserKabChange() {
     XLSX.utils.book_append_sheet(wb, ws1, "TEMPLATE_PUS");
     XLSX.utils.book_append_sheet(wb, ws2, "PETUNJUK_PENGISIAN");
 
-    XLSX.writeFile(wb, "TEMPLATE_REGISTER_PUS_36_KOLOM.xlsx");
+    const labelFile = w.isDefault ? "BAKU" : w.kabupaten.replace(/\s+/g, '_');
+    XLSX.writeFile(wb, `TEMPLATE_REGISTER_PUS_${labelFile}.xlsx`);
   }
-
-  // FUNGSI DOWNLOAD DATA PUS TERISI KE TEMPLATE EXCEL DENGAN FILTER PERAN & WILAYAH
+  
   async function downloadPopulatedExcelData() {
     const targetTahun = parseInt(document.getElementById("import_tahun_select").value, 10);
     const tingkat = document.getElementById("dlExpTingkat").value;
-
-    // 1. Tentukan batasan wilayah berdasarkan peran dan dropdown
+    
     let targetProv = userKodeProv || "52";
     let targetKab = "";
     let targetKec = "";
@@ -7928,8 +8028,7 @@ function onUserKabChange() {
       if (tingkat === "Desa" || tingkat === "Dusun") targetDesa = document.getElementById("dlExpDesa").value;
       if (tingkat === "Dusun") targetDusun = document.getElementById("dlExpDusun").value;
 
-    } else {
-      // Admin Prov
+    } else {      
       if (tingkat !== "Provinsi") targetKab = document.getElementById("dlExpKabupaten").value;
       if (tingkat === "Kecamatan" || tingkat === "Desa" || tingkat === "Dusun") targetKec = document.getElementById("dlExpKecamatan").value;
       if (tingkat === "Desa" || tingkat === "Dusun") targetDesa = document.getElementById("dlExpDesa").value;
@@ -8553,11 +8652,8 @@ function onUserKabChange() {
       }
     };
     reader.readAsArrayBuffer(file);
-  }
+  }  
   
-  // ==========================================
-  // MODUL DOWNLOAD & UPLOAD EXCEL MASTER WILAYAH
-  // ==========================================
   function downloadWilayahTemplate() {
     const headers = [
       "Provinsi", "Kode Provinsi", "Kabupaten", "Kode Kabupaten",
@@ -8565,24 +8661,20 @@ function onUserKabChange() {
       "Dusun", "Kode Dusun", "Jumlah RT"
     ];
 
-    const currentProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-    const currentProvName = dataProvinsi[currentProvKey] || document.getElementById("provinsi")?.options[document.getElementById("provinsi")?.selectedIndex]?.text || "PROVINSI";
-    
-    let sampleKabKey = userKodeKab || "";
-    let sampleKabName = "";
-
-    if (dataKabupaten[currentProvKey]) {
-      sampleKabKey = sampleKabKey || Object.keys(dataKabupaten[currentProvKey])[0] || "01";
-      sampleKabName = dataKabupaten[currentProvKey][sampleKabKey] || "KABUPATEN/KOTA";
-    }
+    const w = getWilayahSampleRiil();
 
     const sampleRow = [
-      String(currentProvName).toUpperCase(),
-      String(currentProvKey).padStart(2, '0'),
-      String(sampleKabName).toUpperCase(),
-      String(sampleKabKey).padStart(2, '0'),
-      "KECAMATAN CONTOH", "01", "DESA CONTOH", "0001",
-      "DUSUN SATU", "0001", "5"
+      w.provinsi,
+      w.kode_prov,
+      w.kabupaten,
+      w.kode_kab,
+      w.kecamatan,
+      w.kode_kec,
+      w.desa,
+      w.kode_desa,
+      w.dusun,
+      w.kode_dusun,
+      String(w.jumlah_rt || 5)
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
@@ -8595,11 +8687,16 @@ function onUserKabChange() {
       }
     }
 
-    ws['!cols'] = headers.map(() => ({ wch: 20 }));
+    ws['!cols'] = [
+      { wch: 22 }, { wch: 15 }, { wch: 22 }, { wch: 16 }, { wch: 22 },
+      { wch: 16 }, { wch: 22 }, { wch: 14 }, { wch: 22 }, { wch: 14 }, { wch: 12 }
+    ];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TEMPLATE_WILAYAH");
-    XLSX.writeFile(wb, "TEMPLATE_MASTER_WILAYAH.xlsx");
+
+    const labelFile = w.isDefault ? "BAKU" : w.kabupaten.replace(/\s+/g, '_');
+    XLSX.writeFile(wb, `TEMPLATE_MASTER_WILAYAH_${labelFile}.xlsx`);
   }
 
   async function handleUploadWilayahExcel() {
@@ -8719,39 +8816,61 @@ function onUserKabChange() {
     };
     reader.readAsArrayBuffer(file);
   }
-
-  // ==========================================
-  // MODUL DOWNLOAD & UPLOAD EXCEL KELOLA LOGIN
-  // ==========================================
+  
   function downloadUserTemplate() {
     const headers = [
       "Nama Lengkap", "Username", "Password", "Role", 
       "Kode Provinsi", "Kode Kabupaten", "Kode Kecamatan", "Kode Desa", 
-      "Kode Dusun (Pisahkan Koma)"
+      "Kode Dusun List"
     ];
 
-    // Contoh: User Desa dengan nama lengkap terisi
-    const sampleRow = [
-      "Punk Lee", "desamareje", "rahasia123", "User Desa", 
-      "52", "01", "05", "0001", 
-      "0001, 0002"
+    const w = getWilayahSampleRiil();
+
+    const sampleRows = [
+      [
+        `Kader ${w.dusun}`, 
+        `kader_${w.desa.toLowerCase().replace(/\s+/g, '')}_${w.kode_dusun}`, 
+        "password123", 
+        "User Desa", 
+        w.kode_prov,
+        w.kode_kab, 
+        w.kode_kec, 
+        w.kode_desa, 
+        w.kode_dusun
+      ],
+      [
+        `Admin Desa ${w.desa}`, 
+        `admin_${w.desa.toLowerCase().replace(/\s+/g, '')}`, 
+        "password123", 
+        "User Desa", 
+        w.kode_prov,
+        w.kode_kab, 
+        w.kode_kec, 
+        w.kode_desa, 
+        ""
+      ]
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleRows]);
     
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
+      for (let C of [4, 5, 6, 7, 8]) {
         const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
         if (ws[cell_ref]) ws[cell_ref].t = 's';
       }
     }
     
-    ws['!cols'] = headers.map(() => ({ wch: 24 }));
+    ws['!cols'] = [
+      { wch: 24 }, { wch: 24 }, { wch: 16 }, { wch: 14 }, 
+      { wch: 15 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 22 }
+    ];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "TEMPLATE_USERS");
-    XLSX.writeFile(wb, "TEMPLATE_KELOLA_LOGIN.xlsx");
+
+    const labelFile = w.isDefault ? "BAKU" : w.kabupaten.replace(/\s+/g, '_');
+    XLSX.writeFile(wb, `TEMPLATE_KELOLA_LOGIN_${labelFile}.xlsx`);
   }
 
   async function handleUploadUserExcel(file) {
