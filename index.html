@@ -648,9 +648,14 @@
       <h2>FORM REGISTER PASANGAN USIA SUBUR (PUS)</h2>
 
       <form id="pusForm" onsubmit="handleFormSubmit(event)">
-        <input type="hidden" id="id_pus" name="id_pus">
-        <input type="hidden" id="old_id_pus" name="old_id_pus">
-        <input type="hidden" id="id_mutasi_tiket" name="id_mutasi_tiket">
+        <!-- ID Tracking & State PUS -->
+        <input type="hidden" id="id_pus" value="">
+        <input type="hidden" id="original_id_pus" value="">
+        <input type="hidden" id="original_kode_dusun" value="">
+        <input type="hidden" id="original_kode_rt" value="">
+        <input type="hidden" id="id_mutasi_tiket" value="">
+
+        <!-- State Tracking Mutasi Antar Wilayah (Skala Provinsi) -->
         <input type="hidden" id="is_pindah_dalam_prov" value="false">
         <input type="hidden" id="pindah_kab_tujuan" value="">
         <input type="hidden" id="pindah_kab_nama" value="">
@@ -3111,18 +3116,20 @@
   }
 
   function BATalkanPilihanPindah(monthIndex) {
-    const sel = document.getElementById("kb_" + monthIndex);
-    if (sel) sel.value = "";
+    const sel = document.getElementById("kb_" + monthIndex); //
+    if (sel) sel.value = ""; //
     
-    document.getElementById("is_pindah_dalam_prov").value = "false";
-    document.getElementById("pindah_kab_tujuan").value = "";
-    document.getElementById("pindah_kab_nama").value = "";
-    document.getElementById("pindah_kec_tujuan").value = "";
-    document.getElementById("pindah_kec_nama").value = "";
-    document.getElementById("pindah_desa_tujuan").value = "";
-    document.getElementById("pindah_desa_nama").value = "";
+    document.getElementById("is_pindah_dalam_prov").value = "false"; //
+    document.getElementById("pindah_kab_tujuan").value = ""; //
+    document.getElementById("pindah_kab_nama").value = ""; //
+    document.getElementById("pindah_kec_tujuan").value = ""; //
+    document.getElementById("pindah_kec_nama").value = ""; //
+    document.getElementById("pindah_desa_tujuan").value = ""; //
+    document.getElementById("pindah_desa_nama").value = ""; //
+    document.getElementById("pindah_dusun_tujuan").value = ""; //
+    document.getElementById("pindah_dusun_nama").value = ""; //
     
-    applyMutationAndAgeLocks();
+    applyMutationAndAgeLocks(); //
   }
 
   // --- LOGIC DROPDOWN BERTINGKAT REKAP ---
@@ -4053,7 +4060,7 @@
 
     const payloadData = typeof item.payload === "string" ? JSON.parse(item.payload) : item.payload;
 
-    // 1. Bersihkan status mutasi bulan-bulan sebelumnya
+    // 1. Bersihkan status mutasi dari riwayat bulan KB agar tidak terbawa
     const monthPayloadKeys = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"];
     monthPayloadKeys.forEach(mKey => {
       let val = String(payloadData[mKey] || "").toUpperCase();
@@ -4066,7 +4073,7 @@
     showFormView();
     resetInputForm();
 
-    // 2. Set State Form & Kosongkan ID PUS agar digenerate baru
+    // 2. Set State Form & Kosongkan ID PUS agar terbentuk ID baru di wilayah tujuan
     document.getElementById("id_mutasi_tiket").value = item.id;
     document.getElementById("id_pus").value = "";
     document.getElementById("original_id_pus").value = "";
@@ -4119,6 +4126,7 @@
 
     setSelectValueCaseInsensitive("peserta_jkn", payloadData.peserta_jkn);
 
+    // 5. Salin Riwayat KB Bulanan yang telah dibersihkan
     for (let m = 1; m <= 12; m++) {
       let mKey = monthPayloadKeys[m - 1];
       if (payloadData[mKey]) {
@@ -4133,7 +4141,7 @@
     Swal.fire({
       icon: 'info',
       title: 'Data Mutasi Dimuat!',
-      text: `Data PUS [${item.nama_istri}] berhasil disalin. Silakan periksa atau lengkapi Dusun dan RT, lalu klik SIMPAN DATA.`
+      text: `Data PUS [${item.nama_istri}] berhasil dimuat. Silakan periksa atau lengkapi Dusun & RT, lalu klik SIMPAN DATA.`
     });
   }
 
@@ -4181,25 +4189,29 @@
   }
 
   function updateDesa(selectedVal = "") {
-    const kodeKab = document.getElementById("kode_kab").value;
-    const kodeKec = document.getElementById("kecamatan").value;
-    document.getElementById("kode_kec").value = kodeKec;
-    resetDropdown("desa", "kode_desa"); 
-    resetDropdown("dusun", "kode_dusun"); 
+    const kodeKab = document.getElementById("kode_kab")?.value || document.getElementById("kabupaten")?.value || userKodeKab || "";
+    const kodeKec = document.getElementById("kecamatan")?.value;
+    document.getElementById("kode_kec").value = kodeKec || "";
+
+    resetDropdown("desa", "kode_desa");
+    resetDropdown("dusun", "kode_dusun");
     resetDropdown("rt", "kode_rt");
 
-    let desaKey = String(kodeKab).padStart(2, '0') + "_" + String(kodeKec).padStart(2, '0');
-    
-    if (kodeKec && dataDesa[desaKey]) {
-      const desaSelect = document.getElementById("desa");
-      desaSelect.disabled = false;
-      for (let kode in dataDesa[desaKey]) {
-        desaSelect.add(new Option(dataDesa[desaKey][kode].toUpperCase(), kode));
-      }
-      if (selectedVal) { 
-        setSelectValueCaseInsensitive("desa", selectedVal); 
-        updateDusun(); 
-      }
+    if (!kodeKec) return;
+
+    const desaSelect = document.getElementById("desa");
+    desaSelect.disabled = false;
+
+    // Manfaatkan helper getDesaList yang konsisten menangani composite key
+    const desas = getDesaList(kodeKec, kodeKab) || {};
+
+    for (let kode in desas) {
+      desaSelect.add(new Option(desas[kode].toUpperCase(), String(kode).padStart(4, '0')));
+    }
+
+    if (selectedVal) {
+      setSelectValueCaseInsensitive("desa", selectedVal);
+      updateDusun();
     }
   }
 
@@ -4535,35 +4547,20 @@
 
       // Generate nomor urut baru mulai 001 di RT tujuan jika idPus kosong
       if (!idPus) {
-        const { data: matchedRows, error: errSearchSeq } = await db
-          .from('data_pus')
-          .select('id_pus')
-          .eq('kode_prov', kdProv)
-          .eq('kode_kab', kdKab)
-          .eq('kode_kec', kdKec)
-          .eq('kode_desa', kdDesa)
-          .eq('kode_dusun', kdDsn)
-          .eq('kode_rt', kdRt)
-          .eq('tahun', thn);
+        const { data: generatedId, error: rpcErr } = await db.rpc('generate_next_id_pus', {
+          p_kode_prov: kdProv,
+          p_kode_kab: kdKab,
+          p_kode_kec: kdKec,
+          p_kode_desa: kdDesa,
+          p_kode_dusun: kdDsn,
+          p_kode_rt: kdRt,
+          p_tahun: thn
+        });
 
-        if (errSearchSeq) throw errSearchSeq;
+        if (rpcErr) throw rpcErr;
+        if (!generatedId) throw new Error("Gagal membuat ID PUS otomatis.");
 
-        let maxSeq = 0;
-        if (matchedRows && matchedRows.length > 0) {
-          matchedRows.forEach(row => {
-            const cleanId = String(row.id_pus || "").trim();
-            if (cleanId.startsWith(expectedPrefix)) {
-              const seqStr = cleanId.slice(expectedPrefix.length).trim();
-              const seqPart = parseInt(seqStr, 10);
-              if (!isNaN(seqPart) && seqPart > maxSeq) {
-                maxSeq = seqPart;
-              }
-            }
-          });
-        }
-
-        const nextNum = maxSeq + 1;
-        idPus = `${expectedPrefix}${String(nextNum).padStart(3, '0')}`;
+        idPus = generatedId;
         document.getElementById("id_pus").value = idPus;
       }
 
@@ -6216,7 +6213,9 @@
     closeSearchModal();
     showFormView();
     document.getElementById("id_pus").value = d.id_pus;    
-    document.getElementById("old_id_pus").value = d.id_pus;
+    document.getElementById("original_id_pus").value = d.id_pus;
+    if (document.getElementById("original_kode_dusun")) document.getElementById("original_kode_dusun").value = d.kode_dusun;
+    if (document.getElementById("original_kode_rt")) document.getElementById("original_kode_rt").value = d.kode_rt;
     
     document.getElementById("tahun_input").value = d.tahun;
     setSelectValueCaseInsensitive("provinsi", d.kode_prov); updateKabupaten(d.kode_kab);
@@ -6253,10 +6252,8 @@
     }
 
     applyMutationAndAgeLocks();
-
     initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
 
-    // Tampilkan tombol hapus saat data dibuka untuk edit
     const delBtn = document.getElementById("btnDeletePus");
     if (delBtn) delBtn.style.display = "block";
   }
@@ -7613,12 +7610,19 @@ function onUserKabChange() {
     onChartTingkatChange();
   }
 
+  function resetFormToNew() {
+    resetInputForm();
+    const navRt = document.getElementById("navRTContainer");
+    if (navRt) navRt.style.display = "none";
+  }
+
   function resetInputForm() {
     document.getElementById("pusForm").reset();
     document.getElementById("id_pus").value = "";
-    document.getElementById("old_id_pus").value = "";
+    document.getElementById("original_id_pus").value = "";
+    if (document.getElementById("original_kode_dusun")) document.getElementById("original_kode_dusun").value = "";
+    if (document.getElementById("original_kode_rt")) document.getElementById("original_kode_rt").value = "";
 
-    // Sembunyikan bilah navigasi RT jika sebelumnya aktif
     const navRT = document.getElementById("navRTContainer");
     if (navRT) navRT.style.display = "none";
 
@@ -7632,18 +7636,15 @@ function onUserKabChange() {
     const dusunSel = document.getElementById("dusun");
     const rtSel    = document.getElementById("rt");
 
-    // Tetapkan kode provinsi aktif (dari sesi login atau default NTB '52')
-    const activeProv = userKodeProv || "52";
+    // Ambil kode provinsi secara dinamis dari sesi atau master data (Bebas '52')
+    const activeProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
 
-    // 1. Kunci Provinsi untuk SEMUA role (lingkup aplikasi berada di 1 provinsi)
     setSelectValueCaseInsensitive("provinsi", activeProv);
     document.getElementById("kode_prov").value = activeProv;
     provSel.style.pointerEvents = "none";
     provSel.style.backgroundColor = "#e9ecef";
 
-    // 2. LOGIKA KUNCI WILAYAH SESUAI ROLE LOGIN
     if (isDesaRole()) {
-      // User Desa: Kunci Kab, Kec, dan Desa
       updateKabupaten(userKodeKab);
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
@@ -7665,7 +7666,6 @@ function onUserKabChange() {
       rtSel.disabled = true;
 
     } else if (isKecRole()) {
-      // Admin Kec: Kunci Kab dan Kec. Buka Desa, Dusun, dan RT
       updateKabupaten(userKodeKab);
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
@@ -7687,7 +7687,6 @@ function onUserKabChange() {
       rtSel.disabled = true;
 
     } else if (isKabRole()) {
-      // Admin Kab: Kunci Kab saja. Buka Kecamatan s.d RT
       updateKabupaten(userKodeKab);
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
@@ -7709,12 +7708,12 @@ function onUserKabChange() {
       rtSel.disabled = true;
 
     } else {
-      // Admin Prov: Buka Kabupaten, Kecamatan, Desa, Dusun, dan RT
+      // Admin Prov: Kabupaten bebas dipilih
       kabSel.style.pointerEvents = "auto";
       kabSel.style.backgroundColor = "#ffffff";
       kabSel.disabled = false;
 
-      updateKabupaten(); // Menampilkan seluruh kabupaten di provinsi tersebut
+      updateKabupaten();
 
       resetDropdown("kecamatan", "kode_kec");
       resetDropdown("desa", "kode_desa");
@@ -7725,7 +7724,6 @@ function onUserKabChange() {
     checkJumlahAnak();
     applyMutationAndAgeLocks();
 
-    // Sembunyikan tombol hapus saat form di-reset ke data baru
     const delBtn = document.getElementById("btnDeletePus");
     if (delBtn) delBtn.style.display = "none";
   }
@@ -9483,22 +9481,35 @@ function onUserKabChange() {
       checkBukanPesertaJkn = true;
     }
 
-    const tglRef = item.tgl_rencana_layanan || new Date().toISOString().split('T')[0];
-    const [yLayanan, mLayanan, dLayanan] = tglRef.split('-');
+    // Format Tanggal Fleksibel
+    const rawTglRef = String(item.tgl_rencana_layanan || new Date().toISOString().split('T')[0]).replace(/\//g, '-').trim();
+    const pTgl = rawTglRef.split('-');
+    let yLayanan = String(new Date().getFullYear()), mLayanan = "01", dLayanan = "01";
 
-    const curKab = String(item.kode_kab || userKodeKab || "01").padStart(2, '0');
-    const curKec = String(item.kode_kec || "").padStart(2, '0');
-    const curDesa = String(item.kode_desa || "").padStart(4, '0');
+    if (pTgl.length === 3) {
+      if (pTgl[0].length === 4) {
+        yLayanan = pTgl[0];
+        mLayanan = pTgl[1].padStart(2, '0');
+        dLayanan = pTgl[2].padStart(2, '0');
+      } else {
+        dLayanan = pTgl[0].padStart(2, '0');
+        mLayanan = pTgl[1].padStart(2, '0');
+        yLayanan = pTgl[2];
+      }
+    }
+
+    // Resolusi Dinamis Wilayah Tanpa Nilai Statis '52' dan '01'
+    const curKab = String(item.kode_kab || userKodeKab || document.getElementById("kode_kab")?.value || "").padStart(2, '0');
+    const curKec = String(item.kode_kec || userKodeKec || "").padStart(2, '0');
+    const curDesa = String(item.kode_desa || userKodeDesa || "").padStart(4, '0');
     const curDsn = String(item.kode_dusun || "").padStart(4, '0');
+    const provKey = String(item.kode_prov || userKodeProv || Object.keys(dataProvinsi)[0] || "").padStart(2, '0');
 
-    const provKey = String(item.kode_prov || userKodeProv || "52").padStart(2, '0');
     let nmKab = item.kabupaten_nama || "";
     if (!nmKab && dataKabupaten[provKey] && dataKabupaten[provKey][curKab]) {
       nmKab = dataKabupaten[provKey][curKab];
     }
-    nmKab = nmKab || "KABUPATEN";
-
-    let nmProv = item.provinsi_nama || (provKey && dataProvinsi[provKey]) || Object.values(dataProvinsi)[0] || "PROVINSI";
+    nmKab = nmKab || "KABUPATEN/KOTA";
 
     const nmKec = (dataKecamatan[curKab] && dataKecamatan[curKab][curKec]) ? dataKecamatan[curKab][curKec] : (item.kecamatan_nama || curKec || '-');
     const compositeDesaKey = curKab + "_" + curKec;
