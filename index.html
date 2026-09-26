@@ -795,8 +795,10 @@
           </table>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 25px;">
-          <button type="submit" id="submitBtn" class="btn-submit" style="margin-top: 0; flex: 3;">SIMPAN DATA</button>
-          <button type="button" id="btnDeletePus" class="btn-submit btn-danger" style="margin-top: 0; flex: 1; display: none; background-color: #ef4444;" onclick="handleDeleteCurrentPus()">🗑️ HAPUS</button>
+          <button type="submit" id="submitBtn" class="btn-submit" style="margin-top: 0; flex: 2;">SIMPAN DATA PUS</button>
+          <button type="button" id="btnDeletePus" class="btn-nav btn-danger" style="display: none; flex: 1; justify-content: center; font-size: 14px; font-weight: bold; border-radius: 6px; padding: 14px;" onclick="handleDeleteFromForm()">
+            🗑️ HAPUS
+          </button>
         </div>
       </form>
     </div>
@@ -2080,7 +2082,7 @@
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let currentUser = "";
-  let userNamaLengkap = "";
+  let currentNamaLengkap = "";
   let userRole = "";
   let userKodeProv = "";
   let userKodeKab = "";
@@ -2836,15 +2838,10 @@
     }
     return kdDesa;
   }
-
+    
   function isProvRole() {
     const r = String(userRole || "").toUpperCase();
     return r.includes("PROV");
-  }
-  
-  function isProvRole() {
-  const r = String(userRole || "").toUpperCase();
-  return r.includes("PROV");
   }
 
   function isKabRole() {
@@ -4401,56 +4398,72 @@
   }
   
   // Fungsi menghapus data yang sedang dibuka di Form Input
-  async function handleDeleteCurrentPus() {
+  function handleDeleteFromForm() {
     const idPus = document.getElementById("id_pus").value.trim();
-    const tahun = document.getElementById("tahun_input").value;
+    const tahun = parseInt(document.getElementById("tahun_input").value, 10);
     const namaIstri = document.getElementById("nama_istri").value.trim();
 
-    if (!idPus) {
-      Swal.fire("Perhatian", "Tidak ada data keluarga yang sedang dipilih untuk dihapus.", "warning");
-      return;
-    }
+    if (!idPus) return;
 
-    confirmDeletePus(idPus, tahun, namaIstri, () => {      
-      navRtDataList = [];
-      navRtCurrentIndex = -1;
-      resetInputForm();      
-
-      Swal.fire("Terhapus!", `Data keluarga [${namaIstri}] (${idPus}) telah dihapus.`, "success");
+    confirmDeletePus(idPus, tahun, namaIstri, () => {
+      // Callback setelah berhasil dihapus dari form: kosongkan form
+      resetInputForm();
+      const navRt = document.getElementById("navRTContainer");
+      if (navRt) navRt.style.display = "none";
     });
   }
 
   // Fungsi reusable untuk konfirmasi hapus data PUS (dipakai di Form maupun Hasil Pencarian)
   function confirmDeletePus(idPus, tahun, namaIstri, onSuccessCallback) {
     Swal.fire({
-      title: 'Hapus Data Keluarga?',
-      html: `Apakah Anda yakin ingin menghapus data keluarga:<br><b>${namaIstri || '-'}</b><br><span style="font-family: monospace; color: #dc2626;">ID PUS: ${idPus} (Tahun ${tahun})</span>?`,
+      title: 'Hapus Data PUS?',
+      html: `Apakah Anda yakin ingin menghapus data PUS <b>${namaIstri}</b><br>(ID: <span style="font-family:monospace; color:#dc2626;">${idPus}</span> - Tahun ${tahun})?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: '#64748b',
-      confirmButtonText: 'Ya, Hapus Data!',
+      confirmButtonText: 'Ya, Hapus!',
       cancelButtonText: 'Batal',
       reverseButtons: true
     }).then(async (result) => {
       if (result.isConfirmed) {
-        Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        
         try {
-          const { error } = await db
-            .from('data_pus')
+          Swal.fire({
+            title: 'Menghapus...',
+            text: 'Sedang menghapus data dari database...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+
+          const { error } = await db.from('data_pus')
             .delete()
             .eq('id_pus', idPus)
             .eq('tahun', tahun);
 
           if (error) throw error;
 
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil Dihapus',
+            text: `Data PUS ${idPus} telah dihapus dari database.`,
+            timer: 1500,
+            showConfirmButton: false
+          });
+
+          // Jalankan callback jika dipanggil dari form
           if (typeof onSuccessCallback === "function") {
             onSuccessCallback();
           }
+
+          // Jika modal pencarian sedang aktif terbuka, segarkan hasilnya
+          const searchModal = document.getElementById("searchModal");
+          if (searchModal && searchModal.style.display === "block") {
+            executeSearch();
+          }
+
         } catch (err) {
           console.error("Delete Error:", err);
-          Swal.fire("Gagal Hapus", err.message || "Terjadi kesalahan saat menghapus data.", "error");
+          Swal.fire('Gagal Menghapus', err.message || 'Terjadi kesalahan sistem saat menghapus data.', 'error');
         }
       }
     });
@@ -4731,7 +4744,7 @@
 
       // Tampilkan tombol Hapus Data      
       const btnDel = document.getElementById("btnDeletePus");
-      if (btnDel) btnDel.style.display = "block";
+      if (btnDel) btnDel.style.display = "flex";
 
       // Aktifkan navigasi RT
       const namaDsnText = document.getElementById("dusun").options[document.getElementById("dusun").selectedIndex]?.text || "";
@@ -6294,8 +6307,8 @@
     applyMutationAndAgeLocks();
     initNavigationRT(d.kode_kec, d.kode_desa, d.kode_dusun, d.kode_rt, d.tahun, d.id_pus, d.dusun_nama);
 
-    const delBtn = document.getElementById("btnDeletePus");
-    if (delBtn) delBtn.style.display = "block";
+    const btnDel = document.getElementById("btnDeletePus");
+    if (btnDel) btnDel.style.display = "flex";
   }
 
   function exportBnbaToExcel() {
@@ -6580,116 +6593,89 @@
     }
   }
 
-   function resetMwForm() {
+  function resetMwForm() {
     document.getElementById("mw_id").value = "";
     document.getElementById("mw_dusun_nama").value = "";
+    document.getElementById("mw_kode_dusun").value = "";
     document.getElementById("mw_jumlah_rt").value = "1";
     document.getElementById("btnSaveMw").innerText = "💾 SIMPAN WILAYAH";
-
-    const inKecKode = document.getElementById("mw_kode_kec");
-    const inDesaKode = document.getElementById("mw_kode_desa");
-    const inDusunKode = document.getElementById("mw_kode_dusun");
-
-    if (inKecKode) { inKecKode.value = ""; inKecKode.readOnly = false; inKecKode.style.backgroundColor = "#ffffff"; }
-    if (inDesaKode) { inDesaKode.value = ""; inDesaKode.readOnly = false; inDesaKode.style.backgroundColor = "#ffffff"; }
-    if (inDusunKode) { inDusunKode.value = ""; inDusunKode.readOnly = false; inDusunKode.style.backgroundColor = "#ffffff"; }
-
-    const inKecNama = document.getElementById("mw_kecamatan_nama");
-    const inDesaNama = document.getElementById("mw_desa_nama");
-
-    if (inKecNama) { inKecNama.value = ""; inKecNama.readOnly = false; inKecNama.style.backgroundColor = "#ffffff"; }
-    if (inDesaNama) { inDesaNama.value = ""; inDesaNama.readOnly = false; inDesaNama.style.backgroundColor = "#ffffff"; }
 
     const inProvNama = document.getElementById("mw_provinsi_nama");
     const inProvKode = document.getElementById("mw_kode_prov");
     const inKabNama  = document.getElementById("mw_kabupaten_nama");
     const inKabKode  = document.getElementById("mw_kode_kab");
+    const inKecNama  = document.getElementById("mw_kecamatan_nama");
+    const inKecKode  = document.getElementById("mw_kode_kec");
+    const inDesaNama = document.getElementById("mw_desa_nama");
+    const inDesaKode = document.getElementById("mw_kode_desa");
+    const inDsnNama  = document.getElementById("mw_dusun_nama");
+    const inDsnKode  = document.getElementById("mw_kode_dusun");
 
-    // Ambil nama kabupaten dari cache jika ada
-    let namaKab = "";
-    if (userKodeKab && dataKabupaten[userKodeProv || "52"]) {
-      namaKab = dataKabupaten[userKodeProv || "52"][userKodeKab] || "";
+    if (!isDesaRole()) {
+      inDesaNama.value = "";
+      inDesaKode.value = "";
+    }
+    if (!isDesaRole() && !isKecRole()) {
+      inKecNama.value = "";
+      inKecKode.value = "";
+    }
+    if (!isDesaRole() && !isKecRole() && !isKabRole()) {
+      inKabNama.value = "";
+      inKabKode.value = "";
     }
 
-    // Cek apakah data kecamatan untuk kode login ini sudah terdaftar
-    let namaKec = "";
-    let isKecRegisteredInDB = false;
-    if (userKodeKab && dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
-      namaKec = dataKecamatan[userKodeKab][userKodeKec];
-      isKecRegisteredInDB = true;
-    }
+    const setFieldLock = (inputNama, inputKode, shouldLock, valNama = "", valKode = "") => {
+      const actuallyLock = Boolean(shouldLock && valNama && valKode);
+      inputNama.value = actuallyLock ? valNama : (shouldLock ? "" : inputNama.value);
+      inputKode.value = actuallyLock ? valKode : (shouldLock ? "" : inputKode.value);
 
-    // =========================================================================
-    // HIERARKI PENGUNCIAN MASTER WILAYAH
-    // =========================================================================
-    if (isKecRole() && isKecRegisteredInDB) {
-      // 1. ADMIN KECAMATAN: Kunci Provinsi, Kabupaten, dan Kecamatan
-      const defaultKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-      const defaultNmProv = dataProvinsi[defaultKdProv] || "";
+      inputNama.readOnly = actuallyLock;
+      inputKode.readOnly = actuallyLock;
+      inputNama.style.backgroundColor = actuallyLock ? "#e9ecef" : "#ffffff";
+      inputKode.style.backgroundColor = actuallyLock ? "#e9ecef" : "#ffffff";
+    };
 
-      inProvNama.value = defaultNmProv;
-      inProvKode.value = defaultKdProv;
-      inProvNama.readOnly = true; inProvKode.readOnly = true;
-      inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
+    let curKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+    let curNamaProv = dataProvinsi[curKdProv] || "";
 
-      inKabNama.value = namaKab;
-      inKabKode.value = userKodeKab;
-      inKabNama.readOnly = true; inKabKode.readOnly = true;
-      inKabNama.style.backgroundColor = "#e9ecef"; inKabKode.style.backgroundColor = "#e9ecef";
+    let curKdKab = userKodeKab || "";
+    let curNamaKab = (curKdProv && curKdKab && dataKabupaten[curKdProv]?.[curKdKab]) ? dataKabupaten[curKdProv][curKdKab] : "";
 
-      inKecNama.value = namaKec;
-      inKecKode.value = userKodeKec;
-      inKecNama.readOnly = true; inKecKode.readOnly = true;
-      inKecNama.style.backgroundColor = "#e9ecef"; inKecKode.style.backgroundColor = "#e9ecef";
+    let curKdKec = userKodeKec || "";
+    let curNamaKec = (curKdKab && curKdKec && dataKecamatan[curKdKab]?.[curKdKec]) ? dataKecamatan[curKdKab][curKdKec] : "";
 
-      inDesaNama.readOnly = false; inDesaKode.readOnly = false;
-      inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
+    let curKdDesa = userKodeDesa || "";
+    let curNamaDesa = (curKdKec && curKdDesa) ? getNamaDesaByKode(curKdKec, curKdDesa, curKdKab) : "";
 
-    // >>> POTONGAN KODE ANDA DILETAKKAN DI SINI <<<
+    const hasProv = Boolean(curNamaProv && curKdProv);
+    const hasKab  = Boolean(curNamaKab && curKdKab);
+    const hasKec  = Boolean(curNamaKec && curKdKec);
+    const hasDesa = Boolean(curNamaDesa && curKdDesa);
+
+    if (isDesaRole()) {
+      setFieldLock(inProvNama, inProvKode, hasProv, curNamaProv, curKdProv);
+      setFieldLock(inKabNama, inKabKode, hasKab, curNamaKab, curKdKab);
+      setFieldLock(inKecNama, inKecKode, hasKec, curNamaKec, curKdKec);
+      setFieldLock(inDesaNama, inDesaKode, hasDesa, curNamaDesa, curKdDesa);
+      setFieldLock(inDsnNama, inDsnKode, false, "", "");
+    } else if (isKecRole()) {
+      setFieldLock(inProvNama, inProvKode, hasProv, curNamaProv, curKdProv);
+      setFieldLock(inKabNama, inKabKode, hasKab, curNamaKab, curKdKab);
+      setFieldLock(inKecNama, inKecKode, hasKec, curNamaKec, curKdKec);
+      setFieldLock(inDesaNama, inDesaKode, false, "", "");
+      setFieldLock(inDsnNama, inDsnKode, false, "", "");
     } else if (isKabRole()) {
-      // 2. ADMIN KABUPATEN: Kunci Provinsi dan Kabupaten saja. Kecamatan & Desa terbuka
-      const defaultKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-      const defaultNmProv = dataProvinsi[defaultKdProv] || "";
-
-      inProvNama.value = defaultNmProv;
-      inProvKode.value = defaultKdProv;
-      inProvNama.readOnly = true; inProvKode.readOnly = true;
-      inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
-
-      inKabNama.value = namaKab;
-      inKabKode.value = userKodeKab;
-      inKabNama.readOnly = true; inKabKode.readOnly = true;
-      inKabNama.style.backgroundColor = "#e9ecef"; inKabKode.style.backgroundColor = "#e9ecef";
-
-      inKecNama.value = ""; inKecKode.value = "";
-      inKecNama.readOnly = false; inKecKode.readOnly = false;
-      inKecNama.style.backgroundColor = "#ffffff"; inKecKode.style.backgroundColor = "#ffffff";
-
-      inDesaNama.value = ""; inDesaKode.value = "";
-      inDesaNama.readOnly = false; inDesaKode.readOnly = false;
-      inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
-
+      setFieldLock(inProvNama, inProvKode, hasProv, curNamaProv, curKdProv);
+      setFieldLock(inKabNama, inKabKode, hasKab, curNamaKab, curKdKab);
+      setFieldLock(inKecNama, inKecKode, false, "", "");
+      setFieldLock(inDesaNama, inDesaKode, false, "", "");
+      setFieldLock(inDsnNama, inDsnKode, false, "", "");
     } else {
-      // 3. ADMIN PROVINSI: Kunci Provinsi saja, Kabupaten ke bawah bebas diinput
-      const defaultKdProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-      const defaultNmProv = dataProvinsi[defaultKdProv] || "";
-
-      inProvNama.value = defaultNmProv;
-      inProvKode.value = defaultKdProv;
-      inProvNama.readOnly = true; inProvKode.readOnly = true;
-      inProvNama.style.backgroundColor = "#e9ecef"; inProvKode.style.backgroundColor = "#e9ecef";
-
-      inKabNama.value = ""; inKabKode.value = "";
-      inKabNama.readOnly = false; inKabKode.readOnly = false;
-      inKabNama.style.backgroundColor = "#ffffff"; inKabKode.style.backgroundColor = "#ffffff";
-
-      inKecNama.value = ""; inKecKode.value = "";
-      inKecNama.readOnly = false; inKecKode.readOnly = false;
-      inKecNama.style.backgroundColor = "#ffffff"; inKecKode.style.backgroundColor = "#ffffff";
-
-      inDesaNama.value = ""; inDesaKode.value = "";
-      inDesaNama.readOnly = false; inDesaKode.readOnly = false;
-      inDesaNama.style.backgroundColor = "#ffffff"; inDesaKode.style.backgroundColor = "#ffffff";
+      setFieldLock(inProvNama, inProvKode, hasProv, curNamaProv, curKdProv);
+      setFieldLock(inKabNama, inKabKode, false, "", "");
+      setFieldLock(inKecNama, inKecKode, false, "", "");
+      setFieldLock(inDesaNama, inDesaKode, false, "", "");
+      setFieldLock(inDsnNama, inDsnKode, false, "", "");
     }
   }
   
@@ -7764,8 +7750,8 @@ function onUserKabChange() {
     checkJumlahAnak();
     applyMutationAndAgeLocks();
 
-    const delBtn = document.getElementById("btnDeletePus");
-    if (delBtn) delBtn.style.display = "none";
+    const btnDel = document.getElementById("btnDeletePus");
+    if (btnDel) btnDel.style.display = "none";
   }
 
   function togglePassword() {
