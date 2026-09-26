@@ -4110,39 +4110,39 @@
     }
     
     const targetProv = String(item.kode_prov_tujuan || userKodeProv || payloadData.kode_prov || Object.keys(dataProvinsi)[0] || "").trim().padStart(2, '0');
-    const targetKab  = String(item.kode_kab_tujuan || userKodeKab || payloadData.kode_kab || "").trim().padStart(2, '0');
-    const targetKec  = String(item.kode_kec_tujuan || userKodeKec || payloadData.kode_kec || "").trim().padStart(2, '0');
-    const targetDesa = String(item.kode_desa_tujuan || userKodeDesa || payloadData.kode_desa || "").trim().padStart(4, '0');
+    const targetKab  = String(item.kode_kab_tujuan || payloadData.kode_kab || "").trim().padStart(2, '0');
+    const targetKec  = String(item.kode_kec_tujuan || payloadData.kode_kec || "").trim().padStart(2, '0');
+    const targetDesa = String(item.kode_desa_tujuan || payloadData.kode_desa || "").trim().padStart(4, '0');
     const targetDsn  = String(item.kode_dusun_tujuan || payloadData.kode_dusun || "").trim().padStart(4, '0');
     
     if (targetProv) {
       setSelectValueCaseInsensitive("provinsi", targetProv);
       document.getElementById("kode_prov").value = targetProv;
       updateKabupaten(targetKab);
-      
-      if (targetKab) {
-        setSelectValueCaseInsensitive("kabupaten", targetKab);
-        document.getElementById("kode_kab").value = targetKab;
-        updateKecamatan(targetKec);
-        
-        if (targetKec) {
-          setSelectValueCaseInsensitive("kecamatan", targetKec);
-          document.getElementById("kode_kec").value = targetKec;
-          updateDesa(targetDesa);
-          
-          if (targetDesa) {
-            setSelectValueCaseInsensitive("desa", targetDesa);
-            document.getElementById("kode_desa").value = targetDesa;
-            updateDusun(cleanTargetDusunValid(targetDsn) ? targetDsn : "");
-            
-            if (cleanTargetDusunValid(targetDsn)) {
-              setSelectValueCaseInsensitive("dusun", targetDsn);
-              document.getElementById("kode_dusun").value = targetDsn;
-              updateRT();
-            }
-          }
-        }
-      }
+    }
+    
+    if (targetKab) {
+      setSelectValueCaseInsensitive("kabupaten", targetKab);
+      document.getElementById("kode_kab").value = targetKab;
+      updateKecamatan(targetKec);
+    }
+    
+    if (targetKec) {
+      setSelectValueCaseInsensitive("kecamatan", targetKec);
+      document.getElementById("kode_kec").value = targetKec;
+      updateDesa(targetDesa);
+    }
+    
+    if (targetDesa) {
+      setSelectValueCaseInsensitive("desa", targetDesa);
+      document.getElementById("kode_desa").value = targetDesa;
+      updateDusun(cleanTargetDusunValid(targetDsn) ? targetDsn : "");
+    }
+    
+    if (cleanTargetDusunValid(targetDsn)) {
+      setSelectValueCaseInsensitive("dusun", targetDsn);
+      document.getElementById("kode_dusun").value = targetDsn;
+      updateRT();
     }
     
     document.getElementById("nama_suami").value = payloadData.nama_suami || item.nama_suami || "";
@@ -4169,11 +4169,10 @@
 
     applyMutationAndAgeLocks();
 
-    const infoAsal = `Asal: Desa ${item.desa_asal || '-'}, Kab. ${item.kabupaten_asal || '-'}`;
     Swal.fire({
       icon: 'info',
       title: 'Data Mutasi Dimuat!',
-      html: `Data PUS <b>${item.nama_istri}</b> berhasil dimuat.<br><small style="color:#64748b;">${infoAsal}</small><br><br>Silakan periksa atau lengkapi Dusun & RT tujuan, lalu klik <b>SIMPAN DATA</b>.`
+      html: `Data PUS <b>${item.nama_istri}</b> berhasil dimuat.<br>Tujuan: <b>${item.kabupaten_tujuan || '-'}, Kec. ${item.kecamatan_tujuan || '-'}, Desa ${item.desa_tujuan || '-'}</b>.<br><br>Silakan lengkapi Dusun & RT, lalu klik <b>SIMPAN DATA PUS</b>.`
     });
   }
 
