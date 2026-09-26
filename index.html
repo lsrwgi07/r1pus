@@ -2801,6 +2801,46 @@
 
     return null;
   }
+
+  function getDesaList(kdKec, kdKab = "") {
+    if (!kdKec) return null;
+    let cleanKab = String(kdKab || userKodeKab || document.getElementById("kode_kab")?.value || "").padStart(2, '0');
+    let cleanKec = String(kdKec).padStart(2, '0');
+    
+    if (cleanKab && cleanKab !== "00") {
+      let compositeKey = cleanKab + "_" + cleanKec;
+      if (dataDesa[compositeKey] && Object.keys(dataDesa[compositeKey]).length > 0) {
+        return dataDesa[compositeKey];
+      }
+    }
+    
+    if (dataDesa[cleanKec] && Object.keys(dataDesa[cleanKec]).length > 0) {
+      return dataDesa[cleanKec];
+    }
+    
+    for (let k in dataDesa) {
+      if (k.endsWith("_" + cleanKec) && Object.keys(dataDesa[k]).length > 0) {
+        return dataDesa[k];
+      }
+    }
+
+    return null;
+  }
+  
+  function getNamaDesaByKode(kdKec, kdDesa, kdKab = "") {
+    if (!kdDesa) return "-";
+    let cleanDesa = String(kdDesa).padStart(4, '0');
+    const desas = getDesaList(kdKec, kdKab);
+    if (desas && desas[cleanDesa]) {
+      return desas[cleanDesa];
+    }
+    return kdDesa;
+  }
+
+  function isProvRole() {
+    const r = String(userRole || "").toUpperCase();
+    return r.includes("PROV");
+  }
   
   function isProvRole() {
   const r = String(userRole || "").toUpperCase();
