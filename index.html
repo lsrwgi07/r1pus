@@ -383,13 +383,32 @@
 
     #filterExpLayananDesaGrid {
       display: grid !important;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+      grid-template-columns: repeat(4, 1fr) !important; /* Mode PC: 4 Kolom */
       gap: 8px !important;
-      max-height: 200px !important;
+      max-height: 180px !important;
       overflow-y: auto !important;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      padding: 10px;
+      border-radius: 6px;
       box-sizing: border-box !important;
     }
 
+    /* Mode Tablet (iPad / Layar Medium <= 992px): 3 Kolom */
+    @media (max-width: 992px) {
+      #filterExpLayananDesaGrid {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+    }
+
+    /* Mode Tablet Kecil (Layar <= 768px): 2 Kolom */
+    @media (max-width: 768px) {
+      #filterExpLayananDesaGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    /* Mode HP / Smartphone (Layar <= 480px): 1 Kolom Penuh */
     @media (max-width: 480px) {
       #filterExpLayananDesaGrid {
         grid-template-columns: 1fr !important;
