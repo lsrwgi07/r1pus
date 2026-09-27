@@ -381,6 +381,53 @@
       }
     }
 
+    .filter-btn-group {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .filter-btn-group button {
+      width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 12px 14px !important;
+      font-size: 13px !important;
+      font-weight: bold !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+      white-space: nowrap;
+    }
+    
+    @media (min-width: 601px) and (max-width: 992px) {
+      .filter-btn-group-3col {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+      .filter-btn-group-chart {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .filter-btn-group-3col,
+      .filter-btn-group-chart {
+        grid-template-columns: 1fr !important;
+      }
+      .chart-filter-inputs,
+      .recap-date-inputs {
+        flex-direction: column !important;
+      }
+      .chart-filter-inputs select,
+      .recap-date-inputs select {
+        width: 100% !important;
+      }
+    }
+
     #filterExpLayananDesaGrid {
       display: grid !important;
       grid-template-columns: repeat(4, 1fr) !important; /* Mode PC: 4 Kolom */
@@ -921,10 +968,17 @@
             </div>
         </div>
         
-        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-          <button type="button" class="btn-action" style="padding: 12px 20px; flex: 1; min-width: 160px;" onclick="fetchRecap()">📊 TAMPILKAN REKAP</button>
-          <button type="button" class="btn-nav btn-warning" style="padding: 12px 15px;" onclick="exportRecapToExcel()">📥 EKSPOR EXCEL</button>
-          <button type="button" class="btn-nav btn-danger" style="padding: 12px 15px;" onclick="exportRecapToPDF()">📄 EKSPOR PDF</button>
+        <!-- Dropdown Tahun & Bulan diberi class recap-date-inputs -->
+        <div class="recap-date-inputs" style="display: flex; gap: 10px;">
+          <select id="recapTahun" style="flex:1;">...</select>
+          <select id="recapBulan" style="flex:1;">...</select>
+        </div>
+
+        <!-- Kontainer Tombol Rekap -->
+        <div class="filter-btn-group filter-btn-group-3col">
+          <button type="button" class="btn-action" onclick="fetchRecap()">📊 TAMPILKAN REKAP</button>
+          <button type="button" class="btn-nav btn-warning" onclick="exportRecapToExcel()">📥 EKSPOR EXCEL</button>
+          <button type="button" class="btn-nav btn-danger" onclick="exportRecapToPDF()">📄 EKSPOR PDF</button>
         </div>
       </div>
 
@@ -1087,10 +1141,10 @@
           </div>
         </div>
 
-          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-            <button type="button" class="btn-action" style="padding: 12px 20px; flex: 1; min-width: 160px;" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
-            <button type="button" class="btn-nav btn-warning" style="padding: 12px 15px;" onclick="exportBnbaToExcel()">📥 EKSPOR EXCEL</button>
-            <button type="button" class="btn-nav btn-danger" style="padding: 12px 15px;" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
+          <div class="filter-btn-group filter-btn-group-3col">
+            <button type="button" class="btn-action" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
+            <button type="button" class="btn-nav btn-warning" onclick="exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS')">📥 EKSPOR EXCEL</button>
+            <button type="button" class="btn-nav btn-danger" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
           </div>
         </div>
 
@@ -1144,7 +1198,7 @@
           <div id="chartFilterDusunContainer" style="display: none;">
             <select id="chartDusun"><option value="">-- PILIH DUSUN --</option></select>
           </div>
-          <div style="display: flex; gap: 10px;">
+          <div class="chart-filter-inputs" style="display: flex; gap: 10px;">
             <select id="chartTahun" style="flex:1;">
               <option value="2025">2025</option>
               <option value="2026">2026</option>
@@ -1175,9 +1229,9 @@
             </select>
           </div>
         </div>
-        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-          <button type="button" class="btn-action" style="padding: 12px 20px; flex: 2; min-width: 180px;" onclick="fetchChartData()">📈 TAMPILKAN GRAFIK</button>
-          <button type="button" class="btn-nav btn-danger" style="padding: 12px 18px; flex: 1; min-width: 150px; justify-content: center;" onclick="exportChartsToPDF()">📄 EKSPOR LAPORAN PDF</button>
+        <div class="filter-btn-group filter-btn-group-chart">
+          <button type="button" class="btn-action" onclick="fetchChartData()">📈 TAMPILKAN GRAFIK</button>
+          <button type="button" class="btn-nav btn-danger" onclick="exportChartsToPDF()">📄 EKSPOR LAPORAN PDF</button>
         </div>
       </div>
 
