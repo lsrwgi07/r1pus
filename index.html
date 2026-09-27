@@ -415,6 +415,40 @@
       }
     }
 
+    #filterExpLayananDusunGrid {
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr) !important; /* Mode PC: 4 Kolom */
+      gap: 8px !important;
+      max-height: 180px !important;
+      overflow-y: auto !important;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      padding: 10px;
+      border-radius: 6px;
+      box-sizing: border-box !important;
+    }
+
+    /* Tablet (<= 992px): 3 Kolom */
+    @media (max-width: 992px) {
+      #filterExpLayananDusunGrid {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+    }
+
+    /* Tablet Kecil (<= 768px): 2 Kolom */
+    @media (max-width: 768px) {
+      #filterExpLayananDusunGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    /* Mobile / HP (<= 480px): 1 Kolom Penuh Pas di Layar */
+    @media (max-width: 480px) {
+      #filterExpLayananDusunGrid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
     .chart-container { position: relative; height: 250px; width: 100%; }    
 
     .sheet-a4 {
@@ -490,14 +524,7 @@
       }
       #layananTabAntrean div[style*="grid-template-columns: minmax(180px"] button {
         width: 100% !important;
-      }
-      
-      #filterExpLayananDesaGrid,
-      #filterExpLayananDusunGrid {
-        grid-template-columns: 1fr !important;
-        width: 100% !important;
-        max-height: 180px !important;
-      }
+      }      
       
       #layananTabAntrean div[style*="border-top: 1px solid #e2e8f0"] {
         flex-direction: column !important;
@@ -9259,9 +9286,14 @@ function onUserKabChange() {
   function renderLayananDusunCheckboxes(kdKec, kdDesa, kdKab) {
     const wrapper = document.getElementById("filterExpLayananDusunWrapper");
     const grid = document.getElementById("filterExpLayananDusunGrid");
+    if (!wrapper || !grid) return;
     grid.innerHTML = "";
 
-    const dsnMap = getDusunList(kdKec, kdDesa, kdKab);
+    const cleanKab = String(kdKab || userKodeKab || "01").padStart(2, '0');
+    const cleanKec = String(kdKec).padStart(2, '0');
+    const cleanDesa = String(kdDesa).padStart(4, '0');
+    const dsnMap = getDusunList(cleanKec, cleanDesa, cleanKab);
+
     if (!dsnMap || Object.keys(dsnMap).length === 0) {
       wrapper.style.display = "none";
       loadAntreanLayananTable();
@@ -9269,6 +9301,7 @@ function onUserKabChange() {
     }
 
     wrapper.style.display = "block";
+
     for (let kd in dsnMap) {
       let cleanKd = String(kd).padStart(4, '0');
       if (isDesaRole() && userAllowedDusun && userAllowedDusun.length > 0) {
@@ -9276,10 +9309,26 @@ function onUserKabChange() {
       }
 
       const label = document.createElement("label");
-      label.style.cssText = "display: flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; color: #334155;";
+      label.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #1e293b;
+        background: #f8fafc;
+        padding: 6px 10px;
+        border-radius: 5px;
+        border: 1.5px solid #cbd5e1;
+        cursor: pointer;
+        box-sizing: border-box;
+        min-height: 38px;
+        min-width: 0;
+        width: 100%;
+      `;
       label.innerHTML = `
-        <input type="checkbox" name="cb_layanan_dusun" value="${cleanKd}" onchange="loadAntreanLayananTable()" style="accent-color: #0284c7;">
-        <span>${dsnMap[kd].nama}</span>
+        <input type="checkbox" name="cb_layanan_dusun" value="${cleanKd}" onchange="loadAntreanLayananTable()" style="width: 16px; height: 16px; flex-shrink: 0; margin: 0; accent-color: #0284c7; cursor: pointer;">
+        <span style="white-space: normal; line-height: 1.25; overflow: visible; text-overflow: unset; word-break: break-word;">${dsnMap[kd].nama}</span>
       `;
       grid.appendChild(label);
     }
