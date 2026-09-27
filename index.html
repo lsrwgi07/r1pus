@@ -428,6 +428,74 @@
       }
     }
 
+    .filter-grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .filter-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .action-btn-grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .action-btn-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .action-btn-grid-3col button,
+    .action-btn-grid-2col button {
+      width: 100% !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 12px 10px !important;
+      font-size: 13px !important;
+      font-weight: bold !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+      white-space: nowrap;
+    }
+    
+    .filter-grid-3col select,
+    .filter-grid-2col select {
+      width: 100% !important;
+      height: 42px !important;
+      padding: 8px 12px !important;
+      font-size: 13px !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+    }
+    
+    @media (max-width: 600px) {
+      .filter-grid-3col,
+      .filter-grid-2col,
+      .action-btn-grid-3col,
+      .action-btn-grid-2col {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
     #filterExpLayananDesaGrid {
       display: grid !important;
       grid-template-columns: repeat(4, 1fr) !important; /* Mode PC: 4 Kolom */
@@ -908,24 +976,52 @@
       <h2>REKAPITULASI PUS & KESERTAAN KB</h2>
       
       <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-          <div>
-            <select id="recapTingkat" onchange="onRecapTingkatChange()">
-              <option value="">-- PILIH LEVEL REKAP --</option>
-              <option value="Provinsi">REKAP PROVINSI</option>
-              <option value="Kabupaten">REKAP KABUPATEN</option>
-              <option value="Kecamatan">REKAP KECAMATAN</option>
-              <option value="Desa">REKAP DESA</option>
-              <option value="Dusun">REKAP DUSUN</option>
-            </select>
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+          
+          <!-- Baris 1: Level Rekap, Tahun, dan Bulan (Sejajar 3 Kolom Sama Lebar) -->
+          <div class="filter-grid-3col">
+            <div>
+              <select id="recapTingkat" onchange="onRecapTingkatChange()">
+                <option value="">-- PILIH LEVEL REKAP --</option>
+                <!-- Untuk index_prov tambahkan: <option value="Provinsi">REKAP PROVINSI</option> -->
+                <option value="Kabupaten">REKAP KABUPATEN</option>
+                <option value="Kecamatan">REKAP KECAMATAN</option>
+                <option value="Desa">REKAP DESA</option>
+                <option value="Dusun">REKAP DUSUN</option>
+              </select>
+            </div>
+            <div>
+              <select id="recapTahun">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+                <option value="2030">2030</option>
+                <option value="2031">2031</option>
+                <option value="2032">2032</option>
+                <option value="2033">2033</option>
+                <option value="2034">2034</option>
+                <option value="2035">2035</option>
+              </select>
+            </div>
+            <div>
+              <select id="recapBulan">
+                <option value="" selected>-- PILIH BULAN --</option>
+                <option value="1">JANUARI</option><option value="2">FEBRUARI</option>
+                <option value="3">MARET</option><option value="4">APRIL</option>
+                <option value="5">MEI</option><option value="6">JUNI</option>
+                <option value="7">JULI</option><option value="8">AGUSTUS</option>
+                <option value="9">SEPTEMBER</option><option value="10">OKTOBER</option>
+                <option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+              </select>
+            </div>
           </div>
           
+          <!-- Dropdown Filter Turunan Wilayah (Jika Dipilih) -->
           <div id="recapFilterKabContainer" style="display: none;">
-            <select id="recapKabupaten" onchange="onRecapKabupatenChange()">
-              <option value="">-- PILIH KABUPATEN/KOTA --</option>
-            </select>
+            <select id="recapKabupaten" onchange="onRecapKabupatenChange()"><option value="">-- PILIH KABUPATEN/KOTA --</option></select>
           </div>
-
           <div id="recapFilterKecContainer" style="display: none;">
             <select id="recapKecamatan" onchange="onRecapKecamatanChange()"><option value="">-- PILIH KECAMATAN --</option></select>
           </div>
@@ -935,40 +1031,10 @@
           <div id="recapFilterDusunContainer" style="display: none;">
             <select id="recapDusun"><option value="">-- PILIH DUSUN --</option></select>
           </div>
-          
-          <div class="recap-date-inputs" style="display: flex; gap: 10px;">
-            <select id="recapTahun" style="flex:1;">
-              <option value="2025">2025</option>
-              <option value="2026">2026</option>
-              <option value="2027">2027</option>
-              <option value="2028">2028</option>
-              <option value="2029">2029</option>
-              <option value="2030">2030</option>
-              <option value="2031">2031</option>
-              <option value="2032">2032</option>
-              <option value="2033">2033</option>
-              <option value="2034">2034</option>
-              <option value="2035">2035</option>
-            </select>
-            <select id="recapBulan" style="flex:1;">
-              <option value="" selected>-- PILIH BULAN --</option>
-              <option value="1">JANUARI</option>
-              <option value="2">FEBRUARI</option>
-              <option value="3">MARET</option>
-              <option value="4">APRIL</option>
-              <option value="5">MEI</option>
-              <option value="6">JUNI</option>
-              <option value="7">JULI</option>
-              <option value="8">AGUSTUS</option>
-              <option value="9">SEPTEMBER</option>
-              <option value="10">OKTOBER</option>
-              <option value="11">NOVEMBER</option>
-              <option value="12">DESEMBER</option>
-            </select>
-            </div>
         </div>
         
-        <div class="filter-btn-group filter-btn-group-3col">
+        <!-- Baris 2: 3 Tombol Aksi Sejajar Presisi 1:1:1 dengan 3 Kolom Dropdown -->
+        <div class="action-btn-grid-3col">
           <button type="button" class="btn-action" onclick="fetchRecap()">📊 TAMPILKAN REKAP</button>
           <button type="button" class="btn-nav btn-warning" onclick="exportRecapToExcel()">📥 EKSPOR EXCEL</button>
           <button type="button" class="btn-nav btn-danger" onclick="exportRecapToPDF()">📄 EKSPOR PDF</button>
@@ -1022,25 +1088,44 @@
       <h2>DATA BNBA PASANGAN USIA SUBUR</h2>
       
       <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-          <div>
-            <select id="bnbaTingkat" onchange="onBnbaTingkatChange()">
-              <option value="">-- PILIH LEVEL BNBA --</option>
-              <option value="Provinsi">BNBA PROVINSI</option>
-              <option value="Kabupaten">BNBA KABUPATEN</option>
-              <option value="Kecamatan">BNBA KECAMATAN</option>
-              <option value="Desa">BNBA DESA</option>
-              <option value="Dusun">BNBA DUSUN</option>
-              <option value="RT">BNBA RT</option>
-            </select>
-          </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
           
-          <div id="bnbaFilterKabContainer" style="display: none;">
-            <select id="bnbaKabupaten" onchange="onBnbaKabupatenChange()">
-              <option value="">-- PILIH KABUPATEN/KOTA --</option>
-            </select>
+          <!-- Baris Dropdown 2 Kolom: Kolom 1 (Level & Lanjutan) | Kolom 2 (Tahun & Bulan) -->
+          <div class="filter-grid-2col">
+            <!-- Kolom 1 Kiri Atas: Level BNBA -->
+            <div>
+              <select id="bnbaTingkat" onchange="onBnbaTingkatChange()">
+                <option value="">-- PILIH LEVEL BNBA --</option>
+                <!-- Untuk index_prov tambahkan: <option value="Provinsi">BNBA PROVINSI</option> -->
+                <option value="Kabupaten">BNBA KABUPATEN</option>
+                <option value="Kecamatan">BNBA KECAMATAN</option>
+                <option value="Desa">BNBA DESA</option>
+                <option value="Dusun">BNBA DUSUN</option>
+                <option value="RT">BNBA RT</option>
+              </select>
+            </div>
+            <!-- Kolom 2 Kanan Atas: Tahun -->
+            <div>
+              <select id="bnbaTahun">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+                <option value="2030">2030</option>
+                <option value="2031">2031</option>
+                <option value="2032">2032</option>
+                <option value="2033">2033</option>
+                <option value="2034">2034</option>
+                <option value="2035">2035</option>
+              </select>
+            </div>
           </div>
 
+          <!-- Dropdown Filter Wilayah Bertingkat (Muncul Sesuai Level Pilihan) -->
+          <div id="bnbaFilterKabContainer" style="display: none;">
+            <select id="bnbaKabupaten" onchange="onBnbaKabupatenChange()"><option value="">-- PILIH KABUPATEN/KOTA --</option></select>
+          </div>
           <div id="bnbaFilterKecContainer" style="display: none;">
             <select id="bnbaKecamatan" onchange="onBnbaKecamatanChange()"><option value="">-- PILIH KECAMATAN --</option></select>
           </div>
@@ -1053,93 +1138,61 @@
           <div id="bnbaFilterRtContainer" style="display: none;">
             <select id="bnbaRt"><option value="">-- PILIH RT --</option></select>
           </div>
-          
-          <!-- 1. TAHUN -->
-          <div>
-            <select id="bnbaTahun">
-              <option value="2025">2025</option>
-              <option value="2026">2026</option>
-              <option value="2027">2027</option>
-              <option value="2028">2028</option>
-              <option value="2029">2029</option>
-              <option value="2030">2030</option>
-              <option value="2031">2031</option>
-              <option value="2032">2032</option>
-              <option value="2033">2033</option>
-              <option value="2034">2034</option>
-              <option value="2035">2035</option>
-            </select>
+
+          <!-- Baris Dropdown 2 Kolom Kedua: Pencarian Lanjutan & Bulan -->
+          <div class="filter-grid-2col">
+            <!-- Kolom 1 Kiri Bawah: Pencarian Lanjutan -->
+            <div>
+              <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()">
+                <option value="">-- PENCARIAN LANJUTAN --</option>
+                <option value="JKN">JKN</option>
+                <option value="KESERTAAN_KB">KESERTAAN KB</option>
+                <option value="METODE_KONTRASEPSI">METODE KONTRASEPSI</option>
+                <option value="AKSEPTOR_KB_BARU">AKSEPTOR KB BARU</option>
+                <option value="ALASAN_TIDAK_KB">ALASAN TIDAK BER KB</option>
+                <option value="HAMIL">HAMIL</option>
+                <option value="HAMIL_BARU">HAMIL BARU</option>
+                <option value="PUS_BARU">PUS BARU</option>
+                <option value="MUTASI">MUTASI</option>
+              </select>
+            </div>
+            <!-- Kolom 2 Kanan Bawah: Bulan -->
+            <div>
+              <select id="bnbaBulan">
+                <option value="" selected>-- PILIH BULAN --</option>
+                <option value="1">JANUARI</option><option value="2">FEBRUARI</option>
+                <option value="3">MARET</option><option value="4">APRIL</option>
+                <option value="5">MEI</option><option value="6">JUNI</option>
+                <option value="7">JULI</option><option value="8">AGUSTUS</option>
+                <option value="9">SEPTEMBER</option><option value="10">OKTOBER</option>
+                <option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+              </select>
+            </div>
           </div>
 
-          <!-- 2. PENCARIAN LANJUTAN & SUB CHECKLIST MULTI-PILIH -->
-          <div>
-            <select id="bnbaFilterAdvCategory" onchange="onBnbaAdvCategoryChange()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: normal; color: #1e293b;">
-              <option value="">-- PENCARIAN LANJUTAN --</option>
-              <option value="JKN">JKN</option>
-              <option value="KESERTAAN_KB">KESERTAAN KB</option>
-              <option value="METODE_KONTRASEPSI">METODE KONTRASEPSI</option>
-              <option value="AKSEPTOR_KB_BARU">AKSEPTOR KB BARU</option>
-              <option value="ALASAN_TIDAK_KB">ALASAN TIDAK BER KB</option>
-              <option value="HAMIL">HAMIL</option>
-              <option value="HAMIL_BARU">HAMIL BARU</option>
-              <option value="PUS_BARU">PUS BARU</option>
-              <option value="MUTASI">MUTASI</option>
-            </select>
-          </div>
-
-          <!-- PANEL PILIHAN CHECKBOX ADAPTIF -->
-          <div id="bnbaAdvCheckboxPanel" style="display: none; margin-top: 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
-            
-            <!-- Header: Judul Kiri & Tombol Aksi Kanan -->
+          <!-- Panel Checkbox Pencarian Lanjutan (Lebar Penuh Otomatis) -->
+          <div id="bnbaAdvCheckboxPanel" style="display: none; margin-top: 5px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
               <span id="bnbaAdvPanelTitle" style="font-size: 11px; font-weight: 800; color: #075985; letter-spacing: 0.5px; text-transform: uppercase;">
                 PILIH METODE AKSEPTOR KB BARU:
               </span>
               <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                <button type="button" onclick="toggleAllAdvCheckboxes(true)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
-                  Pilih<br>Semua
-                </button>
-                <button type="button" onclick="toggleAllAdvCheckboxes(false)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">
-                  Hapus<br>Semua
-                </button>
+                <button type="button" onclick="toggleAllAdvCheckboxes(true)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">Pilih<br>Semua</button>
+                <button type="button" onclick="toggleAllAdvCheckboxes(false)" style="background-color: #334155; color: #ffffff; border: none; border-radius: 10px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; line-height: 1.2; text-align: center;">Hapus<br>Semua</button>
               </div>              
             </div>
-
-            <!-- Garis Pemisah Halus (Dotted Divider) -->
             <div style="border-bottom: 1px dotted #cbd5e1; margin-bottom: 12px;"></div>
-
-            <!-- Grid Multi-Kolom Rata & Adaptif -->
-            <div id="bnbaAdvCheckboxGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 10px 14px; align-items: flex-start;">
-              <!-- Item Checkbox dirender dinamis oleh JS onBnbaAdvCategoryChange -->
-            </div>
-          </div>         
-
-          <!-- 3. BULAN (DILETAKKAN DI BAWAH PENCARIAN LANJUTAN) -->
-          <div>
-            <select id="bnbaBulan">
-              <option value="" selected>-- PILIH BULAN --</option>
-              <option value="1">JANUARI</option>
-              <option value="2">FEBRUARI</option>
-              <option value="3">MARET</option>
-              <option value="4">APRIL</option>
-              <option value="5">MEI</option>
-              <option value="6">JUNI</option>
-              <option value="7">JULI</option>
-              <option value="8">AGUSTUS</option>
-              <option value="9">SEPTEMBER</option>
-              <option value="10">OKTOBER</option>
-              <option value="11">NOVEMBER</option>
-              <option value="12">DESEMBER</option>
-            </select>
+            <div id="bnbaAdvCheckboxGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 10px 14px; align-items: flex-start;"></div>
           </div>
         </div>
 
-          <div class="filter-btn-group filter-btn-group-3col">
-            <button type="button" class="btn-action" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
-            <button type="button" class="btn-nav btn-warning" onclick="exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS')">📥 EKSPOR EXCEL</button>
-            <button type="button" class="btn-nav btn-danger" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
-          </div>
+        <!-- Tombol Aksi BNBA Tetap 3 Kolom Simetris (1:1:1) -->
+        <div class="action-btn-grid-3col">
+          <button type="button" class="btn-action" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
+          <button type="button" class="btn-nav btn-warning" onclick="exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS')">📥 EKSPOR EXCEL</button>
+          <button type="button" class="btn-nav btn-danger" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
         </div>
+      </div>
 
       <div style="overflow-x: auto; margin-top: 15px;">
         <table id="bnbaTable" class="kb-table" style="font-size: 11px; white-space: nowrap;">
@@ -1164,24 +1217,52 @@
 
       <!-- PANEL FILTER GRAFIK -->
       <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-          <div>
-            <select id="chartTingkat" onchange="onChartTingkatChange()">
-              <option value="">-- PILIH LEVEL GRAFIK --</option>
-              <option value="Provinsi">GRAFIK PROVINSI</option>
-              <option value="Kabupaten">GRAFIK KABUPATEN</option>
-              <option value="Kecamatan">GRAFIK KECAMATAN</option>
-              <option value="Desa">GRAFIK DESA</option>
-              <option value="Dusun">GRAFIK DUSUN</option>
-            </select>
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+          
+          <!-- Baris 1: Level Grafik, Tahun, dan Bulan (Sejajar 3 Kolom Sama Lebar) -->
+          <div class="filter-grid-3col">
+            <div>
+              <select id="chartTingkat" onchange="onChartTingkatChange()">
+                <option value="">-- PILIH LEVEL GRAFIK --</option>
+                <!-- Untuk index_prov tambahkan: <option value="Provinsi">GRAFIK PROVINSI</option> -->
+                <option value="Kabupaten">GRAFIK KABUPATEN</option>
+                <option value="Kecamatan">GRAFIK KECAMATAN</option>
+                <option value="Desa">GRAFIK DESA</option>
+                <option value="Dusun">GRAFIK DUSUN</option>
+              </select>
+            </div>
+            <div>
+              <select id="chartTahun">
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="2029">2029</option>
+                <option value="2030">2030</option>
+                <option value="2031">2031</option>
+                <option value="2032">2032</option>
+                <option value="2033">2033</option>
+                <option value="2034">2034</option>
+                <option value="2035">2035</option>
+              </select>
+            </div>
+            <div>
+              <select id="chartBulan">
+                <option value="" selected>-- PILIH BULAN --</option>
+                <option value="1">JANUARI</option><option value="2">FEBRUARI</option>
+                <option value="3">MARET</option><option value="4">APRIL</option>
+                <option value="5">MEI</option><option value="6">JUNI</option>
+                <option value="7">JULI</option><option value="8">AGUSTUS</option>
+                <option value="9">SEPTEMBER</option><option value="10">OKTOBER</option>
+                <option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+              </select>
+            </div>
           </div>
 
+          <!-- Dropdown Filter Turunan Wilayah Grafik -->
           <div id="chartFilterKabContainer" style="display: none;">
-            <select id="chartKabupaten" onchange="onChartKabupatenChange()">
-              <option value="">-- PILIH KABUPATEN / KOTA --</option>
-            </select>
+            <select id="chartKabupaten" onchange="onChartKabupatenChange()"><option value="">-- PILIH KABUPATEN / KOTA --</option></select>
           </div>
-
           <div id="chartFilterKecContainer" style="display: none;">
             <select id="chartKecamatan" onchange="onChartKecamatanChange()"><option value="">-- PILIH KECAMATAN --</option></select>
           </div>
@@ -1191,38 +1272,10 @@
           <div id="chartFilterDusunContainer" style="display: none;">
             <select id="chartDusun"><option value="">-- PILIH DUSUN --</option></select>
           </div>
-          <div class="chart-filter-inputs" style="display: flex; gap: 10px;">
-            <select id="chartTahun" style="flex:1;">
-              <option value="2025">2025</option>
-              <option value="2026">2026</option>
-              <option value="2027">2027</option>
-              <option value="2028">2028</option>
-              <option value="2029">2029</option>
-              <option value="2030">2030</option>
-              <option value="2031">2031</option>
-              <option value="2032">2032</option>
-              <option value="2033">2033</option>
-              <option value="2034">2034</option>
-              <option value="2035">2035</option>
-            </select>
-            <select id="chartBulan" style="flex:1;">
-              <option value="" selected>-- PILIH BULAN --</option>
-              <option value="1">JANUARI</option>
-              <option value="2">FEBRUARI</option>
-              <option value="3">MARET</option>
-              <option value="4">APRIL</option>
-              <option value="5">MEI</option>
-              <option value="6">JUNI</option>
-              <option value="7">JULI</option>
-              <option value="8">AGUSTUS</option>
-              <option value="9">SEPTEMBER</option>
-              <option value="10">OKTOBER</option>
-              <option value="11">NOVEMBER</option>
-              <option value="12">DESEMBER</option>
-            </select>
-          </div>
         </div>
-        <div class="filter-btn-group filter-btn-group-chart">
+
+        <!-- Baris 2: 2 Tombol Aksi Simetris 50% - 50% Sama Lebar -->
+        <div class="action-btn-grid-2col">
           <button type="button" class="btn-action" onclick="fetchChartData()">📈 TAMPILKAN GRAFIK</button>
           <button type="button" class="btn-nav btn-danger" onclick="exportChartsToPDF()">📄 EKSPOR LAPORAN PDF</button>
         </div>
