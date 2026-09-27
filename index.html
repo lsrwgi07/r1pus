@@ -381,11 +381,15 @@
       }
     }
 
-    @media (max-width: 768px) {
-      #filterExpLayananDesaGrid {
-        grid-template-columns: repeat(2, 1fr) !important;
-      }
+    #filterExpLayananDesaGrid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+      gap: 8px !important;
+      max-height: 200px !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
     }
+
     @media (max-width: 480px) {
       #filterExpLayananDesaGrid {
         grid-template-columns: 1fr !important;
@@ -1835,7 +1839,7 @@
                 <button type="button" onclick="toggleAllLayananCheckboxes('cb_layanan_desa', false)" style="font-size: 10px; padding: 2px 6px; cursor: pointer; border-radius: 3px; border: 1px solid #cbd5e1; background: #fff;">Hapus Semua</button>
               </div>
             </div>
-            <div id="filterExpLayananDesaGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; max-height: 100px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px;"></div>
+            <div id="filterExpLayananDesaGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; background: #fff; border: 1.5px solid #cbd5e1; padding: 10px; border-radius: 6px; box-sizing: border-box;"></div>
           </div>
 
           <!-- CHECKBOX FILTER DUSUN -->
@@ -1847,7 +1851,7 @@
                 <button type="button" onclick="toggleAllLayananCheckboxes('cb_layanan_dusun', false)" style="font-size: 10px; padding: 2px 6px; cursor: pointer; border-radius: 3px; border: 1px solid #cbd5e1; background: #fff;">Hapus Semua</button>
               </div>
             </div>
-            <div id="filterExpLayananDusunGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; max-height: 100px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px;"></div>
+            <div id="filterExpLayananDusunGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; background: #fff; border: 1.5px solid #cbd5e1; padding: 10px; border-radius: 6px;"></div>
           </div>
         </div>
 
@@ -9191,13 +9195,29 @@ function onUserKabChange() {
     }
 
     wrapper.style.display = "block";
-    listDesaKeys.forEach(kd => {
+
+    desaKeys.forEach(kd => {
       const cleanKd = String(kd).padStart(4, '0');
       const label = document.createElement("label");
-      label.style.cssText = "display: flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; color: #334155;";
+      label.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #1e293b;
+        background: #f8fafc;
+        padding: 6px 10px;
+        border-radius: 5px;
+        border: 1.5px solid #cbd5e1;
+        cursor: pointer;
+        box-sizing: border-box;
+        min-height: 38px;
+        min-width: 0;
+      `;
       label.innerHTML = `
-        <input type="checkbox" name="cb_layanan_desa" value="${cleanKd}" onchange="onLayananDesaCheckboxChange('${cleanKec}', '${cleanKab}')" style="accent-color: #0284c7;">
-        <span>${desas[kd]}</span>
+        <input type="checkbox" name="cb_layanan_desa" value="${cleanKd}" onchange="onLayananDesaCheckboxChange('${cleanKec}', '${cleanKab}')" style="width: 16px; height: 16px; flex-shrink: 0; margin: 0; accent-color: #0284c7; cursor: pointer;">
+        <span style="white-space: normal; line-height: 1.25; overflow: visible; text-overflow: unset; word-break: break-word;">${desas[kd]}</span>
       `;
       grid.appendChild(label);
     });
