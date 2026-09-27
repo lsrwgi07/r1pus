@@ -936,7 +936,7 @@
             <select id="recapDusun"><option value="">-- PILIH DUSUN --</option></select>
           </div>
           
-          <div style="display: flex; gap: 10px;">
+          <div class="recap-date-inputs" style="display: flex; gap: 10px;">
             <select id="recapTahun" style="flex:1;">
               <option value="2025">2025</option>
               <option value="2026">2026</option>
@@ -968,13 +968,6 @@
             </div>
         </div>
         
-        <!-- Dropdown Tahun & Bulan diberi class recap-date-inputs -->
-        <div class="recap-date-inputs" style="display: flex; gap: 10px;">
-          <select id="recapTahun" style="flex:1;">...</select>
-          <select id="recapBulan" style="flex:1;">...</select>
-        </div>
-
-        <!-- Kontainer Tombol Rekap -->
         <div class="filter-btn-group filter-btn-group-3col">
           <button type="button" class="btn-action" onclick="fetchRecap()">📊 TAMPILKAN REKAP</button>
           <button type="button" class="btn-nav btn-warning" onclick="exportRecapToExcel()">📥 EKSPOR EXCEL</button>
