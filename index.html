@@ -7927,7 +7927,7 @@ function onUserKabChange() {
     }
 
     checkJumlahAnak();
-    applyMutationAndAgeLocks();
+    checkAndLockKbTable();
 
     const btnDel = document.getElementById("btnDeletePus");
     if (btnDel) btnDel.style.display = "none";
