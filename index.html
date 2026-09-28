@@ -9275,23 +9275,26 @@ function onUserKabChange() {
     const wDesa = document.getElementById("filterExpLayananDesaWrapper");
     const wDusun = document.getElementById("filterExpLayananDusunWrapper");
 
-    cKab.style.display = "none";
-    cKec.style.display = "none";
-    wDesa.style.display = "none";
-    wDusun.style.display = "none";
+    if (cKab) cKab.style.display = "none";
+    if (cKec) cKec.style.display = "none";
+    if (wDesa) wDesa.style.display = "none";
+    if (wDusun) wDusun.style.display = "none";
 
-    if (isDesaRole()) {
-      renderLayananDusunCheckboxes(userKodeKec, userKodeDesa, userKodeKab);
-    } else if (isKecRole()) {
-      renderLayananDesaCheckboxes(userKodeKec, userKodeKab);
-    } else if (isKabRole()) {
-      cKec.style.display = "block";
+    const curKab = String(userKodeKab || "").padStart(2, '0');
+
+    if (isDesaRole()) {      
+      renderLayananDusunCheckboxes(userKodeKec, userKodeDesa, curKab);
+    } else if (isKecRole()) {      
+      renderLayananDesaCheckboxes(userKodeKec, curKab);
+    } else if (isKabRole()) {      
+      if (cKec) cKec.style.display = "block";
       populateKecamatanByKab(userKodeKab, "filterExpLayananKec");
       loadAntreanLayananTable();
-    } else {
-      // Admin Prov: Tampilkan Dropdown Kabupaten
-      cKab.style.display = "block";
-      populateKabupatenDropdown("filterExpLayananKab", userKodeProv || "52");
+    } else {      
+      if (cKab && selKab) {
+        cKab.style.display = "block";
+        populateKabupatenDropdown("filterExpLayananKab", userKodeProv || Object.keys(dataProvinsi)[0] || "52");
+      }
       loadAntreanLayananTable();
     }
   }
@@ -9331,16 +9334,26 @@ function onUserKabChange() {
     const grid = document.getElementById("filterExpLayananDesaGrid");
     const wDusun = document.getElementById("filterExpLayananDusunWrapper");
     
+    if (!wrapper || !grid) return;
     grid.innerHTML = "";
-    wDusun.style.display = "none";
+    if (wDusun) wDusun.style.display = "none";
 
-    let cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
+    let cleanKab = String(kdKab || userKodeKab || document.getElementById("filterExpLayananKab")?.value || "").padStart(2, '0');
     let cleanKec = String(kdKec).padStart(2, '0');
     let desaKey = cleanKab + "_" + cleanKec;
     let desas = dataDesa[desaKey] || dataDesa[cleanKec] || {};
 
-    let listDesaKeys = Object.keys(desas);
-    if (listDesaKeys.length === 0) {
+    if (Object.keys(desas).length === 0) {
+      for (let k in dataDesa) {
+        if (k.endsWith("_" + cleanKec)) {
+          desas = dataDesa[k];
+          break;
+        }
+      }
+    }
+    
+    const desaKeys = Object.keys(desas);
+    if (desaKeys.length === 0) {
       wrapper.style.display = "none";
       loadAntreanLayananTable();
       return;
