@@ -6298,13 +6298,12 @@
     link.href = tempCanvas.toDataURL('image/png', 1.0);
     link.click();
   }
-
-  // Helper fungsi untuk memberi tanda highlight kuning pada kata kunci
+  
   function highlightText(text, keyword) {
     if (!text) return "-";
-    if (!keyword) return text;
+    if (!keyword) return text;    
     const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return String(text).replace(regex, `<mark style="background-color: #fef08a; padding: 1px 4px; border-radius: 3px; font-weight: bold;">$1</mark>`);
+    return String(text).replace(regex, `<mark style="background-color: #fef08a; color: inherit; padding: 0 1px; border-radius: 2px;">$1</mark>`);
   }
   
   async function executeSearch() {
@@ -6314,8 +6313,8 @@
     container.innerHTML = "<p style='text-align:center; color:#64748b; padding:15px;'>Mencari data...</p>";
 
     let query = db.from('data_pus').select('*');
-    if (keyword) {      
-      query = query.or(`id_pus.ilike.%${keyword}%,nama_istri.ilike.%${keyword}%,nik_istri.ilike.%${keyword}%,nama_suami.ilike.%${keyword}%`);
+    if (keyword) {
+      query = query.or(`id_pus.ilike.%${keyword}%,nama_istri.ilike.%${keyword}%,nik_istri.ilike.%${keyword}%,nama_suami.ilike.%${keyword}%,nik_suami.ilike.%${keyword}%`);
     }
 
     if (isDesaRole()) {
@@ -6348,7 +6347,7 @@
       if (des) query = query.eq('kode_desa', des);
       if (dsn) query = query.eq('kode_dusun', dsn);
       if (rt) query = query.eq('kode_rt', rt);
-    } else {      
+    } else {
       query = query.eq('kode_prov', userKodeProv || Object.keys(dataProvinsi)[0] || '52');
       let kab = document.getElementById("searchKabupaten").value;
       let kec = document.getElementById("searchKecamatan").value;
@@ -6381,7 +6380,7 @@
       let div = document.createElement("div");
       div.className = "search-result-item";
       div.style.cssText = "padding: 10px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s;";
-      
+
       div.onclick = function() {
         selectDataForEdit(item);
       };
@@ -6389,17 +6388,24 @@
       div.onmouseover = () => div.style.backgroundColor = "#f1f5f9";
       div.onmouseout = () => div.style.backgroundColor = "transparent";
 
+      // Penerapan highlightText pada entitas teks pencarian
+      const hlId = highlightText(item.id_pus, keywordInput);
+      const hlIstri = highlightText(item.nama_istri, keywordInput);
+      const hlNikIstri = highlightText(item.nik_istri, keywordInput);
+      const hlSuami = highlightText(item.nama_suami, keywordInput);
+      const hlNikSuami = highlightText(item.nik_suami, keywordInput);
+
       div.innerHTML = `
         <div style="flex: 1;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-right: 10px;">
-            <span style="font-weight: bold; color: #1f4e78; font-size: 13px;">🆔 ${item.id_pus} (${item.tahun})</span>
+            <span style="font-weight: bold; color: #1f4e78; font-size: 13px;">🆔 ${hlId} (${item.tahun})</span>
             <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
               RT ${item.kode_rt || '-'} / DSN ${item.dusun_nama || '-'}
             </span>
           </div>
           <div style="font-size: 12.5px; color: #334155; line-height: 1.4;">
-            👩 <b>Istri:</b> ${item.nama_istri} <span style="font-family: monospace; color: #64748b;">(${item.nik_istri})</span><br>
-            👨 <b>Suami:</b> ${item.nama_suami} <span style="font-family: monospace; color: #64748b;">(${item.nik_suami})</span>
+            👩 <b>Istri:</b> ${hlIstri} <span style="font-family: monospace; color: #64748b;">(${hlNikIstri})</span><br>
+            👨 <b>Suami:</b> ${hlSuami} <span style="font-family: monospace; color: #64748b;">(${hlNikSuami})</span>
           </div>
           <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">
             📍 Kab. ${item.kabupaten_nama || '-'} | Kec. ${item.kecamatan_nama || '-'} | Desa ${item.desa_nama || '-'}
