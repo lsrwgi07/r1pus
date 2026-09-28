@@ -5744,7 +5744,7 @@
       tbody.innerHTML = `<tr><td colspan='${totalColSpan}' style='text-align:center; color:red; padding: 20px;'>Gagal memuat data: ${err.message}</td></tr>`;
       Swal.fire("Error", "Gagal memuat BNBA: " + err.message, "error");
     }
-  }  
+  }
   
   async function fetchChartData() {
     const tingkat = document.getElementById("chartTingkat").value;
@@ -10333,9 +10333,7 @@ function onUserKabChange() {
       kdAsuransi = "3";
     }
 
-    const totalAnak = parseInt(item.jumlah_anak || 0, 10);
-    const anakLaki = totalAnak > 0 ? Math.floor(totalAnak / 2) : 0;
-    const anakPerempuan = totalAnak > 0 ? Math.ceil(totalAnak / 2) : 0;
+    const totalAnak = parseInt(item.jumlah_anak || 0, 10);    
 
     let strUmurThn = "";
     let strBulan = "";
@@ -10415,7 +10413,9 @@ function onUserKabChange() {
             </tr>
             <tr>
               <td>X. Jumlah anak hidup</td><td>:</td>
-              <td>Laki-laki &nbsp;<span class="box-char">${totalAnak > 0 ? anakLaki : '&nbsp;'}</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Perempuan &nbsp;<span class="box-char">${totalAnak > 0 ? anakPerempuan : '&nbsp;'}</span></td>
+              <td>
+                <span class="box-char" style="min-width: 18px; padding: 0 4px;">${totalAnak > 0 ? totalAnak : '0'}</span> &nbsp;Orang
+              </td>
             </tr>
             <tr>
               <td>XI. Umur anak terakhir yang masih hidup</td><td>:</td>
