@@ -10158,8 +10158,7 @@ function onUserKabChange() {
     iframe.style.height = '0';
     iframe.style.border = '0';
     document.body.appendChild(iframe);
-
-    // PENYESUAIAN NAMA OUTPUT DINAMIS:
+    
     let labelNamaIstri = "";
     if (list.length === 1) {
       labelNamaIstri = String(list[0].nama_istri || "PUS").trim().replace(/[^a-zA-Z0-9_\-]/g, '_');
@@ -10170,12 +10169,17 @@ function onUserKabChange() {
 
     const dynamicTitle = `KARTU_K_I_KB_${labelNamaIstri}`;
 
+    // KUNCI SOLUSI NAMA FILE PDF K/I/KB:
+    const originalDocumentTitle = document.title;
+    document.title = dynamicTitle;
+
     const doc = iframe.contentWindow.document;
     doc.open();
     doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8">
           <title>${dynamicTitle}</title>
           <style>
             @page { 
@@ -10247,13 +10251,19 @@ function onUserKabChange() {
     `);
     doc.close();
 
-    iframe.contentWindow.onafterprint = function() {
-      setTimeout(() => { iframe.remove(); }, 300);
+    const restoreTitleAndCleanup = () => {
+      document.title = originalDocumentTitle;
+      setTimeout(() => {
+        if (iframe && iframe.parentNode) iframe.remove();
+      }, 400);
     };
+
+    iframe.contentWindow.onafterprint = restoreTitleAndCleanup;
 
     setTimeout(() => {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
+      setTimeout(restoreTitleAndCleanup, 2500);
     }, 600);
   }
 
@@ -10263,11 +10273,11 @@ function onUserKabChange() {
     const pTgl = cleanTglFormatted.split('-');
     let yLayanan = String(new Date().getFullYear()), mLayanan = "01", dLayanan = "01";
     if (pTgl.length === 3) {
-      if (pTgl[0].length === 4) {        
+      if (pTgl[0].length === 4) {
         yLayanan = pTgl[0];
         mLayanan = pTgl[1].padStart(2, '0');
         dLayanan = pTgl[2].padStart(2, '0');
-      } else {        
+      } else {
         dLayanan = pTgl[0].padStart(2, '0');
         mLayanan = pTgl[1].padStart(2, '0');
         yLayanan = pTgl[2];
@@ -10292,7 +10302,7 @@ function onUserKabChange() {
       }
     }
     
-    // 3. Evaluasi Umur Istri Presisi
+    // 3. Evaluasi Umur Istri
     let parsedUmurDb = parseInt(item.umur_istri, 10);
     let umurIstriVal = "";
     if (!isNaN(parsedUmurDb) && parsedUmurDb > 0) {
@@ -10306,7 +10316,7 @@ function onUserKabChange() {
       umurIstriVal = umurDihitung > 0 ? umurDihitung : "";
     }
 
-    // 4. Resolusi Wilayah Dinamis
+    // 4. Resolusi Nama Wilayah Lengkap
     const curKab  = String(item.kode_kab || userKodeKab || "").padStart(2, '0');
     const curKec  = String(item.kode_kec || userKodeKec || "").padStart(2, '0');
     const curDesa = String(item.kode_desa || userKodeDesa || "").padStart(4, '0');
@@ -10335,7 +10345,7 @@ function onUserKabChange() {
     else if (alkon.includes("MOW") || alkon.includes("TUBEKTOMI")) kdAlkon = "9";
     else if (alkon.includes("MOP") || alkon.includes("VASEKTOMI")) kdAlkon = "10";
 
-    // 6. Tanggal Rencana Cabut (Implan 3 Thn, IUD 8 Thn)
+    // 6. Tanggal Cabut Implan / IUD
     let dCabut = "", mCabut = "", yCabut = "";
     if (alkon.includes("IMPLAN") || alkon.includes("IMP") || alkon.includes("IUD") || alkon.includes("SUSUK")) {
       const addYears = alkon.includes("IUD") ? 8 : 3;
@@ -10357,14 +10367,15 @@ function onUserKabChange() {
     let kdAsuransi = "";
     if (rawJkn.includes("PBI") || rawJkn.includes("BPJS")) {
       kdAsuransi = "1";
-    } else if (rawJkn.includes("SWASTA")) {
+    } else if (rawJkn.includes("SWASTA") || rawJkn.includes("LAINNYA")) {
       kdAsuransi = "2";
     } else if (rawJkn.includes("TIDAK") || rawJkn === "TIDAK MEMILIKI" || rawJkn === "NON-JKN") {
       kdAsuransi = "3";
     }
 
-    // 9. Penyesuaian Jumlah Anak Tunggal (Tanpa Gender)
+    // 9. Jumlah Anak Hidup Gabungan
     const totalAnak = parseInt(item.jumlah_anak || 0, 10);
+    const strTotalAnak = String(totalAnak).padStart(2, '0');
 
     let strUmurThn = "";
     let strBulan = "";
@@ -10377,239 +10388,412 @@ function onUserKabChange() {
     return `
       <div class="sheet-a4-page page-kiv">
         <div class="form-wrapper-kiv">
-          <!-- KOP ATAS IDENTIK FORMAT PDF -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5mm;">
-            <tr>
-              <td style="width: 25%; font-weight: bold; font-size: 11.5pt; vertical-align: top;">K/IV/KB/15</td>
-              <td style="width: 38%; font-size: 7.8pt; vertical-align: top; line-height: 1.2;">
-                I. Kode Faskes KB/Jaringan/<br>&nbsp;&nbsp;&nbsp;Jejaring
-              </td>
-              <td style="width: 37%; text-align: right; vertical-align: top;">
-                <span class="box-single" style="min-width: 180px; text-align: left;">${item.faskes_tujuan || ''}</span>
-              </td>
-            </tr>
-            <tr>
-              <td></td>
-              <td style="font-size: 7.8pt; vertical-align: middle;">II. Kode Keluarga Indonesia:</td>
-              <td style="text-align: right; vertical-align: middle;">
-                <span class="box-single" style="min-width: 180px; text-align: center;">&nbsp;</span>
-              </td>
-            </tr>
-          </table>
+          
+          <!-- KOP HEADER -->
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
+            <div style="border: 1.2px solid #000; font-weight: bold; font-size: 7.5pt; padding: 1px 6px; line-height: 1;">K/IV/KB/15</div>
+          </div>
 
-          <div style="text-align: center; font-weight: bold; font-size: 10.5pt; margin: 0.5mm 0 2mm 0; letter-spacing: 0.5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 3px;">
+            <div style="display: flex; align-items: center; gap: 4px; width: 48%;">
+              <span style="font-size: 7.2pt; line-height: 1.15;">I. Kode Faskes KB/Jaringan/<br>&nbsp;&nbsp;&nbsp;Jejaring</span>
+              <span style="font-size: 7.2pt;">:</span>
+              <div style="display: flex; gap: 1px;">
+                <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
+                <span style="margin: 0 1px;"></span>
+                <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
+                <span style="margin: 0 1px;"></span>
+                <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px; width: 52%;">
+              <span style="font-size: 7.2pt;">II. Kode Keluarga Indonesia :</span>
+              <div style="display: flex; gap: 1px;">
+                <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: center; font-weight: bold; font-size: 10pt; letter-spacing: 0.5px; margin: 2px 0 3px 0;">
             KARTU STATUS PESERTA KB
           </div>
 
-          <!-- IDENTITAS DATA PUS (III s.d XIII) -->
-          <table class="tbl-field" style="width: 100%; border-collapse: collapse;">
-            <tr><td style="width: 31%;">III. Nama Peserta KB</td><td style="width: 1%;">:</td><td style="width: 68%; font-weight: bold;">${item.nama_istri || ''}</td></tr>
-            <tr>
-              <td>IV. Tgl Lahir/Umur Istri</td><td>:</td>
-              <td>
-                <span class="box-char">${dLahir ? dLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLahir ? dLahir.charAt(1) : '&nbsp;'}</span> / 
-                <span class="box-char">${mLahir ? mLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLahir ? mLahir.charAt(1) : '&nbsp;'}</span> / 
-                <span class="box-char">${yLahir ? yLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(3) : '&nbsp;'}</span>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Umur: <b>${umurIstriVal !== "" ? umurIstriVal : ''}</b> Tahun
-              </td>
-            </tr>
-            <tr><td>V. Nama Suami/Istri</td><td>:</td><td>${item.nama_suami || ''}</td></tr>
-            <tr>
-              <td>VI. Pendidikan Suami dan Istri</td><td>:</td>
-              <td>
-                <table style="width: 100%; font-size: 7.2pt; border-collapse: collapse;">
-                  <tr><td style="width: 33%;">1) Tidak Tamat SD/MI</td><td style="width: 33%;">3) Tamat SLTP/MTsN</td><td style="width: 34%;">5) Tamat PT</td></tr>
-                  <tr><td>2) Tamat SD/MI</td><td>4) Tamat SLTA/MA</td><td>6) Tidak Sekolah</td></tr>
-                </table>
-                <div style="margin-top: 1px; text-align: right; padding-right: 25px;">
-                  Suami &nbsp;<span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp; Istri &nbsp;<span class="box-char">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr><td>VII. Alamat Peserta KB</td><td>:</td><td>${alamatLengkap}</td></tr>
-            <tr>
-              <td>VIII. Pekerjaan Suami dan Istri</td><td>:</td>
-              <td>
-                <table style="width: 100%; font-size: 7.2pt; border-collapse: collapse;">
-                  <tr><td style="width: 25%;">1) Petani</td><td style="width: 25%;">4) PNS/TNI/POLRI</td><td style="width: 25%;">7) Pensiunan</td><td style="width: 25%;">10) Tidak Bekerja</td></tr>
-                  <tr><td>2) Nelayan</td><td>5) Pegawai Swasta</td><td>8) Pekerja Lepas</td><td></td></tr>
-                  <tr><td>3) Pedagang</td><td>6) Wiraswasta</td><td>9) Lainnya</td><td></td></tr>
-                </table>
-                <div style="margin-top: 1px; text-align: right; padding-right: 25px;">
-                  Suami &nbsp;<span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp; Istri &nbsp;<span class="box-char">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>IX. Penggunaan Asuransi</td><td>:</td>
-              <td><span class="box-char">${kdAsuransi || '&nbsp;'}</span> &nbsp;&nbsp; 1) BPJS Kesehatan &nbsp;&nbsp;&nbsp;&nbsp; 2) Lainnya &nbsp;&nbsp;&nbsp;&nbsp; 3) Tidak</td>
-            </tr>
-            <tr>
-              <!-- PENYESUAIAN SESUAI PERMINTAAN: JUMLAH ANAK SAJA TANPA LAKI-LAKI & PEREMPUAN -->
-              <td>X. Jumlah anak hidup</td><td>:</td>
-              <td>
-                <span class="box-char" style="min-width: 16px; padding: 0 4px; font-weight: bold;">${totalAnak > 0 ? totalAnak : '0'}</span> &nbsp;Orang
-              </td>
-            </tr>
-            <tr>
-              <td>XI. Umur anak terakhir yang masih hidup</td><td>:</td>
-              <td>
-                <span class="box-char">${strUmurThn ? strUmurThn.charAt(0) : '&nbsp;'}</span><span class="box-char">${strUmurThn ? strUmurThn.charAt(1) : '&nbsp;'}</span> Tahun &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-                <span class="box-char">${strBulan ? strBulan.charAt(0) : '&nbsp;'}</span><span class="box-char">${strBulan ? strBulan.charAt(1) : '&nbsp;'}</span> Bulan
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">XII. Status Peserta KB</td><td style="vertical-align: top;">:</td>
-              <td>
-                <span class="box-char">${kdStatusPeserta || '&nbsp;'}</span><br>
-                <table style="width: 100%; font-size: 7.2pt; margin-top: 1px; border-collapse: collapse;">
-                  <tr><td style="width: 50%;">1) Baru Pertama kali</td><td style="width: 50%;">3) Pernah pakai alat KB</td></tr>
-                  <tr><td>2) Pernah pakai alat KB berhenti sesudah bersalin/keguguran</td><td>4) Sedang ber-KB</td></tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="vertical-align: top;">XIII. Alat/Obat/Cara KB terakhir</td><td style="vertical-align: top;">:</td>
-              <td>
-                <span class="box-char">${kdAlkon || '&nbsp;'}</span><br>
-                <table style="width: 100%; font-size: 7.2pt; margin-top: 1px; border-collapse: collapse;">
-                  <tr><td style="width: 25%;">1) Suntikan 1 Bulanan</td><td style="width: 25%;">4) Kondom</td><td style="width: 25%;">7) IUD CuT 380A</td><td style="width: 25%;">10) Vasektomi</td></tr>
-                  <tr><td>2) Suntikan 3 Bulanan</td><td>5) Implan 1 Batang</td><td>8) IUD Lain-lain</td><td></td></tr>
-                  <tr><td>3) Pil</td><td>6) Implan 2 Batang</td><td>9) Tubektomi</td><td></td></tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <!-- BAGIAN XIV: PENAPISAN (SKRINING) 2 KOLOM IDENTIK -->
-          <div style="border-top: 1px solid #000; margin-top: 1.5mm; padding-top: 1.5mm;">
-            <div style="font-weight: bold; font-size: 7.6pt; margin-bottom: 0.3mm;">XIV. Penapisan (Skrining) untuk menentukan alat kontrasepsi yang dapat digunakan calon peserta KB</div>
-            <div style="font-size: 6.4pt; font-style: italic; margin-bottom: 1.2mm; line-height: 1.2;">
-              Petunjuk: Periksalah keadaan berikut ini dan hasilnya ditulis dengan angka atau tanda centang (✓) pada kotak yang tersedia.<br>
-              Penapisan (Skrining) hanya boleh dilakukan oleh pelaksana yang telah dilatih dalam pelayanan KB.
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 7.1pt;">
+          <!-- BAGIAN III s.d IX (KOLOM DUA SEJAJAR) -->
+          <div style="border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 3px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 7pt;">
               <tr>
-                <!-- KOLOM KIRI: ANAMNESE -->
-                <td style="width: 50%; vertical-align: top; padding-right: 5px; border-right: 1px solid #000;">
-                  <b>Anamnese</b><br>
-                  1. Haid terakhir tanggal : <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><br>
-                  2. Hamil/Diduga Hamil : &nbsp; <span class="box-char">&nbsp;</span> 1) Ya &nbsp;&nbsp; 2) Tidak<br>
-                  3. Jumlah GPA : &nbsp; Gravida <span class="box-char">&nbsp;</span> &nbsp; Partus <span class="box-char">&nbsp;</span> &nbsp; Abortus <span class="box-char">&nbsp;</span><br>
-                  4. Menyusui : &nbsp; <span class="box-char">&nbsp;</span> 1) Ya &nbsp;&nbsp; 2) Tidak<br>
-                  5. Riwayat Penyakit Sebelumnya :<br>
-                  <table style="width: 100%; margin-left: 2px; font-size: 7pt; border-collapse: collapse;">
-                    <tr><td style="width: 74%;"></td><td style="width: 13%; text-align: center;">Tidak</td><td style="width: 13%; text-align: center;">Ya</td></tr>
-                    <tr><td style="padding: 0.5px 0;">a. Sakit kuning</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td style="padding: 0.5px 0;">b. Perdarahan pervaginam tidak diketahui sebabnya</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td style="padding: 0.5px 0;">c. Keputihan yang lama</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                    <tr><td style="padding: 0.5px 0;">d. Tumor: Payudara / Rahim / Indung telur</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
-                  </table>
-                  <div style="font-size: 5.8pt; color: #333; margin-top: 0.8mm; line-height: 1.15;">
-                    Bila semua jawaban TIDAK, dapat diberikan salah satu cara KB (kecuali IUD dan Tubektomi). Bila salah satu jawaban YA, rujuk ke dokter.
+                <td style="width: 15%; padding: 1.5px 0;">III. Nama Peserta KB</td>
+                <td style="width: 1%; padding: 1.5px 0;">:</td>
+                <td style="width: 34%; font-weight: bold; text-transform: uppercase; padding: 1.5px 0;">${item.nama_istri || ''}</td>
+                <td style="width: 17%; padding: 1.5px 0;">IV. Tgl Lahir/Umur Istri</td>
+                <td style="width: 1%; padding: 1.5px 0;">:</td>
+                <td style="width: 32%; padding: 1.5px 0;">
+                  <span class="box-char">${dLahir ? dLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLahir ? dLahir.charAt(1) : '&nbsp;'}</span>
+                  <span class="box-char">${mLahir ? mLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLahir ? mLahir.charAt(1) : '&nbsp;'}</span>
+                  <span class="box-char">${yLahir ? yLahir.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLahir ? yLahir.charAt(3) : '&nbsp;'}</span>
+                  / &nbsp;<b>${umurIstriVal || '&nbsp;&nbsp;'}</b> Thn
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 1.5px 0;">V. Nama Suami/Istri</td>
+                <td style="padding: 1.5px 0;">:</td>
+                <td style="text-transform: uppercase; padding: 1.5px 0;">${item.nama_suami || ''}</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">VI. Pendidikan Suami dan Istri</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">:</td>
+                <td style="padding: 1.5px 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 6.2pt; line-height: 1.2;">
+                      1) Tidak Tamat SD/MI &nbsp; 3) Tamat SLTP/MTsN &nbsp; 5) Tamat PT<br>
+                      2) Tamat SD/MI &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4) Tamat SLTA/MA &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6) Tidak Sekolah
+                    </div>
+                    <div style="text-align: right; white-space: nowrap; font-size: 6.5pt;">
+                      Suami <span class="box-char">&nbsp;</span> &nbsp; Istri <span class="box-char">&nbsp;</span>
+                    </div>
                   </div>
                 </td>
-                <!-- KOLOM KANAN: PEMERIKSAAN -->
-                <td style="width: 50%; vertical-align: top; padding-left: 5px;">
-                  <b>Pemeriksaan</b><br>
-                  6. Keadaan Umum : &nbsp; <span class="box-char">&nbsp;</span> 1) Baik &nbsp;&nbsp; 2) Sedang &nbsp;&nbsp; 3) Kurang<br>
-                  7. Berat Badan : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Kg &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8. Tekanan Darah : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mmHg<br>
-                  9. Sebelum pemasangan IUD/Tubektomi dilakukan pemeriksaan dalam :<br>
-                  <table style="width: 100%; margin-left: 2px; font-size: 7pt; border-collapse: collapse;">
-                    <tr><td style="width: 74%;"></td><td style="width: 13%; text-align: center;">Tidak</td><td style="width: 13%; text-align: center;">Ya</td></tr>
+              </tr>
+              <tr>
+                <td style="vertical-align: top; padding: 1.5px 0;">VII. Alamat Peserta KB</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">:</td>
+                <td style="vertical-align: top; padding-right: 6px; padding-top: 1.5px;">${alamatLengkap}</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">VIII. Pekerjaan Suami dan Istri</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">:</td>
+                <td style="padding: 1.5px 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 6pt; line-height: 1.2;">
+                      1) Petani &nbsp;&nbsp;&nbsp;&nbsp; 4) PNS/TNI/POLRI &nbsp; 7) Pensiunan &nbsp;&nbsp;&nbsp; 10) Tidak Bekerja<br>
+                      2) Nelayan &nbsp;&nbsp;&nbsp; 5) Pegawai Swasta &nbsp; 8) Pekerja Lepas<br>
+                      3) Pedagang &nbsp; 6) Wiraswasta &nbsp;&nbsp;&nbsp;&nbsp; 9) Lainnya
+                    </div>
+                    <div style="text-align: right; white-space: nowrap; font-size: 6.5pt;">
+                      Suami <span class="box-char">&nbsp;</span> &nbsp; Istri <span class="box-char">&nbsp;</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 1.5px 0;">IX. Penggunaan Asuransi</td>
+                <td style="padding: 1.5px 0;">:</td>
+                <td colspan="4" style="padding: 1.5px 0;">
+                  <span class="box-char">${kdAsuransi || '&nbsp;'}</span> &nbsp; 1) BPJS Kesehatan &nbsp;&nbsp;&nbsp;&nbsp; 2) Lainnya &nbsp;&nbsp;&nbsp;&nbsp; 3) Tidak
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- BAGIAN X s.d XIII (RIWAYAT KB DUA KOLOM SEJAJAR) -->
+          <div style="border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 3px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 7pt;">
+              <tr>
+                <!-- X: JUMLAH ANAK HIDUP GABUNGAN -->
+                <td style="width: 18%; padding: 1.5px 0;">X. Jumlah anak hidup</td>
+                <td style="width: 1%; padding: 1.5px 0;">:</td>
+                <td style="width: 31%; padding: 1.5px 0;">
+                  <div style="display: inline-flex; align-items: center; gap: 4px;">
+                    <span class="box-char" style="width: 17px; text-align: center; font-weight: bold;">${strTotalAnak.charAt(0)}</span><span class="box-char" style="width: 17px; text-align: center; font-weight: bold;">${strTotalAnak.charAt(1)}</span>
+                    <span>Orang</span>
+                  </div>
+                </td>
+                <td style="width: 25%; padding: 1.5px 0;">XI. Umur anak terakhir yang masih hidup</td>
+                <td style="width: 1%; padding: 1.5px 0;">:</td>
+                <td style="width: 24%; padding: 1.5px 0;">
+                  <div style="display: inline-flex; align-items: center; gap: 4px;">
+                    <div style="text-align: center;">
+                      <span class="box-char">${strUmurThn ? strUmurThn.charAt(0) : '&nbsp;'}</span><span class="box-char">${strUmurThn ? strUmurThn.charAt(1) : '&nbsp;'}</span>
+                      <div style="font-size: 5pt; color: #555; line-height: 1;">Tahun</div>
+                    </div>
+                    <div style="text-align: center;">
+                      <span class="box-char">${strBulan ? strBulan.charAt(0) : '&nbsp;'}</span><span class="box-char">${strBulan ? strBulan.charAt(1) : '&nbsp;'}</span>
+                      <div style="font-size: 5pt; color: #555; line-height: 1;">Bulan</div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top; padding: 1.5px 0;">XII. Status Peserta KB</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">:</td>
+                <td style="padding: 1.5px 0;">
+                  <span class="box-char">${kdStatusPeserta || '&nbsp;'}</span>
+                  <div style="font-size: 6.2pt; line-height: 1.25; margin-top: 1.5px;">
+                    1) Baru Pertama kali<br>
+                    2) Pernah pakai alat KB berhenti sesudah bersalin/keguguran<br>
+                    3) Pernah pakai alat KB<br>
+                    4) Sedang ber-KB
+                  </div>
+                </td>
+                <td style="vertical-align: top; padding: 1.5px 0;">XIII. Alat/Obat/Cara KB terakhir</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">:</td>
+                <td style="vertical-align: top; padding: 1.5px 0;">
+                  <span class="box-char">${kdAlkon || '&nbsp;'}</span>
+                  <div style="font-size: 6.2pt; line-height: 1.25; margin-top: 1.5px;">
+                    1) Suntikan 1 Bulanan &nbsp;&nbsp;&nbsp; 4) Kondom &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7) IUD CuT 380A<br>
+                    2) Suntikan 3 Bulanan &nbsp;&nbsp;&nbsp; 5) Implan 1 Batang &nbsp; 8) IUD Lain-lain<br>
+                    3) Pil &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6) Implan 2 Batang &nbsp; 9) Tubektomi &nbsp;&nbsp; 10) Vasektomi
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- BAGIAN XIV: PENAPISAN (SKRINING) -->
+          <div style="border-bottom: 1px solid #000; padding-bottom: 3px; margin-bottom: 3px;">
+            <div style="font-weight: bold; font-size: 7.3pt;">
+              XIV. Penapisan (Skrining) untuk menentukan alat kontrasepsi yang dapat digunakan calon peserta KB
+            </div>
+            <div style="font-size: 6pt; font-style: italic; line-height: 1.15; margin-bottom: 2px;">
+              Petunjuk : &nbsp; Periksalah keadaan berikut ini dan hasilnya ditulis dengan angka atau tanda centang (✓) pada kotak yang tersedia.<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Penapisan (Skrining) hanya boleh dilakukan oleh pelaksana yang telah dilatih dalam pelayanan KB.
+            </div>
+
+            <div style="font-weight: bold; font-size: 6.9pt; text-decoration: underline; margin-bottom: 1.5px;">Anamnese</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt; margin-bottom: 2px;">
+              <tr>
+                <td style="width: 20%; padding: 1px 0;">1. Haid terakhir tanggal</td>
+                <td style="width: 1%; padding: 1px 0;">:</td>
+                <td style="width: 32%; padding: 1px 0;">
+                  <div style="display: inline-flex; align-items: center; gap: 2.5px;">
+                    <div style="text-align: center;"><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><div style="font-size: 4.6pt; line-height: 1;">Tanggal</div></div>
+                    <div style="text-align: center;"><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><div style="font-size: 4.6pt; line-height: 1;">Bulan</div></div>
+                    <div style="text-align: center;"><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><div style="font-size: 4.6pt; line-height: 1;">Tahun</div></div>
+                  </div>
+                </td>
+                <td style="width: 20%; padding: 1px 0;">2. Hamil/Diduga Hamil</td>
+                <td style="width: 1%; padding: 1px 0;">:</td>
+                <td style="width: 26%; padding: 1px 0;">
+                  <span class="box-char">&nbsp;</span> &nbsp; 1) Ya &nbsp;&nbsp; 2) Tidak
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 0;">3. Jumlah GPA</td>
+                <td style="padding: 1px 0;">:</td>
+                <td colspan="4" style="padding: 1px 0;">
+                  Gravida (Kehamilan) <span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                  Partus (Persalinan) <span class="box-char">&nbsp;</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                  Abortus (Keguguran) <span class="box-char">&nbsp;</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 0;">4. Menyusui</td>
+                <td style="padding: 1px 0;">:</td>
+                <td colspan="4" style="padding: 1px 0;">
+                  <span class="box-char">&nbsp;</span> &nbsp; 1) Ya &nbsp;&nbsp; 2) Tidak
+                </td>
+              </tr>
+            </table>
+
+            <!-- TABEL PENYAKIT DENGAN KOTAK DIALOG KANAN -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt;">
+              <tr>
+                <td style="width: 53%; vertical-align: top; padding-right: 5px;">
+                  <div style="margin-bottom: 1px;">5. Riwayat Penyakit Sebelumnya :</div>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt;">
+                    <tr style="text-align: center; font-weight: bold;">
+                      <td style="width: 74%;"></td>
+                      <td style="width: 13%;">Tidak</td>
+                      <td style="width: 13%;">Ya</td>
+                    </tr>
+                    <tr><td style="padding: 0.5px 0;">a. Sakit kuning</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.5px 0;">b. Perdarahan pervaginam yang tidak diketahui sebabnya</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr><td style="padding: 0.5px 0;">c. Keputihan yang lama</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
+                    <tr>
+                      <td style="padding: 0.5px 0;">
+                        d. Tumor :<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;- Payudara<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;- Rahim<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;- Indung telur
+                      </td>
+                      <td style="text-align: center; vertical-align: middle;"><span class="box-char">&nbsp;</span></td>
+                      <td style="text-align: center; vertical-align: middle;"><span class="box-char">&nbsp;</span></td>
+                    </tr>
+                  </table>
+                </td>
+                <td style="width: 47%; vertical-align: middle; padding-left: 5px;">
+                  <div style="border: 1px solid #000; padding: 5px 8px; font-size: 6.1pt; line-height: 1.35;">
+                    - Bila semua jawaban <b>TIDAK</b>, dapat diberikan salah satu dari cara KB (kecuali IUD dan Tubektomi).<br><br>
+                    - Bila salah satu jawaban <b>YA</b>, rujuk ke dokter.
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <div style="font-weight: bold; font-size: 6.9pt; text-decoration: underline; margin: 3px 0 1.5px 0;">Pemeriksaan</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt; margin-bottom: 1.5px;">
+              <tr>
+                <td style="width: 16%; padding: 1px 0;">6. Keadaan Umum</td>
+                <td style="width: 1%; padding: 1px 0;">:</td>
+                <td style="width: 33%; padding: 1px 0;"><span class="box-char">&nbsp;</span> &nbsp; 1) Baik &nbsp;&nbsp; 2) Sedang &nbsp;&nbsp; 3) Kurang</td>
+                <td style="width: 16%; padding: 1px 0;">7. Berat Badan</td>
+                <td style="width: 1%; padding: 1px 0;">:</td>
+                <td style="width: 33%; padding: 1px 0;"><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> Kg</td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 0;">8. Tekanan Darah</td>
+                <td style="padding: 1px 0;">:</td>
+                <td colspan="4" style="padding: 1px 0;"><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> mmHg</td>
+              </tr>
+            </table>
+
+            <!-- PEMERIKSAAN DALAM IUD/TUBEKTOMI DENGAN KOTAK DIALOG KANAN -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt; margin-top: 1px;">
+              <tr>
+                <td style="width: 53%; vertical-align: top; padding-right: 5px;">
+                  <div>9. Sebelum dilakukan pemasangan IUD atau Tubektomi dilakukan pemeriksaan dalam :</div>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt; margin-top: 1px;">
+                    <tr style="text-align: center; font-weight: bold;">
+                      <td style="width: 74%;"></td>
+                      <td style="width: 13%;">Tidak</td>
+                      <td style="width: 13%;">Ya</td>
+                    </tr>
                     <tr><td style="padding: 0.5px 0;">a. Tanda-tanda radang</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
                     <tr><td style="padding: 0.5px 0;">b. Tumor/keganasan ginekologi</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
                   </table>
-                  <div style="font-size: 5.8pt; color: #333; line-height: 1.15; margin-top: 0.5mm;">
-                    Bila semua jawaban TIDAK, pemasangan IUD/Tubektomi dapat dilakukan. Bila YA, rujuk ke dokter.
+                </td>
+                <td style="width: 47%; vertical-align: middle; padding-left: 5px;">
+                  <div style="border: 1px solid #000; padding: 5px 8px; font-size: 6.1pt; line-height: 1.3;">
+                    Bila semua jawaban <b>TIDAK</b>, pemasangan IUD atau tindakan Tubektomi dapat dilakukan. Bila salah satu jawaban <b>YA</b>, rujuk ke dokter.
                   </div>
-                  10. Posisi Rahim : &nbsp; <span class="box-char">&nbsp;</span> 1) Retrofleksi &nbsp;&nbsp; 2) Antefleksi<br>
-                  11. Pemeriksaan tambahan (khusus Vasektomi dan Tubektomi) :<br>
-                  <table style="width: 100%; margin-left: 2px; font-size: 7pt; border-collapse: collapse;">
-                    <tr><td style="width: 74%;"></td><td style="width: 13%; text-align: center;">Tidak</td><td style="width: 13%; text-align: center;">Ya</td></tr>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding-top: 2px;">
+                  10. Posisi Rahim &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;
+                  <span class="box-char">&nbsp;</span> &nbsp; 1) Retrofleksi &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2) Antefleksi
+                </td>
+              </tr>
+            </table>
+
+            <!-- PEMERIKSAAN TAMBAHAN KHUSUS VASEKTOMI / TUBEKTOMI -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt; margin-top: 1.5px;">
+              <tr>
+                <td style="width: 53%; vertical-align: top; padding-right: 5px;">
+                  <div>11. Pemeriksaan tambahan (khusus untuk calon Vasektomi dan Tubektomi) :</div>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 6.7pt; margin-top: 1px;">
+                    <tr style="text-align: center; font-weight: bold;">
+                      <td style="width: 74%;"></td>
+                      <td style="width: 13%;">Tidak</td>
+                      <td style="width: 13%;">Ya</td>
+                    </tr>
                     <tr><td style="padding: 0.5px 0;">a. Tanda-tanda diabetes</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
                     <tr><td style="padding: 0.5px 0;">b. Kelainan pembekuan darah</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
                     <tr><td style="padding: 0.5px 0;">c. Radang orchitis/epididymitis</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
                     <tr><td style="padding: 0.5px 0;">d. Tumor/keganasan ginekologi</td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td><td style="text-align: center;"><span class="box-char">&nbsp;</span></td></tr>
                   </table>
-                  <div style="font-size: 5.8pt; color: #333; line-height: 1.15; margin-top: 0.5mm;">
-                    Bila semua jawaban TIDAK, dapat dilakukan Vasektomi. Bila YA, rujuk ke Rumah Sakit.
+                </td>
+                <td style="width: 47%; vertical-align: middle; padding-left: 5px;">
+                  <div style="border: 1px solid #000; padding: 5px 8px; font-size: 6.1pt; line-height: 1.3;">
+                    Bila semua jawaban <b>TIDAK</b>, dapat dilakukan Vasektomi. Bila salah satu jawabannya <b>YA</b>, maka rujuklah ke Faskes KB/Rumah Sakit yang lengkap.
                   </div>
                 </td>
               </tr>
             </table>
 
-            <!-- POIN 12: TABEL PETAK 10 METODE KONTRASEPSI -->
-            <div style="margin-top: 1.5mm; font-size: 7.1pt;">
-              12. Alat/obat/cara kontrasepsi yang boleh dipergunakan :<br>
-              <table class="tbl-grid" style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 0.8mm;">
-                <tr>
-                  <td>Suntikan 1 Bulanan</td><td>Suntikan 3 Bulanan</td><td>Pil</td><td>Kondom</td>
-                  <td>Implan 1 Batang</td><td>Implan 2 Batang</td><td>IUD CuT 380A</td><td>IUD Lain-lain</td>
-                  <td>Tubektomi</td><td>Vasektomi</td>
-                </tr>
-                <tr style="height: 14px;">
-                  <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                </tr>
-              </table>
+            <!-- 12. TABEL 10 ALKON BOLEH DIPERGUNAKAN -->
+            <div style="margin-top: 3px; font-size: 6.9pt; display: flex; align-items: center; justify-content: space-between;">
+              <span>12. Alat/obat/cara kontrasepsi yang boleh dipergunakan :</span>
+              <span style="font-size: 6.2pt; font-weight: bold;">*)</span>
             </div>
+            <table class="tbl-grid" style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 1px;">
+              <tr style="font-weight: bold; background: #fafafa;">
+                <td style="width: 10%;">Suntikan 1 Bulanan</td>
+                <td style="width: 10%;">Suntikan 3 Bulanan</td>
+                <td style="width: 7%;">Pil</td>
+                <td style="width: 8%;">Kondom</td>
+                <td style="width: 11%;">Implan 1 Batang</td>
+                <td style="width: 11%;">Implan 2 Batang</td>
+                <td style="width: 11%;">IUD CuT 380A</td>
+                <td style="width: 11%;">IUD Lain-lain</td>
+                <td style="width: 10%;">Tubektomi</td>
+                <td style="width: 11%;">Vasektomi</td>
+              </tr>
+              <tr style="height: 14px;">
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+              </tr>
+            </table>
           </div>
 
-          <!-- BAGIAN BAWAH: METODE TERPILIH, TANGGAL & TANDA TANGAN (XV s.d XIX) -->
-          <div style="border-top: 1px solid #000; margin-top: 2mm; padding-top: 1.5mm; font-size: 7.2pt;">
+          <!-- BAGIAN XV s.d XIX: KONTRASEPSI TERPILIH, TANGGAL & TANDA TANGAN -->
+          <div style="font-size: 6.9pt;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="width: 45%; vertical-align: top;">
-                  XV. Alat/obat/cara kontrasepsi yang dipilih : <span class="box-char">${kdAlkon || '&nbsp;'}</span><br>
-                  <table style="width: 100%; font-size: 6.9pt; margin-top: 1mm; border-collapse: collapse;">
-                    <tr><td style="padding: 0.5px 0;">1) Suntikan 1 Bulanan</td><td style="padding: 0.5px 0;">5) Implan 1 Batang</td><td style="padding: 0.5px 0;">9) Tubektomi</td></tr>
-                    <tr><td style="padding: 0.5px 0;">2) Suntikan 3 Bulanan</td><td style="padding: 0.5px 0;">6) Implan 2 Batang</td><td style="padding: 0.5px 0;">10) Vasektomi</td></tr>
-                    <tr><td style="padding: 0.5px 0;">3) Pil</td><td style="padding: 0.5px 0;">7) IUD CuT 380A</td><td></td></tr>
-                    <tr><td style="padding: 0.5px 0;">4) Kondom</td><td style="padding: 0.5px 0;">8) IUD Lain-lain</td><td></td></tr>
+                <!-- KIRI: METODE TERPILIH -->
+                <td style="width: 47%; vertical-align: top; padding-right: 5px;">
+                  <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 1.5px;">
+                    <span>XV. Alat/obat/cara kontrasepsi yang dipilih</span>
+                    <span>:</span>
+                    <span class="box-char">${kdAlkon || '&nbsp;'}</span>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 6.3pt; line-height: 1.25;">
+                    <tr><td style="width: 50%;">1) Suntikan 1 Bulanan</td><td style="width: 50%;">5) Implan 1 Batang</td></tr>
+                    <tr><td>2) Suntikan 3 Bulanan</td><td>6) Implan 2 Batang</td></tr>
+                    <tr><td>3) Pil</td><td>7) IUD CuT 380A</td></tr>
+                    <tr><td>4) Kondom</td><td>8) IUD Lain-lain</td></tr>
+                    <tr><td>9) Tubektomi</td><td>10) Vasektomi</td></tr>
                   </table>
-                </td>
-                <td style="width: 55%; vertical-align: top; padding-left: 6px;">
-                  XVI. Tanggal dilayani : 
-                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                  <span class="box-char">${dLayanan ? dLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLayanan ? dLayanan.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${mLayanan ? mLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLayanan ? mLayanan.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${yLayanan ? yLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(3) : '&nbsp;'}</span>
-                  <br><span style="font-size: 5.8pt; margin-left: 90px; color: #555;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span><br>
                   
-                  XVII. Tanggal kunjungan ulang : 
-                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / 
-                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> / 
-                  <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
-                  <br><span style="font-size: 5.8pt; margin-left: 90px; color: #555;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span><br>
-                  
-                  XVIII. Tanggal dicabut : 
-                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                  <span class="box-char">${dCabut ? dCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${dCabut ? dCabut.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${mCabut ? mCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${mCabut ? mCabut.charAt(1) : '&nbsp;'}</span> / 
-                  <span class="box-char">${yCabut ? yCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(1) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(2) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(3) : '&nbsp;'}</span>
-                  <br><span style="font-size: 6.2pt; margin-left: 90px; color: #555;">(khusus Implan/IUD)&nbsp;&nbsp; Tanggal &nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</span>
+                  <div style="margin-top: 3px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <span>XVII. Tanggal kunjungan ulang</span>
+                      <span>:</span>
+                      <div style="display: inline-flex; align-items: center; gap: 2px;">
+                        <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> /
+                        <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span> /
+                        <span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span><span class="box-char">&nbsp;</span>
+                      </div>
+                    </div>
+                    <div style="font-size: 4.8pt; color: #555; margin-left: 140px; line-height: 1;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</div>
+                  </div>
                 </td>
-              </tr>
-            </table>
 
-            <table style="width: 100%; border-collapse: collapse; margin-top: 2.5mm;">
-              <tr>
-                <td style="width: 50%; font-size: 6.4pt; vertical-align: bottom; line-height: 1.2;">
-                  KETERANGAN:<br>
-                  *) Coret yang tidak perlu / yang tidak boleh diberikan.<br>
-                  **) Ditulis gratis untuk pelayanan tidak bayar
-                </td>
-                <td style="width: 50%; text-align: center; vertical-align: top;">
-                  XIX. Penanggungjawab Pelayanan KB<br>
-                  Dokter / Bidan / Perawat Kesehatan<br><br><br>
-                  <div style="display: inline-block; text-align: left;">
-                    ( ............................................................ )<br>
-                    <span style="margin-left: 6px;">NIP.</span>
+                <!-- KANAN: TANGGAL LAYANAN, DICABUT & TTD -->
+                <td style="width: 53%; vertical-align: top; padding-left: 5px;">
+                  <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span>XVI. Tanggal dilayani</span>
+                      <span>: &nbsp; **) ........................</span>
+                      <div style="display: inline-flex; align-items: center; gap: 2px;">
+                        <span class="box-char">${dLayanan ? dLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${dLayanan ? dLayanan.charAt(1) : '&nbsp;'}</span> /
+                        <span class="box-char">${mLayanan ? mLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${mLayanan ? mLayanan.charAt(1) : '&nbsp;'}</span> /
+                        <span class="box-char">${yLayanan ? yLayanan.charAt(0) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(1) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(2) : '&nbsp;'}</span><span class="box-char">${yLayanan ? yLayanan.charAt(3) : '&nbsp;'}</span>
+                      </div>
+                    </div>
+                    <div style="text-align: right; font-size: 4.8pt; color: #555; line-height: 1;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</div>
+                  </div>
+
+                  <div style="margin-top: 2px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span>XVIII. Tanggal dicabut<br><span style="font-size: 5.5pt; color: #444;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(khusus Implan/IUD)</span></span>
+                      <span>:</span>
+                      <div style="display: inline-flex; align-items: center; gap: 2px;">
+                        <span class="box-char">${dCabut ? dCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${dCabut ? dCabut.charAt(1) : '&nbsp;'}</span> /
+                        <span class="box-char">${mCabut ? mCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${mCabut ? mCabut.charAt(1) : '&nbsp;'}</span> /
+                        <span class="box-char">${yCabut ? yCabut.charAt(0) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(1) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(2) : '&nbsp;'}</span><span class="box-char">${yCabut ? yCabut.charAt(3) : '&nbsp;'}</span>
+                      </div>
+                    </div>
+                    <div style="text-align: right; font-size: 4.8pt; color: #555; line-height: 1;">Tanggal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Bulan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Tahun</div>
                   </div>
                 </td>
               </tr>
             </table>
+
+            <!-- FOOTER: CATATAN KAKI DI KIRI & TANDA TANGAN DOKTER/BIDAN DI KANAN -->
+            <table style="width: 100%; border-collapse: collapse; margin-top: 3px;">
+              <tr>
+                <td style="width: 48%; vertical-align: bottom; font-size: 6.2pt; line-height: 1.25;">
+                  <b>KETERANGAN :</b><br>
+                  *) &nbsp; Coret yang tidak perlu / yang tidak boleh diberikan.<br>
+                  **) Ditulis gratis untuk pelayanan tidak bayar
+                </td>
+                <td style="width: 52%; text-align: center; vertical-align: top; font-size: 6.9pt;">
+                  <div>XIX. Penanggungjawab Pelayanan KB</div>
+                  <div style="margin-bottom: 24px;">Dokter/Bidan/Perawat Kesehatan</div>
+                  <div>( .................................................................... )</div>
+                  <div style="text-align: left; padding-left: 20%; font-size: 6.4pt; margin-top: 1px;">NIP.</div>
+                </td>
+              </tr>
+            </table>
           </div>
+
         </div>
       </div>
     `;
@@ -10931,9 +11115,6 @@ function onUserKabChange() {
     const isKiv = (jenisDoc === 'KIV');
     const labelForm = isKiv ? 'FORM_K_IV_KB' : 'INFORMED_CONSENT_KB';
 
-    // PENYESUAIAN NAMA OUTPUT DINAMIS:
-    // Jika 1 akseptor: FORM_K_IV_KB - NAMA_ISTRI
-    // Jika lebih dari 1 akseptor: FORM_K_IV_KB - NAMA_ISTRI_PERTAMA_dkk
     let labelNamaIstri = "";
     if (list.length === 1) {
       labelNamaIstri = String(list[0].nama_istri || "PUS").trim().replace(/[^a-zA-Z0-9_\-]/g, '_');
@@ -10944,17 +11125,21 @@ function onUserKabChange() {
 
     const dynamicTitle = `${labelForm}_${labelNamaIstri}`;
 
+    const originalDocumentTitle = document.title;
+    document.title = dynamicTitle;
+
     const doc = iframe.contentWindow.document;
     doc.open();
     doc.write(`
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8">
           <title>${dynamicTitle}</title>
           <style>
             @page {
               size: A4 portrait;
-              margin: 0 !important;
+              margin: 0 !important; /* Menghilangkan otomatis header & footer URL/tanggal peramban */
             }
             * {
               box-sizing: border-box !important;
@@ -10973,12 +11158,14 @@ function onUserKabChange() {
             .sheet-a4-page {
               page-break-after: always;
               break-after: page;
+              page-break-inside: avoid !important;
               background: #fff;
               width: 210mm;
               height: 297mm;
               box-sizing: border-box;
               overflow: hidden;
             }
+            /* Ukuran Padding Persis index_prov.html */
             .page-kiv {
               padding: 20mm 15mm !important;
             }
@@ -11004,24 +11191,25 @@ function onUserKabChange() {
             .box-char {
               border: 1px solid #000;
               display: inline-block;
-              width: 11px;
-              height: 12px;
-              line-height: 12px;
+              width: 10.5px;
+              height: 11.5px;
+              line-height: 11px;
               text-align: center;
-              font-size: 7.5pt;
+              font-size: 7pt;
               font-weight: bold;
-              margin: 0 1px;
+              margin: 0 0.5px;
               vertical-align: middle;
             }
             .tbl-field td {
-              font-size: 7.4pt;
+              font-size: 7.2pt;
               padding: 1.2px 0;
               vertical-align: top;
             }
             .tbl-grid th, .tbl-grid td {
               border: 1px solid #000;
-              padding: 2px;
-              font-size: 6.5pt;
+              padding: 2px 1px;
+              font-size: 6pt;
+              line-height: 1.1;
             }
             .form-wrapper-consent {
               box-sizing: border-box;
@@ -11104,13 +11292,19 @@ function onUserKabChange() {
     `);
     doc.close();
 
-    iframe.contentWindow.onafterprint = function() {
-      setTimeout(() => { iframe.remove(); }, 300);
+    const restoreTitleAndCleanup = () => {
+      document.title = originalDocumentTitle;
+      setTimeout(() => {
+        if (iframe && iframe.parentNode) iframe.remove();
+      }, 400);
     };
+
+    iframe.contentWindow.onafterprint = restoreTitleAndCleanup;
 
     setTimeout(() => {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
+      setTimeout(restoreTitleAndCleanup, 2500);
     }, 600);
   }
   
