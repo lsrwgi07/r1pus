@@ -1657,10 +1657,27 @@
 
     <!-- TAB 2: DAFTAR WILAYAH TERDAFTAR -->
     <div id="mwTabList" style="display: none;">
+      <!-- Panel Filter Wilayah Bertingkat (Kab -> Kec -> Desa) -->
+      <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;">
+          <select id="filterMwKab" onchange="onFilterMwKabChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA KABUPATEN/KOTA --</option>
+          </select>
+          <select id="filterMwKec" onchange="onFilterMwKecChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA KECAMATAN --</option>
+          </select>
+          <select id="filterMwDesa" onchange="renderRegisteredWilayahTable()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA DESA --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Kolom Pencarian & Tombol Segarkan -->
       <div style="margin-bottom: 10px; display: flex; gap: 8px;">
         <input type="text" id="filterMwInput" placeholder="Cari Kabupaten / Kecamatan / Desa / Dusun..." oninput="renderRegisteredWilayahTable()" style="flex:1;">
         <button type="button" class="btn-nav btn-secondary" onclick="loadRegisteredWilayahList()">🔄 Segarkan</button>
       </div>
+
       <div style="max-height: 350px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
         <table class="kb-table" style="font-size: 11.5px; width: 100%; margin-top: 0;">
           <thead>
@@ -1784,8 +1801,27 @@
 
     <!-- TAB 2: TABEL DAFTAR AKUN -->
     <div id="userTabList" style="display: none;">
+      <!-- Panel Filter Wilayah Bertingkat Akun -->
+      <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;">
+          <select id="filterUserRole" onchange="renderUsersTable()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA ROLE --</option>
+          </select>
+          <select id="filterUserKab" onchange="onFilterUserKabChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA KABUPATEN/KOTA --</option>
+          </select>
+          <select id="filterUserKec" onchange="onFilterUserKecChange()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA KECAMATAN --</option>
+          </select>
+          <select id="filterUserDesa" onchange="renderUsersTable()" style="padding: 7px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%;">
+            <option value="">-- SEMUA DESA --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Kolom Pencarian & Tombol Segarkan -->
       <div style="margin-bottom: 10px; display: flex; gap: 8px;">
-        <input type="text" id="filterUsersInput" placeholder="Cari Username / Role / Kabupaten / Kecamatan / Desa..." oninput="renderUsersTable()" style="flex: 1;">
+        <input type="text" id="filterUsersInput" placeholder="Cari Nama / Username / Role / Wilayah..." oninput="renderUsersTable()" style="flex: 1;">
         <button type="button" class="btn-nav btn-secondary" onclick="loadUsersList()">🔄 Segarkan</button>
       </div>
 
@@ -1801,7 +1837,7 @@
               <th style="background: #1f4e78; color: white;">KABUPATEN / KOTA</th>
               <th style="background: #1f4e78; color: white;">KECAMATAN</th>
               <th style="background: #1f4e78; color: white;">DESA</th>
-              <th style="background: #1f4e78; color: white;">DUSUN</th> <!-- KOLOM BARU -->
+              <th style="background: #1f4e78; color: white;">DUSUN</th>
               <th style="background: #1f4e78; color: white;">AKSI</th>
             </tr>
           </thead>
@@ -6910,57 +6946,135 @@
     }
   }
 
+  function initFilterMwDropdownsProv() {
+    const selKab = document.getElementById("filterMwKab");
+    const selKec = document.getElementById("filterMwKec");
+    const selDesa = document.getElementById("filterMwDesa");
+    if (!selKab || !selKec || !selDesa) return;
+
+    populateKabupatenDropdown("filterMwKab");
+    selKec.innerHTML = '<option value="">-- SEMUA KECAMATAN --</option>';
+    selDesa.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+
+    if (isDesaRole()) {
+      selKab.value = userKodeKab;
+      selKab.disabled = true;
+
+      populateKecamatanByKab(userKodeKab, "filterMwKec");
+      selKec.value = userKodeKec;
+      selKec.disabled = true;
+
+      populateDesaByKec(userKodeKec, "filterMwDesa", userKodeKab);
+      selDesa.value = userKodeDesa;
+      selDesa.disabled = true;
+
+    } else if (isKecRole()) {
+      selKab.value = userKodeKab;
+      selKab.disabled = true;
+
+      populateKecamatanByKab(userKodeKab, "filterMwKec");
+      selKec.value = userKodeKec;
+      selKec.disabled = true;
+
+      populateDesaByKec(userKodeKec, "filterMwDesa", userKodeKab);
+      selDesa.disabled = false;
+
+    } else if (isKabRole()) {
+      selKab.value = userKodeKab;
+      selKab.disabled = true;
+
+      populateKecamatanByKab(userKodeKab, "filterMwKec");
+      selKec.disabled = false;
+      selDesa.disabled = false;
+
+    } else {
+      // Admin Prov: Bebas pilih Kabupaten
+      selKab.disabled = false;
+      selKec.disabled = false;
+      selDesa.disabled = false;
+    }
+  }
+
+  function onFilterMwKabChange() {
+    const kab = isProvRole() ? document.getElementById("filterMwKab")?.value : userKodeKab;
+    const selKec = document.getElementById("filterMwKec");
+    const selDesa = document.getElementById("filterMwDesa");
+
+    if (selKec) selKec.innerHTML = '<option value="">-- SEMUA KECAMATAN --</option>';
+    if (selDesa) selDesa.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+
+    if (kab && selKec) {
+      populateKecamatanByKab(kab, "filterMwKec");
+    }
+    renderRegisteredWilayahTable();
+  }
+
+  function onFilterMwKecChange() {
+    const kab = isProvRole() ? document.getElementById("filterMwKab")?.value : userKodeKab;
+    const kec = document.getElementById("filterMwKec")?.value;
+    const selDesa = document.getElementById("filterMwDesa");
+
+    if (selDesa) selDesa.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+    if (kec && selDesa) {
+      populateDesaByKec(kec, "filterMwDesa", kab);
+    }
+    renderRegisteredWilayahTable();
+  }
+
   async function loadRegisteredWilayahList() {
     const tbody = document.getElementById("mwRegisteredTbody");
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:15px;">Memuat data wilayah...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:15px;">Memuat data wilayah...</td></tr>`;
 
     let query = db.from('master_wilayah').select('*').order('kecamatan', { ascending: true });
 
-    // HIERARKI HAK AKSES WILAYAH SESUAI ROLE LOGIN
     if (isDesaRole()) {
-      // User Desa: Hanya melihat dusun di desa miliknya
-      query = query.eq('kode_kab', userKodeKab)
-                   .eq('kode_kec', userKodeKec)
-                   .eq('kode_desa', userKodeDesa);
+      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
     } else if (isKecRole()) {
-      // Admin Kecamatan: Hanya melihat dusun/desa di kecamatannya
-      query = query.eq('kode_kab', userKodeKab)
-                   .eq('kode_kec', userKodeKec);
+      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec);
     } else if (isKabRole()) {
-      // Admin Kabupaten: Melihat seluruh wilayah dalam 1 kabupaten miliknya
       query = query.eq('kode_kab', userKodeKab);
     } else if (isProvRole()) {
-      // Admin Provinsi: Melihat seluruh wilayah dalam 1 provinsi
       query = query.eq('kode_prov', userKodeProv || '52');
     }
 
     const { data, error } = await query;
     if (error || !data) {
-      console.error("Gagal memuat master wilayah:", error);
-      tbody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:15px;">Gagal memuat: ${error ? error.message : 'Koneksi error'}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center; padding:15px;">Gagal memuat: ${error ? error.message : 'Koneksi error'}</td></tr>`;
       return;
     }
 
     allRegisteredWilayahData = data;
+    initFilterMwDropdownsProv();
     renderRegisteredWilayahTable();
   }
 
   function renderRegisteredWilayahTable() {
-    const filter = (document.getElementById("filterMwInput").value || "").toUpperCase().trim();
+    const filter = (document.getElementById("filterMwInput")?.value || "").toUpperCase().trim();
+    const selKab = document.getElementById("filterMwKab")?.value || "";
+    const selKec = document.getElementById("filterMwKec")?.value || "";
+    const selDesa = document.getElementById("filterMwDesa")?.value || "";
     const tbody = document.getElementById("mwRegisteredTbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
 
-    const filtered = allRegisteredWilayahData.filter(item => 
-      (item.kabupaten || '').toUpperCase().includes(filter) ||
-      (item.desa || '').toUpperCase().includes(filter) ||
-      (item.dusun || '').toUpperCase().includes(filter) ||
-      (item.kecamatan || '').toUpperCase().includes(filter) ||
-      (item.kode_desa || '').includes(filter) ||
-      (item.kode_dusun || '').includes(filter)
-    );
+    const filtered = allRegisteredWilayahData.filter(item => {
+      if (selKab && String(item.kode_kab || '').trim().padStart(2, '0') !== selKab.padStart(2, '0')) return false;
+      if (selKec && String(item.kode_kec || '').trim().padStart(2, '0') !== selKec.padStart(2, '0')) return false;
+      if (selDesa && String(item.kode_desa || '').trim().padStart(4, '0') !== selDesa.padStart(4, '0')) return false;
+
+      if (filter) {
+        return (item.kabupaten || '').toUpperCase().includes(filter) ||
+               (item.desa || '').toUpperCase().includes(filter) ||
+               (item.dusun || '').toUpperCase().includes(filter) ||
+               (item.kecamatan || '').toUpperCase().includes(filter) ||
+               (item.kode_desa || '').includes(filter) ||
+               (item.kode_dusun || '').includes(filter);
+      }
+      return true;
+    });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:15px; color:#777;">Data wilayah tidak ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:15px; color:#777;">Data wilayah tidak ditemukan untuk filter ini.</td></tr>`;
       return;
     }
 
@@ -7418,128 +7532,216 @@ function onUserKabChange() {
     }
   }
 
+   function initFilterUserDropdownsProv() {
+    const selRole = document.getElementById("filterUserRole");
+    const selKab = document.getElementById("filterUserKab");
+    const selKec = document.getElementById("filterUserKec");
+    const selDesa = document.getElementById("filterUserDesa");
+    if (!selRole || !selKab || !selKec || !selDesa) return;
+
+    // 1. Opsi Role Sesuai Otoritas
+    if (isDesaRole()) {
+      selRole.innerHTML = '<option value="User Desa">User Desa</option>';
+      selRole.disabled = true;
+    } else if (isKecRole()) {
+      selRole.innerHTML = '<option value="User Desa">User Desa</option>';
+      selRole.disabled = true;
+    } else if (isKabRole()) {
+      selRole.innerHTML = `
+        <option value="">-- SEMUA ROLE --</option>
+        <option value="Admin Kec">Admin Kec</option>
+        <option value="User Desa">User Desa</option>
+      `;
+      selRole.disabled = false;
+    } else {
+      // Admin Prov
+      selRole.innerHTML = `
+        <option value="">-- SEMUA ROLE --</option>
+        <option value="Admin Prov">Admin Prov</option>
+        <option value="Admin Kab">Admin Kab</option>
+        <option value="Admin Kec">Admin Kec</option>
+        <option value="User Desa">User Desa</option>
+      `;
+      selRole.disabled = false;
+    }
+
+    // 2. Dropdown Wilayah
+    populateKabupatenDropdown("filterUserKab");
+    selKec.innerHTML = '<option value="">-- SEMUA KECAMATAN --</option>';
+    selDesa.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+
+    if (isDesaRole()) {
+      selKab.value = userKodeKab; selKab.disabled = true;
+      populateKecamatanByKab(userKodeKab, "filterUserKec");
+      selKec.value = userKodeKec; selKec.disabled = true;
+      populateDesaByKec(userKodeKec, "filterUserDesa", userKodeKab);
+      selDesa.value = userKodeDesa; selDesa.disabled = true;
+
+    } else if (isKecRole()) {
+      selKab.value = userKodeKab; selKab.disabled = true;
+      populateKecamatanByKab(userKodeKab, "filterUserKec");
+      selKec.value = userKodeKec; selKec.disabled = true;
+      populateDesaByKec(userKodeKec, "filterUserDesa", userKodeKab);
+      selDesa.disabled = false;
+
+    } else if (isKabRole()) {
+      selKab.value = userKodeKab; selKab.disabled = true;
+      populateKecamatanByKab(userKodeKab, "filterUserKec");
+      selKec.disabled = false;
+      selDesa.disabled = false;
+
+    } else {
+      selKab.disabled = false;
+      selKec.disabled = false;
+      selDesa.disabled = false;
+    }
+  }
+
+  function onFilterUserKabChange() {
+    const kab = isProvRole() ? document.getElementById("filterUserKab")?.value : userKodeKab;
+    const selKec = document.getElementById("filterUserKec");
+    const selDesa = document.getElementById("filterUserDesa");
+
+    if (selKec) selKec.innerHTML = '<option value="">-- SEMUA KECAMATAN --</option>';
+    if (selDesa) selDesa.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+
+    if (kab && selKec) {
+      populateKecamatanByKab(kab, "filterUserKec");
+    }
+    renderUsersTable();
+  }
+
+  function onFilterUserKecChange() {
+    const kab = isProvRole() ? document.getElementById("filterUserKab")?.value : userKodeKab;
+    const kec = document.getElementById("filterUserKec")?.value;
+    const selDesa = document.getElementById("filterUserDesa");
+
+    if (selDesa) selDesa.innerHTML = '<option value="">-- SEMUA DESA --</option>';
+    if (kec && selDesa) {
+      populateDesaByKec(kec, "filterUserDesa", kab);
+    }
+    renderUsersTable();
+  }
+
   async function loadUsersList() {
     const tbody = document.getElementById("usersTbody");
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 15px;">Memuat data...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 15px;">Memuat data...</td></tr>`;
 
     let query = db.from('users').select('*').order('username', { ascending: true });
 
-    // HIERARKI HAK AKSES LIHAT DAFTAR PENGGUNA
     if (isDesaRole()) {
-      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec).eq('kode_desa', userKodeDesa);
+      query = query.eq('kode_kab', userKodeKab)
+                   .eq('kode_kec', userKodeKec)
+                   .eq('kode_desa', userKodeDesa)
+                   .eq('role', 'User Desa');
     } else if (isKecRole()) {
-      query = query.eq('kode_kab', userKodeKab).eq('kode_kec', userKodeKec);
+      // Admin Kec: Hanya boleh melihat User Desa di wilayah kecamatannya
+      query = query.eq('kode_kab', userKodeKab)
+                   .eq('kode_kec', userKodeKec)
+                   .eq('role', 'User Desa');
     } else if (isKabRole()) {
-      query = query.eq('kode_kab', userKodeKab);
+      // Admin Kab: Melihat akun di wilayah kabupatennya, tidak boleh melihat Admin Prov
+      query = query.eq('kode_kab', userKodeKab)
+                   .neq('role', 'Admin Prov');
     } else if (isProvRole()) {
-      // Admin Prov: Ambil seluruh user di provinsi tersebut
       query = query.eq('kode_prov', userKodeProv || '52');
     }
 
     const { data, error } = await query;
     if (error || !data) {
-      console.error("Gagal memuat daftar users:", error);
       tbody.innerHTML = `<tr><td colspan="10" style="color:red; text-align: center; padding: 15px;">Gagal memuat: ${error ? error.message : 'Error koneksi'}</td></tr>`;
       return;
     }
 
     allUsersData = data;
+    initFilterUserDropdownsProv();
     renderUsersTable();
   }
 
   function renderUsersTable() {
-    const filter = (document.getElementById("filterUsersInput").value || "").toLowerCase().trim();
+    const filter = (document.getElementById("filterUsersInput")?.value || "").toLowerCase().trim();
+    const selRole = document.getElementById("filterUserRole")?.value || "";
+    const selKab = document.getElementById("filterUserKab")?.value || "";
+    const selKec = document.getElementById("filterUserKec")?.value || "";
+    const selDesa = document.getElementById("filterUserDesa")?.value || "";
+
     const tbody = document.getElementById("usersTbody");
+    if (!tbody) return;
     tbody.innerHTML = "";
 
-    // Helper pencarian nama kabupaten
     function getNamaKab(kdKab) {
       if (!kdKab) return "-";
       const cleanKab = String(kdKab).padStart(2, '0');
       const provKey = userKodeProv || "52";
-      if (dataKabupaten[provKey] && dataKabupaten[provKey][cleanKab]) {
-        return dataKabupaten[provKey][cleanKab];
-      }
+      if (dataKabupaten[provKey] && dataKabupaten[provKey][cleanKab]) return dataKabupaten[provKey][cleanKab];
       for (let p in dataKabupaten) {
         if (dataKabupaten[p][cleanKab]) return dataKabupaten[p][cleanKab];
       }
       return kdKab;
     }
 
-    // Helper pencarian nama kecamatan
     function getNamaKec(kdKab, kdKec) {
       if (!kdKec) return "-";
       const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
       const cleanKec = String(kdKec).padStart(2, '0');
-      
-      if (dataKecamatan[cleanKab] && dataKecamatan[cleanKab][cleanKec]) {
-        return dataKecamatan[cleanKab][cleanKec];
-      }
+      if (dataKecamatan[cleanKab] && dataKecamatan[cleanKab][cleanKec]) return dataKecamatan[cleanKab][cleanKec];
       for (let kab in dataKecamatan) {
         if (dataKecamatan[kab][cleanKec]) return dataKecamatan[kab][cleanKec];
       }
       return kdKec;
     }
 
-    // Helper pencarian nama desa yang akurat
     function getNamaDesa(kdKab, kdKec, kdDesa) {
       if (!kdDesa) return "-";
       const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
-      const cleanKec = String(kdKec || "").padStart(2, '0');
+      const cleanKec = String(kdKec).padStart(2, '0');
       const cleanDesa = String(kdDesa).padStart(4, '0');
-      
-      // Coba composite key kab_kec
       const compositeKey = cleanKab + "_" + cleanKec;
-      if (dataDesa[compositeKey] && dataDesa[compositeKey][cleanDesa]) {
-        return dataDesa[compositeKey][cleanDesa];
-      }
-      // Coba key kec saja
-      if (dataDesa[cleanKec] && dataDesa[cleanKec][cleanDesa]) {
-        return dataDesa[cleanKec][cleanDesa];
-      }
-      // Pencarian mendalam di seluruh dataDesa jika key tidak langsung cocok
-      for (let k in dataDesa) {
-        if (dataDesa[k][cleanDesa]) return dataDesa[k][cleanDesa];
-      }
+      if (dataDesa[compositeKey] && dataDesa[compositeKey][cleanDesa]) return dataDesa[compositeKey][cleanDesa];
+      if (dataDesa[cleanKec] && dataDesa[cleanKec][cleanDesa]) return dataDesa[cleanKec][cleanDesa];
       return kdDesa;
     }
 
-    // Helper pencarian nama dusun berdasarkan array allowed_dusun
-    function getNamaDusunFormatted(kdKec, kdDesa, allowedDusunArr, role) {
+    function getNamaDusunFormatted(kdKec, kdDesa, allowedDusunArr, role, kdKab) {
       if (role !== "User Desa") return "-";
       if (!allowedDusunArr || !Array.isArray(allowedDusunArr) || allowedDusunArr.length === 0) {
         return `<span style="color:#059669; font-weight:600;">SEMUA DUSUN</span>`;
       }
-
+      const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
       const cleanKec = String(kdKec || "").padStart(2, '0');
       const cleanDesa = String(kdDesa || "").padStart(4, '0');
-      const dusunObj = getDusunList(cleanKec, cleanDesa);
+      const dusunObj = getDusunList(cleanKec, cleanDesa, cleanKab);
 
       const namaList = allowedDusunArr.map(kdDsn => {
         const cleanDsn = String(kdDsn).padStart(4, '0');
-        if (dusunObj && dusunObj[cleanDsn]) {
-          return dusunObj[cleanDsn].nama;
-        }
-        return cleanDsn; // Fallback jika nama tidak ditemukan di cache
+        if (dusunObj && dusunObj[cleanDsn]) return dusunObj[cleanDsn].nama;
+        return cleanDsn;
       });
-
       return `<span style="color:#0284c7; font-weight:bold;">${namaList.join(", ")}</span>`;
     }
 
     const filtered = allUsersData.filter(item => {
-      const nmKab = getNamaKab(item.kode_kab).toLowerCase();
-      const nmKec = getNamaKec(item.kode_kab, item.kode_kec).toLowerCase();
-      const nmDesa = getNamaDesa(item.kode_kab, item.kode_kec, item.kode_desa).toLowerCase();
-      return (item.username || '').toLowerCase().includes(filter) ||
-             (item.nama_lengkap || '').toLowerCase().includes(filter) ||
-             (item.role || '').toLowerCase().includes(filter) ||
-             nmKab.includes(filter) ||
-             nmKec.includes(filter) ||
-             nmDesa.includes(filter);
+      if (selRole && item.role !== selRole) return false;
+      if (selKab && String(item.kode_kab || '').trim().padStart(2, '0') !== selKab.padStart(2, '0')) return false;
+      if (selKec && String(item.kode_kec || '').trim().padStart(2, '0') !== selKec.padStart(2, '0')) return false;
+      if (selDesa && String(item.kode_desa || '').trim().padStart(4, '0') !== selDesa.padStart(4, '0')) return false;
+
+      if (filter) {
+        const nmKab = getNamaKab(item.kode_kab).toLowerCase();
+        const nmKec = getNamaKec(item.kode_kab, item.kode_kec).toLowerCase();
+        const nmDesa = getNamaDesa(item.kode_kab, item.kode_kec, item.kode_desa).toLowerCase();
+        return (item.username || '').toLowerCase().includes(filter) ||
+               (item.nama_lengkap || '').toLowerCase().includes(filter) ||
+               (item.role || '').toLowerCase().includes(filter) ||
+               nmKab.includes(filter) ||
+               nmKec.includes(filter) ||
+               nmDesa.includes(filter);
+      }
+      return true;
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 15px; color: #777;">Tidak ada akun ditemukan untuk filter ini.</td></tr>`;
       return;
     }
 
@@ -7548,23 +7750,19 @@ function onUserKabChange() {
       const nmKab = getNamaKab(item.kode_kab);
       const nmKec = getNamaKec(item.kode_kab, item.kode_kec);
       const nmDesa = getNamaDesa(item.kode_kab, item.kode_kec, item.kode_desa);
-      const strDusun = getNamaDusunFormatted(item.kode_kec, item.kode_desa, item.allowed_dusun, item.role);
-      
+      const strDusun = getNamaDusunFormatted(item.kode_kec, item.kode_desa, item.allowed_dusun, item.role, item.kode_kab);
+
       let canModify = false;
       const targetRole = String(item.role || "").toUpperCase();
 
-      if (isProvRole()) {        
+      if (isProvRole()) {
         canModify = true;
-      } else if (isKabRole()) {        
-        if (targetRole.includes("KEC") || targetRole.includes("DESA")) {
-          canModify = true;
-        }
-      } else if (isKecRole()) {        
-        if (targetRole.includes("DESA")) {
-          canModify = true;
-        }
+      } else if (isKabRole()) {
+        if (targetRole.includes("KEC") || targetRole.includes("DESA")) canModify = true;
+      } else if (isKecRole()) {
+        if (targetRole.includes("DESA")) canModify = true;
       }
-      
+
       const actionButtons = canModify ? `
         <button type="button" class="btn-nav btn-warning" style="padding: 3px 6px; font-size: 11px;" onclick="populateUserToForm('${item.id}')">✏️</button>
         <button type="button" class="btn-nav btn-danger" style="padding: 3px 6px; font-size: 11px;" onclick="confirmDeleteUser('${item.id}', '${item.username}')">🗑️</button>
@@ -7594,7 +7792,7 @@ function onUserKabChange() {
       `;
       tbody.appendChild(tr);
     });
-  }
+  } 
 
   function populateUserToForm(id) {
     const item = allUsersData.find(u => String(u.id) === String(id));
