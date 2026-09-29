@@ -4442,9 +4442,10 @@
 
   function updateDusun(selectedVal = "") {
     const kodeKab = document.getElementById("kode_kab")?.value || userKodeKab || "";
-    const kodeKec = document.getElementById("kecamatan").value;
-    const kodeDesa = document.getElementById("desa").value;
+    const kodeKec = document.getElementById("kecamatan")?.value || userKodeKec || "";
+    const kodeDesa = document.getElementById("desa")?.value || userKodeDesa || "";
     document.getElementById("kode_desa").value = kodeDesa;
+
     resetDropdown("dusun", "kode_dusun"); 
     resetDropdown("rt", "kode_rt");    
     
@@ -4453,11 +4454,14 @@
     if (kodeDesa && dusunObj) {
       const dusunSelect = document.getElementById("dusun");
       dusunSelect.disabled = false;
+      dusunSelect.style.pointerEvents = "auto";
+      dusunSelect.style.backgroundColor = "#ffffff";
 
       const allowedSet = new Set((userAllowedDusun || []).map(d => String(d).trim().padStart(4, '0')));
 
       for (let kode in dusunObj) {
-        let cleanKd = String(kode).trim().padStart(4, '0');        
+        let cleanKd = String(kode).trim().padStart(4, '0');       
+        
         
         if (isDesaRole() && allowedSet.size > 0) {
           if (!allowedSet.has(cleanKd)) {
@@ -4467,37 +4471,55 @@
         
         dusunSelect.add(new Option(dusunObj[kode].nama.toUpperCase(), cleanKd));
       }
-
+      
       if (isDesaRole() && dusunSelect.options.length === 2) {
         dusunSelect.selectedIndex = 1;
-        updateRT();
-      } else if (selectedVal) { 
+        document.getElementById("kode_dusun").value = dusunSelect.value;
+        updateRT(); // Langsung isi dan buka RT
+      }      
+      else if (selectedVal) { 
         setSelectValueCaseInsensitive("dusun", selectedVal); 
+        document.getElementById("kode_dusun").value = dusunSelect.value;
         updateRT(); 
       }
     }
   }
 
   function updateRT(selectedVal = "") {
-    const kodeKec = document.getElementById("kecamatan").value;
-    const kodeDesa = document.getElementById("desa").value;
-    const kodeDusun = document.getElementById("dusun").value;
+    const kodeKab = document.getElementById("kode_kab")?.value || userKodeKab || "";
+    const kodeKec = document.getElementById("kecamatan")?.value || userKodeKec || "";
+    const kodeDesa = document.getElementById("desa")?.value || userKodeDesa || "";
+    const kodeDusun = document.getElementById("dusun")?.value || "";
+    
     document.getElementById("kode_dusun").value = kodeDusun;
     resetDropdown("rt", "kode_rt");
-    let dusunObj = getDusunList(kodeKec, kodeDesa);
+
+    if (!kodeDusun) return;
+
+    let dusunObj = getDusunList(kodeKec, kodeDesa, kodeKab);
+    
     if (kodeDesa && kodeDusun && dusunObj && dusunObj[kodeDusun]) {
-      const rtSelect = document.getElementById("rt");
+      const rtSelect = document.getElementById("rt");      
+      
       rtSelect.disabled = false;
+      rtSelect.style.pointerEvents = "auto";
+      rtSelect.style.backgroundColor = "#ffffff";
+      rtSelect.style.cursor = "default";
+
       for (let i = 1; i <= dusunObj[kodeDusun].jumlah_rt; i++) {
         let kodeRTFormatted = i.toString().padStart(3, '0');
         rtSelect.add(new Option("RT " + kodeRTFormatted, kodeRTFormatted));
       }
+
       if (selectedVal) { 
         setSelectValueCaseInsensitive("rt", selectedVal); 
         setKodeRT(); 
       }
-    }    
-    checkAndLockKbTable();
+    }
+    
+    if (typeof checkAndLockKbTable === "function") {
+      checkAndLockKbTable();
+    }
   }
 
   function setKodeRT() { 
@@ -8063,42 +8085,55 @@ function onUserKabChange() {
     const desaSel  = document.getElementById("desa");
     const dusunSel = document.getElementById("dusun");
     const rtSel    = document.getElementById("rt");
-
-    // Ambil kode provinsi secara dinamis dari sesi atau master data (Bebas '52')
+    
     const activeProv = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-
+    
     setSelectValueCaseInsensitive("provinsi", activeProv);
     document.getElementById("kode_prov").value = activeProv;
     provSel.style.pointerEvents = "none";
     provSel.style.backgroundColor = "#e9ecef";
-
+    
     if (isDesaRole()) {
       updateKabupaten(userKodeKab);
+      document.getElementById("kode_kab").value = userKodeKab;
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
 
       updateKecamatan(userKodeKec);
+      document.getElementById("kode_kec").value = userKodeKec;
       kecSel.style.pointerEvents = "none";
       kecSel.style.backgroundColor = "#e9ecef";
 
       updateDesa(userKodeDesa);
+      document.getElementById("kode_desa").value = userKodeDesa;
       desaSel.style.pointerEvents = "none";
       desaSel.style.backgroundColor = "#e9ecef";
+      
+      updateDusun();
 
       dusunSel.style.pointerEvents = "auto";
       dusunSel.style.backgroundColor = "#ffffff";
       dusunSel.disabled = false;
-
-      rtSel.style.pointerEvents = "auto";
-      rtSel.style.backgroundColor = "#ffffff";
-      rtSel.disabled = true;
-
+      
+      if (dusunSel.value) {
+        rtSel.disabled = false;
+        rtSel.style.pointerEvents = "auto";
+        rtSel.style.backgroundColor = "#ffffff";
+        updateRT();
+      } else {
+        rtSel.disabled = true;
+        rtSel.style.backgroundColor = "#e9ecef";
+        rtSel.style.pointerEvents = "none";
+      }
+    
     } else if (isKecRole()) {
       updateKabupaten(userKodeKab);
+      document.getElementById("kode_kab").value = userKodeKab;
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
 
       updateKecamatan(userKodeKec);
+      document.getElementById("kode_kec").value = userKodeKec;
       kecSel.style.pointerEvents = "none";
       kecSel.style.backgroundColor = "#e9ecef";
 
@@ -8113,9 +8148,10 @@ function onUserKabChange() {
       rtSel.style.pointerEvents = "auto";
       rtSel.style.backgroundColor = "#ffffff";
       rtSel.disabled = true;
-
+    
     } else if (isKabRole()) {
       updateKabupaten(userKodeKab);
+      document.getElementById("kode_kab").value = userKodeKab;
       kabSel.style.pointerEvents = "none";
       kabSel.style.backgroundColor = "#e9ecef";
 
@@ -8134,9 +8170,8 @@ function onUserKabChange() {
       rtSel.style.pointerEvents = "auto";
       rtSel.style.backgroundColor = "#ffffff";
       rtSel.disabled = true;
-
+    
     } else {
-      // Admin Prov: Kabupaten bebas dipilih
       kabSel.style.pointerEvents = "auto";
       kabSel.style.backgroundColor = "#ffffff";
       kabSel.disabled = false;
