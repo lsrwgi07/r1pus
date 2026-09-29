@@ -7537,53 +7537,66 @@ function onUserKabChange() {
 
     const roleVal = document.getElementById("user_role_select").value;
     const userId = document.getElementById("user_id").value;
-
-    let targetKab = "";
-    let targetKec = "";
-    let targetDesa = "";
+    
+    let targetProv = userKodeProv || "52";
+    let targetKab = null;
+    let targetKec = null;
+    let targetDesa = null;
 
     if (roleVal === "Admin Prov") {
-    targetKab = null;
-    targetKec = null;
-    targetDesa = null;
+      targetKab = null;
+      targetKec = null;
+      targetDesa = null;
     } else if (roleVal === "Admin Kab") {
-    targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-    targetKec = null;
-    targetDesa = null;
+      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+      targetKec = null;
+      targetDesa = null;
     } else if (roleVal === "Admin Kec") {
-    targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-    targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
-    targetDesa = null;
+      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+      targetKec = (isProvRole() || isKabRole()) ? document.getElementById("user_kec_select").value : userKodeKec;
+      targetDesa = null;
     } else { // "User Desa"
-    targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
-    targetKec = isProvRole() || isKabRole() ? document.getElementById("user_kec_select").value : userKodeKec;
-    targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
+      targetKab = isProvRole() ? document.getElementById("user_kab_select").value : userKodeKab;
+      targetKec = (isProvRole() || isKabRole()) ? document.getElementById("user_kec_select").value : userKodeKec;
+      targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
     }
+    
+    const checkedBoxes = document.querySelectorAll('input[name="user_dusun_checkbox"]:checked');
+    const selectedDusun = Array.from(checkedBoxes).map(cb => cb.value.padStart(4, '0'));
 
-      // === GANTIKAN BLOK PAYLOAD DENGAN INI ===
-      // Ambil daftar kode dusun yang dicentang
-      const checkedDusunBoxes = document.querySelectorAll('input[name="user_dusun_checkbox"]:checked');
-      const selectedDusun = Array.from(checkedDusunBoxes).map(cb => cb.value);
+    const dusunString = (roleVal === "User Desa" && selectedDusun.length > 0) ? selectedDusun.join(',') : null;
+    const dusunArray = (roleVal === "User Desa" && selectedDusun.length > 0) ? selectedDusun : null;
+    
+    const payload = {
+      username: document.getElementById("user_name_input").value.trim(),
+      nama_lengkap: document.getElementById("user_fullname_input")?.value.trim() || document.getElementById("user_namalengkap_input")?.value.trim() || null,
+      password_hash: document.getElementById("user_pass_input").value.trim(),
+      role: roleVal,
+      kode_prov: targetProv ? targetProv.padStart(2, '0') : null,
+      kode_kab: targetKab ? targetKab.padStart(2, '0') : null,
+      kode_kec: targetKec ? targetKec.padStart(2, '0') : null,
+      kode_desa: targetDesa ? targetDesa.padStart(4, '0') : null,
+      kode_dusun_list: dusunString // Nama kolom bawaan tabel users
+    };
 
-      const payload = {
-        username: document.getElementById("user_name_input").value.trim(),
-        nama_lengkap: document.getElementById("user_fullname_input").value.trim() || null,
-        password_hash: document.getElementById("user_pass_input").value.trim(),
-        role: roleVal,
-        kode_prov: userKodeProv || "52",
-        kode_kab: targetKab ? targetKab.padStart(2, '0') : null,
-        kode_kec: targetKec ? targetKec.padStart(2, '0') : null,
-        kode_desa: targetDesa ? targetDesa.padStart(4, '0') : null,
-        allowed_dusun: (roleVal === "User Desa" && selectedDusun.length > 0) ? selectedDusun : null
-      };
-      // =======================================
-
-      try {
+    try {
       let res;
+      
       if (userId) {
         res = await db.from('users').update(payload).eq('id', userId);
       } else {
         res = await db.from('users').insert([payload]);
+      }
+      
+      if (res.error && res.error.message && res.error.message.includes("kode_dusun_list")) {
+        delete payload.kode_dusun_list;
+        payload.allowed_dusun = dusunArray;
+
+        if (userId) {
+          res = await db.from('users').update(payload).eq('id', userId);
+        } else {
+          res = await db.from('users').insert([payload]);
+        }
       }
 
       if (res.error) throw res.error;
@@ -7591,16 +7604,19 @@ function onUserKabChange() {
       Swal.fire({
         icon: 'success',
         title: 'Tersimpan!',
-        text: 'Data akun pengguna berhasil disimpan.',
+        text: `Data akun ${payload.username} berhasil disimpan.`,
         timer: 1500,
         showConfirmButton: false
       });
 
       resetUserForm();
-      loadUsersList();
+      if (typeof loadUsersList === "function") {
+        loadUsersList();
+      }
 
     } catch (err) {
-      Swal.fire('Gagal Menyimpan', err.message, 'error');
+      console.error("Save User Error:", err);
+      Swal.fire('Gagal Menyimpan', err.message || 'Terjadi kesalahan sistem saat menyimpan akun.', 'error');
     } finally {
       btn.disabled = false;
       btn.innerText = userId ? "💾 PERBARUI AKUN" : "💾 SIMPAN AKUN";
