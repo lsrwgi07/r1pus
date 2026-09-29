@@ -2354,6 +2354,30 @@
     }
   }
 
+  function refreshGreeting() {
+    if (!currentUser) return;
+    let activeProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+    let namaProvDinamis = dataProvinsi[activeProvKey] || Object.values(dataProvinsi)[0] || "";
+    let namaWilayahDinamis = "";
+
+    if (userRole.includes("PROV")) {
+      namaWilayahDinamis = namaProvDinamis;
+    } else if (userRole.includes("KAB")) {
+      const provKey = userKodeProv || "52";
+      if (dataKabupaten[provKey] && dataKabupaten[provKey][userKodeKab]) {
+        namaWilayahDinamis = dataKabupaten[provKey][userKodeKab];
+      }
+    } else if (userRole.includes("KEC") || userRole === "ADMIN") {
+      if (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
+        namaWilayahDinamis = dataKecamatan[userKodeKab][userKodeKec];
+      }
+    } else {
+      namaWilayahDinamis = (typeof getNamaDesaByKode === "function")
+        ? getNamaDesaByKode(userKodeKec, userKodeDesa, userKodeKab)
+        : "";
+    }
+    setUserGreeting(userRole, namaWilayahDinamis, currentUser, userKodeKab, namaProvDinamis, currentNamaLengkap || userNamaLengkap);
+  }
   
   function setSelectValueCaseInsensitive(selectId, targetValue) {
     const select = document.getElementById(selectId);
@@ -2428,10 +2452,10 @@
             namaWilayahDinamis = dataKecamatan[userKodeKab][userKodeKec];
           }
         } else {
-          if (dataDesa[userKodeKec] && dataDesa[userKodeKec][userKodeDesa]) {
-            namaWilayahDinamis = dataDesa[userKodeKec][userKodeDesa];
-          }
-        }
+          namaWilayahDinamis = (typeof getNamaDesaByKode === "function") 
+            ? getNamaDesaByKode(userKodeKec, userKodeDesa, userKodeKab) 
+            : "";
+        }        
 
         setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis, userNamaLengkap);
 
@@ -3996,82 +4020,82 @@
 
   // --- LOGIN & DASHBOARD VIEW LOGIC ---
   async function handleLogin(event) {
-  event.preventDefault();
-  const btn = document.getElementById("btnLogin");
-  const user = document.getElementById("login_username").value.trim();
-  const pass = document.getElementById("login_password").value.trim();
+    event.preventDefault();
+    const btn = document.getElementById("btnLogin");
+    const user = document.getElementById("login_username").value.trim();
+    const pass = document.getElementById("login_password").value.trim();
 
-  btn.disabled = true;
-  btn.innerText = "Memverifikasi...";
+    btn.disabled = true;
+    btn.innerText = "Memverifikasi...";
 
-  try {
-    // Memanggil Secure RPC function di backend Supabase (kredensial tabel terlindungi)
-    const { data, error } = await db.rpc('login_user_app', {
-      p_username: user,
-      p_password: pass
-    });
+    try {
+      // Memanggil Secure RPC function di backend Supabase (kredensial tabel terlindungi)
+      const { data, error } = await db.rpc('login_user_app', {
+        p_username: user,
+        p_password: pass
+      });
 
-    if (error || !data || !data.success) {
-      Swal.fire('Gagal Masuk', (data && data.message) ? data.message : 'Kredensial tidak valid!', 'warning');
-      return;
+      if (error || !data || !data.success) {
+        Swal.fire('Gagal Masuk', (data && data.message) ? data.message : 'Kredensial tidak valid!', 'warning');
+        return;
+      }
+
+      currentUser = data.username;
+      userNamaLengkap = data.nama_lengkap || "";
+      userRole = String(data.role || "User Desa").toUpperCase();
+      userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
+      userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
+      userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
+      const rawDusunFromDb = data.allowed_dusun || data.kode_dusun_list || null;
+      userAllowedDusun = parseAllowedDusun(rawDusunFromDb);
+
+      const sessionData = {
+        username: data.username,
+        nama_lengkap: userNamaLengkap,
+        role: data.role,
+        kode_prov: userKodeProv,
+        kode_kab: data.kode_kab,
+        kode_kec: data.kode_kec,
+        kode_desa: data.kode_desa,
+        allowed_dusun: data.allowed_dusun
+      };
+      localStorage.setItem("pus_app_session", JSON.stringify(sessionData));
+
+      let activeProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
+      let namaProvDinamis = dataProvinsi[activeProvKey] || Object.values(dataProvinsi)[0] || "";
+
+      let namaWilayahDinamis = "";
+      if (userRole.includes("PROV")) {
+        namaWilayahDinamis = namaProvDinamis;
+      } else if (userRole.includes("KAB")) {
+        const provKey = userKodeProv || "52";
+        if (dataKabupaten[provKey] && dataKabupaten[provKey][userKodeKab]) {
+          namaWilayahDinamis = dataKabupaten[provKey][userKodeKab];
+        }
+      } else if (userRole.includes("KEC") || userRole === "ADMIN") {
+        if (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
+          namaWilayahDinamis = dataKecamatan[userKodeKab][userKodeKec];
+        }
+      } else {
+        namaWilayahDinamis = (typeof getNamaDesaByKode === "function") 
+          ? getNamaDesaByKode(userKodeKec, userKodeDesa, userKodeKab) 
+          : "";      
+      }
+      
+      setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis, userNamaLengkap);
+
+      document.getElementById("loginContainer").style.display = "none";
+      document.getElementById("appContainer").style.display = "block";
+      
+      showDashboardView();
+
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "MASUK";
     }
-
-    currentUser = data.username;
-    userNamaLengkap = data.nama_lengkap || "";
-    userRole = String(data.role || "User Desa").toUpperCase();
-    userKodeKab = String(data.kode_kab || "").trim().padStart(2, '0');
-    userKodeKec = String(data.kode_kec || "").trim().padStart(2, '0');
-    userKodeDesa = String(data.kode_desa || "").trim().padStart(4, '0');
-    const rawDusunFromDb = data.allowed_dusun || data.kode_dusun_list || null;
-    userAllowedDusun = parseAllowedDusun(rawDusunFromDb);
-
-    const sessionData = {
-      username: data.username,
-      nama_lengkap: userNamaLengkap,
-      role: data.role,
-      kode_prov: userKodeProv,
-      kode_kab: data.kode_kab,
-      kode_kec: data.kode_kec,
-      kode_desa: data.kode_desa,
-      allowed_dusun: data.allowed_dusun
-    };
-    localStorage.setItem("pus_app_session", JSON.stringify(sessionData));
-
-    let activeProvKey = userKodeProv || Object.keys(dataProvinsi)[0] || "";
-    let namaProvDinamis = dataProvinsi[activeProvKey] || Object.values(dataProvinsi)[0] || "";
-
-    let namaWilayahDinamis = "";
-    if (userRole.includes("PROV")) {
-      namaWilayahDinamis = namaProvDinamis;
-    } else if (userRole.includes("KAB")) {
-      const provKey = userKodeProv || "52";
-      if (dataKabupaten[provKey] && dataKabupaten[provKey][userKodeKab]) {
-        namaWilayahDinamis = dataKabupaten[provKey][userKodeKab];
-      }
-    } else if (userRole.includes("KEC") || userRole === "ADMIN") {
-      if (dataKecamatan[userKodeKab] && dataKecamatan[userKodeKab][userKodeKec]) {
-        namaWilayahDinamis = dataKecamatan[userKodeKab][userKodeKec];
-      }
-    } else {
-      if (dataDesa[userKodeKec] && dataDesa[userKodeKec][userKodeDesa]) {
-        namaWilayahDinamis = dataDesa[userKodeKec][userKodeDesa];
-      }
-    }
-    
-    setUserGreeting(data.role, namaWilayahDinamis, data.username, userKodeKab, namaProvDinamis, userNamaLengkap);
-
-    document.getElementById("loginContainer").style.display = "none";
-    document.getElementById("appContainer").style.display = "block";
-    
-    showDashboardView();
-
-  } catch (err) {
-    Swal.fire('Error', err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "MASUK";
   }
-}
 
   function showDashboardView() {
     // Tutup dan reset modal jika masih terbuka
@@ -4109,6 +4133,10 @@
 
     if (typeof updateDashboardBadgeLayanan === "function") {
       updateDashboardBadgeLayanan();
+    }
+
+    if (typeof refreshGreeting === "function") {
+      refreshGreeting();
     }
   }  
 
