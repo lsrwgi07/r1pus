@@ -686,6 +686,49 @@
       #formPendaftaranLayanan button[type="button"] {
         width: 100% !important;
       }
+      
+      .grid-layanan-faskes {
+        display: grid;
+        grid-template-columns: 2fr 1.1fr 1.7fr;
+        gap: 14px;
+        align-items: start;
+        margin-top: 12px;
+        margin-bottom: 24px;
+      }
+
+      .btn-layanan-actions {
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid #e2e8f0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      /* Penyesuaian Mode Tablet (Layar <= 768px) */
+      @media (max-width: 768px) {
+        .grid-layanan-faskes {
+          grid-template-columns: 1.5fr 1fr 1.5fr;
+          gap: 10px;
+        }
+      }
+
+      /* Penyesuaian Mode HP / Mobile (Layar <= 640px) */
+      @media (max-width: 640px) {
+        .grid-layanan-faskes {
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+          margin-bottom: 16px !important;
+        }
+        .grid-layanan-faskes .label-field-kb {
+          height: auto !important;
+          min-height: auto !important;
+        }
+        .btn-layanan-actions {
+          grid-template-columns: 1fr !important;
+          gap: 10px !important;
+        }
+      }
     }
   </style>
 </head>
@@ -1843,7 +1886,7 @@
 
         <div class="form-group" style="margin-bottom: 12px;">
           <label>Nama Lengkap:</label>
-          <input type="text" id="user_fullname_input" placeholder="Contoh: Punk Lee (kosongkan jika default)" style="text-transform: none;">
+          <input type="text" id="user_namalengkap_input" placeholder="Contoh: Punk Lee (Kosongkan jika ingin sebutan wilayah)" style="text-transform: none;">
         </div>
 
         <div class="form-group" style="margin-bottom: 12px;">
@@ -1867,7 +1910,7 @@
           </select>
         </div>
 
-        <!-- BARIS BARU: KABUPATEN UNTUK USER -->
+        <!-- BARIS KABUPATEN -->
         <div id="userKabRow" class="form-group" style="display: none; margin-bottom: 12px;">
           <label>Kabupaten / Kota:</label>
           <select id="user_kab_select" onchange="onUserKabChange()">
@@ -1875,6 +1918,7 @@
           </select>
         </div>
 
+        <!-- BARIS KECAMATAN -->
         <div id="userKecRow" class="form-group" style="display: none; margin-bottom: 12px;">
           <label>Kecamatan:</label>
           <select id="user_kec_select" onchange="onUserKecChange()">
@@ -1882,23 +1926,22 @@
           </select>
         </div>
 
+        <!-- BARIS DESA -->
         <div id="userDesaRow" class="form-group" style="display: none; margin-bottom: 15px;">
           <label>Desa:</label>
-          <select id="user_desa_select">
+          <select id="user_desa_select" onchange="onUserDesaChange()">
             <option value="">-- PILIH DESA --</option>
           </select>
         </div>
 
-        <!-- PILIHAN AKSES DUSUN KHUSUS -->
+        <!-- BARIS HAK AKSES DUSUN -->
         <div id="userDusunRow" class="form-group" style="display: none; margin-bottom: 15px;">
-          <label style="align-self: flex-start;">Akses Dusun:</label>
+          <label>Hak Akses Dusun:</label>
           <div style="flex: 1;">
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
-              *Kosongkan centang jika user diizinkan mengakses <b>SEMUA DUSUN</b> di desa ini.
+            <div id="userDusunContainer" style="max-height: 120px; overflow-y: auto; border: 1px solid #ccc; border-radius: 6px; padding: 8px; background: #fff;">
+              <small style="color: #64748b;">Pilih Desa terlebih dahulu...</small>
             </div>
-            <div id="userDusunCheckboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #fff;">
-              <span style="color: #94a3b8; font-size: 12px;">Pilih desa terlebih dahulu...</span>
-            </div>
+            <small style="color: #64748b; font-size: 11px;">*Kosongkan centang jika akun diizinkan mengakses SEMUA dusun di desa tersebut.</small>
           </div>
         </div>
 
@@ -2244,26 +2287,26 @@
             <span style="font-size: 11px; color: #64748b; font-weight: 600;">(Terisi Otomatis)</span>
           </div>
 
-          <!-- Baris 1: Nama Istri & NIK Istri -->
+          <!-- Baris 1: Nama Istri & NIK Istri (Simetris 2 Kolom) -->
           <div class="grid-2-col">
             <div class="form-col-kb">
-              <label for="reg_nama_istri" class="label-field-kb">Nama Istri:</label>
+              <label for="reg_nama_istri" class="label-field-kb">NAMA ISTRI:</label>
               <input type="text" id="reg_nama_istri" class="input-control-kb" readonly placeholder="PILIH PUS TERLEBIH DAHULU" style="font-weight: 700; color: #0f172a;">
             </div>
             <div class="form-col-kb">
-              <label for="reg_nik_istri" class="label-field-kb">NIK Istri:</label>
+              <label for="reg_nik_istri" class="label-field-kb">NIK ISTRI:</label>
               <input type="text" id="reg_nik_istri" class="input-control-kb" readonly placeholder="-" style="font-family: monospace; font-weight: 600;">
             </div>
           </div>
 
-          <!-- Baris 2: Nama Suami & Wilayah Domisili -->
+          <!-- Baris 2: Nama Suami & Wilayah Domisili (Simetris 2 Kolom) -->
           <div class="grid-2-col" style="margin-bottom: 0;">
             <div class="form-col-kb">
-              <label for="reg_nama_suami" class="label-field-kb">Nama Suami:</label>
+              <label for="reg_nama_suami" class="label-field-kb">NAMA SUAMI:</label>
               <input type="text" id="reg_nama_suami" class="input-control-kb" readonly placeholder="-" style="font-weight: 600;">
             </div>
             <div class="form-col-kb">
-              <label for="reg_info_wilayah" class="label-field-kb">Wilayah Domisili:</label>
+              <label for="reg_info_wilayah" class="label-field-kb">WILAYAH DOMISILI:</label>
               <input type="text" id="reg_info_wilayah" class="input-control-kb" readonly placeholder="-">
             </div>
           </div>
@@ -2281,11 +2324,11 @@
             <span style="font-size: 11px; color: #ef4444; font-weight: 700;">* Wajib Diisi</span>
           </div>
 
-          <!-- Baris 1: Jenis Pelayanan, Metode, & Jenis Akseptor -->
+          <!-- Baris 1: Jenis Pelayanan, Metode, & Jenis Akseptor (3 Kolom Sejajar) -->
           <div class="grid-3-col">
             <div class="form-col-kb">
               <label for="reg_jenis_pelayanan" class="label-field-kb">
-                Jenis Pelayanan <span style="color:#ef4444; margin-left:2px;">*</span>
+                JENIS PELAYANAN <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <select id="reg_jenis_pelayanan" class="input-control-kb" onchange="onJenisPelayananChange()" required style="font-weight: 700;">
                 <option value="">-- PILIH PELAYANAN --</option>
@@ -2297,7 +2340,7 @@
 
             <div class="form-col-kb">
               <label for="reg_rencana_metode" class="label-field-kb">
-                Metode Kontrasepsi <span style="color:#ef4444; margin-left:2px;">*</span>
+                METODE KONTRASEPSI <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <select id="reg_rencana_metode" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" disabled required style="font-weight: 700; color: #0369a1;">
                 <option value=""></option>
@@ -2306,10 +2349,11 @@
 
             <div class="form-col-kb">
               <label class="label-field-kb">
-                Jenis Akseptor <span style="font-size: 10px; color: #0284c7; margin-left: 4px;">(OTOMATIS)</span>
+                JENIS AKSEPTOR <span style="font-size: 10px; color: #0284c7; margin-left: 4px;">(OTOMATIS)</span>
               </label>
               <input type="hidden" id="reg_jenis_akseptor" value="">
-              <div id="badgeJenisAkseptorDisplay" class="input-control-kb" style="background: #f8fafc; font-weight: 700; color: #64748b; display: flex; align-items: center; border-style: dashed;"></div>
+              <div id="badgeJenisAkseptorDisplay" class="input-control-kb" style="background: #f8fafc; font-weight: 700; color: #64748b; display: flex; align-items: center; border-style: dashed;">
+                Menunggu metode...
               </div>
             </div>
           </div>
@@ -2319,11 +2363,11 @@
             <small id="infoRiwayatKb" style="font-size: 11.5px; font-weight: 600; color: #0369a1; display: block; line-height: 1.4;"></small>
           </div>
 
-          <!-- Baris 2: Bulan & Tanggal Rencana -->
+          <!-- Baris 2: Bulan & Tanggal Rencana (2 Kolom Sejajar) -->
           <div class="grid-2-col">
             <div class="form-col-kb">
               <label for="reg_bulan_rencana" class="label-field-kb">
-                Bulan Pelayanan <span style="color:#ef4444; margin-left:2px;">*</span>
+                BULAN PELAYANAN <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <select id="reg_bulan_rencana" class="input-control-kb" onchange="evaluasiOtomatisJenisAkseptor()" required style="font-weight: 600;">
                 <option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option>
@@ -2335,43 +2379,114 @@
 
             <div class="form-col-kb">
               <label for="reg_tgl_rencana" class="label-field-kb">
-                Tanggal Rencana Tindakan <span style="color:#ef4444; margin-left:2px;">*</span>
+                TANGGAL RENCANA TINDAKAN <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
               <input type="date" id="reg_tgl_rencana" class="input-control-kb" required>
             </div>
           </div>
-
-          <!-- Baris 3: Tempat Pelayanan & Kader Pendamping -->
-          <div class="grid-2-col">
-            <div class="form-col-kb">
-              <label for="reg_faskes_tujuan" class="label-field-kb">
-                Tempat / Fasilitas Pelayanan <span style="color:#ef4444; margin-left:2px;">*</span>
-              </label>
-              <input type="text" id="reg_faskes_tujuan" class="input-control-kb" required placeholder="CONTOH: RSUD / PUSKESMAS / PMB" oninput="this.value = this.value.toUpperCase()">
+          
+          <!-- FILTER WILAYAH FASKES (SKALA PROVINSI) -->
+          <div id="wrapperFilterFaskesWilayah" style="display: none; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-top: 10px; margin-bottom: 12px;">
+            <div style="font-size: 11px; font-weight: 700; color: #0369a1; text-transform: uppercase; margin-bottom: 6px;">
+              📍 Filter Wilayah Faskes Pelayanan
             </div>
-
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
+              <!-- Dropdown Kabupaten (Muncul untuk Admin Prov) -->
+              <div id="colFilterFaskesKab" style="display: none;">
+                <label style="font-size: 11px; font-weight: bold; color: #475569;">KABUPATEN / KOTA:</label>
+                <select id="reg_filter_faskes_kab" class="input-control-kb" onchange="onRegFilterFaskesKabChange()" style="font-weight: 600;">
+                  <option value="">-- SEMUA KABUPATEN --</option>
+                </select>
+              </div>
+              <!-- Dropdown Kecamatan (Muncul untuk Admin Prov & Admin Kab) -->
+              <div id="colFilterFaskesKec" style="display: none;">
+                <label style="font-size: 11px; font-weight: bold; color: #475569;">KECAMATAN:</label>
+                <select id="reg_filter_faskes_kec" class="input-control-kb" onchange="onRegFilterFaskesKecChange()" style="font-weight: 600;">
+                  <option value="">-- PILIH KECAMATAN --</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Baris 3: Dropdown Faskes, Kode Faskes Otomatis, & Nama Kader -->
+          <div class="grid-layanan-faskes">            
             <div class="form-col-kb">
-              <label for="reg_nama_kader" class="label-field-kb">
-                Nama Kader Pendamping <span style="color:#ef4444; margin-left:2px;">*</span>
+              <label for="reg_faskes_tujuan" class="label-field-kb" style="height: 32px; margin-bottom: 6px; display: flex; align-items: flex-end;">
+                TEMPAT / FASILITAS PELAYANAN <span style="color:#ef4444; margin-left:2px;">*</span>
               </label>
-              <input type="text" id="reg_nama_kader" class="input-control-kb" required placeholder="NAMA LENGKAP KADER" oninput="this.value = this.value.toUpperCase()" style="font-weight: 600;">
+              <select 
+                id="reg_faskes_tujuan" 
+                class="input-control-kb" 
+                required 
+                onchange="onSelectFaskesLayananChange()"
+                style="font-weight: 600; text-transform: uppercase;"
+              >
+                <option value="">-- PILIH TEMPAT PELAYANAN --</option>
+              </select>
+            </div>            
+            
+            <div class="form-col-kb">
+              <label for="reg_kode_faskes" class="label-field-kb" style="height: 32px; margin-bottom: 6px; display: flex; align-items: flex-end;">
+                KODE FASKES
+              </label>
+              <input 
+                type="text" 
+                id="reg_kode_faskes" 
+                maxlength="11" 
+                class="input-control-kb" 
+                placeholder="" 
+                readonly
+                style="font-family: monospace; font-weight: bold; text-align: center; letter-spacing: 0.5px; background-color: #f1f5f9; cursor: not-allowed;"
+              >
+            </div>            
+            
+            <div class="form-col-kb">
+              <label for="reg_nama_kader" class="label-field-kb" style="height: 32px; margin-bottom: 6px; display: flex; align-items: flex-end;">
+                NAMA KADER <span style="color:#ef4444; margin-left:2px;">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="reg_nama_kader" 
+                class="input-control-kb" 
+                required 
+                placeholder="NAMA LENGKAP KADER" 
+                oninput="this.value = this.value.toUpperCase()" 
+                style="font-weight: 600;"
+              >
             </div>
           </div>
 
-          <!-- Baris 4: Catatan Tambahan -->
-          <div class="form-col-kb">
-            <label for="reg_catatan" class="label-field-kb" style="min-height: auto;">Catatan Tambahan:</label>
-            <input type="text" id="reg_catatan" class="input-control-kb" placeholder="Contoh: Riwayat tensi tinggi, ganti dari suntik 3 bulanan, dll." style="text-transform: none;">
+          <!-- Baris 4: Catatan Tambahan (Opsional) -->
+          <div class="form-col-kb" style="margin-bottom: 0;">
+            <label for="reg_catatan" class="label-field-kb" style="min-height: auto; margin-bottom: 4px;">
+              CATATAN TAMBAHAN (OPSIONAL):
+            </label>
+            <input 
+              type="text" 
+              id="reg_catatan" 
+              class="input-control-kb" 
+              placeholder="Contoh: Rujukan Pustu / Jadwal Sore / Kontak Khusus"
+            >
           </div>
         </div>
 
-        <!-- TOMBOL AKSI -->
-        <div style="display: flex; gap: 10px;">
-          <button type="submit" id="btnSimpanPendaftaranLayanan" class="btn-submit" style="margin-top: 0; flex: 2; background-color: #0284c7; padding: 12px; font-size: 14px;">
-            💾 DAFTARKAN CALON AKSEPTOR
+        <!-- TOMBOL AKSI SIMETRIS & RESPONSIF -->
+        <div class="btn-layanan-actions">          
+          <button 
+            type="button" 
+            class="btn-nav btn-secondary" 
+            onclick="resetFormPendaftaranLayanan()" 
+            style="width: 100%; height: 42px; line-height: 42px; padding: 0 16px; margin: 0; font-size: 13px; font-weight: 600; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;"
+          >
+            🔄 Bersihkan
           </button>
-          <button type="button" class="btn-nav btn-secondary" style="flex: 1; justify-content: center; padding: 12px; font-size: 14px;" onclick="resetFormPendaftaranLayanan()">
-            Bersihkan
+          <button
+            type="submit" 
+            id="btnSimpanPendaftaranLayanan" 
+            class="btn-submit" 
+            style="width: 100%; height: 42px; line-height: 42px; padding: 0 16px; margin: 0; font-size: 13px; font-weight: 700; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;"
+          >
+            💾 DAFTARKAN CALON AKSEPTOR
           </button>
         </div>
       </form>
@@ -5246,18 +5361,54 @@
   // Helper evaluasi komprehensif status PUS, PUS Baru, Hamil Baru, dan Akseptor KB Baru
   function hitungStatusIndikator(r, bulan, mKeys) {
     const monthKey = mKeys[bulan - 1];
-    const cur = evaluateKbStatus(r[monthKey]);
+    let cur = evaluateKbStatus(r[monthKey]);
     const prev = bulan > 1 ? evaluateKbStatus(r[mKeys[bulan - 2]]) : null;
     const umurIstri = parseInt(r.umur_istri || 0, 10);
 
-    // 1. EVALUASI TOTAL PUS & BUKAN PUS
-    const isMutasiOr50 = (cur.type === "BUKAN_PUS" || umurIstri >= 50);
+    // 1. CEK APAKAH SUDAH TERJADI MUTASI DI BULAN-BULAN SEBELUMNYA (BULAN 1 S.D BULAN-1)
+    let pernahMutasiSebelumnya = false;
+    let jenisMutasiSebelumnya = "";
+    for (let i = 0; i < bulan - 1; i++) {
+      const stPrev = evaluateKbStatus(r[mKeys[i]]);
+      if (stPrev.type === "BUKAN_PUS") {
+        pernahMutasiSebelumnya = true;
+        jenisMutasiSebelumnya = stPrev.cat;
+        break;
+      }
+    }
+
+    // 2. CEK USIA 50 TAHUN SECARA PRESISI DARI TANGGAL LAHIR
+    let sudah50Tahun = false;
+    if (r.tgl_lahir_istri) {
+      const dob = new Date(r.tgl_lahir_istri);
+      if (!isNaN(dob.getTime())) {
+        const thnInput = parseInt(r.tahun || document.getElementById("recapTahun")?.value || new Date().getFullYear(), 10);
+        const birthYear = dob.getFullYear();
+        const birthMonth = dob.getMonth() + 1;
+        const yearTurning50 = birthYear + 50;
+
+        if (thnInput > yearTurning50) {
+          sudah50Tahun = true;
+        } else if (thnInput === yearTurning50 && bulan >= birthMonth) {
+          sudah50Tahun = true;
+        }
+      }
+    } else if (umurIstri >= 50) {
+      sudah50Tahun = true;
+    }
+
+    // JIKA DI BULAN INI KOSONG TAPI PERNAH MUTASI DI BULAN LALU, JANGAN ANGGAP SEBAGAI PUS
+    const isMutasiBulanIni = (cur.type === "BUKAN_PUS");
+    const isMutasiOr50 = isMutasiBulanIni || pernahMutasiSebelumnya || sudah50Tahun;
+
+    // SYARAT PUS AKTIF:
+    // Bukan mutasi (baik bulan ini maupun bulan lalu), belum 50 tahun, dan status bulan ini PESERTA_KB / BUKAN_PESERTA
     const isPusAktif = !isMutasiOr50 && (cur.type === "PESERTA_KB" || cur.type === "BUKAN_PESERTA");
 
-    // 2. EVALUASI RIWAYAT BULAN SEBELUMNYA
+    // 3. EVALUASI RIWAYAT BULAN SEBELUMNYA
     let allPrevEmpty = true;
     let everKbBefore = false;
-    let consecutiveNonKbCount = 0; // Menghitung putus pakai mundur dari bulan lalu
+    let consecutiveNonKbCount = 0;
 
     for (let i = 0; i < bulan - 1; i++) {
       const st = evaluateKbStatus(r[mKeys[i]]);
@@ -5269,7 +5420,6 @@
       }
     }
 
-    // Hitung berapa bulan berturut-turut tidak ber-KB tepat sebelum bulan ini
     if (bulan > 1) {
       for (let i = bulan - 2; i >= 0; i--) {
         const st = evaluateKbStatus(r[mKeys[i]]);
@@ -5281,49 +5431,47 @@
       }
     }
 
-    // 3. EVALUASI PUS BARU
+    // 4. EVALUASI PUS BARU (Mendukung perpindahan wilayah provinsi maupun tiket mutasi)
     let isPusBaru = false;
-    const isBukanPindah = (r.is_pindah_dalam_kab !== true && r.is_pindah_dalam_kab !== "true" && !r.id_mutasi_tiket);
+    const isBukanPindah = (
+      r.is_pindah_dalam_prov !== true && 
+      r.is_pindah_dalam_prov !== "true" && 
+      r.is_pindah_dalam_kab !== true && 
+      r.is_pindah_dalam_kab !== "true" && 
+      !r.id_mutasi_tiket
+    );
     if (!isMutasiOr50 && isBukanPindah && isPusAktif) {
-      if (bulan === 1) {
-        isPusBaru = true;
-      } else if (allPrevEmpty) {
+      if (bulan === 1 || allPrevEmpty) {
         isPusBaru = true;
       }
     }
 
-    // 4. EVALUASI HAMIL BARU
+    // 5. EVALUASI HAMIL BARU
     let isHamilBaru = false;
     if (cur.type === "BUKAN_PESERTA" && cur.reason === "HAMIL") {
-      if (bulan === 1) {
-        isHamilBaru = true;
-      } else if (prev && prev.reason !== "HAMIL") {
+      if (bulan === 1 || (prev && prev.reason !== "HAMIL")) {
         isHamilBaru = true;
       }
     }
 
-    // 5. EVALUASI AKSEPTOR KB BARU & GANTI CARA
+    // 6. EVALUASI AKSEPTOR KB BARU & GANTI CARA
     let isKbBaru = false;
-    let kbBaruSub = ""; // 'KBPP' | 'PASCA_DO' | 'MURNI'
+    let kbBaruSub = "";
     let isGantiCara = false;
 
-    if (cur.type === "PESERTA_KB") {
+    if (cur.type === "PESERTA_KB" && !isMutasiOr50) {
       if (bulan > 1) {
         if (prev && prev.type === "PESERTA_KB") {
-          // Bukan KB baru, cek apakah ganti metode
           if (prev.method && prev.method !== cur.method) {
             isGantiCara = true;
           }
         } else if (prev && prev.reason === "HAMIL") {
-          // KBPP: Bulan lalu berstatus HAMIL
           isKbBaru = true;
           kbBaruSub = "KBPP";
         } else if (everKbBefore && consecutiveNonKbCount >= 3) {
-          // Pasca DO: Pernah ber-KB dan putus pakai minimal 3 bulan berturut-turut
           isKbBaru = true;
           kbBaruSub = "PASCA_DO";
         } else if (!everKbBefore) {
-          // Baru Murni: Belum pernah tercatat ber-KB sebelumnya
           isKbBaru = true;
           kbBaruSub = "MURNI";
         }
@@ -5336,12 +5484,15 @@
       umurIstri,
       isPusAktif,
       isMutasiOr50,
+      isMutasiBulanIni,
+      pernahMutasiSebelumnya,
+      sudah50Tahun,
       isPusBaru,
       isHamilBaru,
       isKbBaru,
       kbBaruSub,
       isGantiCara
-    };  
+    };
   }
   
   async function fetchRecap() {
@@ -5489,7 +5640,8 @@
       if (res.isPusAktif) {
         grouped[key].total_pus++;
 
-        // Kelompok Umur
+        // Distribusi Kelompok Umur
+        const u = res.umurIstri;
         if (u >= 15 && u <= 19) grouped[key].u15_19++;
         else if (u >= 20 && u <= 24) grouped[key].u20_24++;
         else if (u >= 25 && u <= 29) grouped[key].u25_29++;
@@ -5498,7 +5650,7 @@
         else if (u >= 40 && u <= 44) grouped[key].u40_44++;
         else if (u >= 45) grouped[key].u45_plus++;
 
-        // Distribusi 4 Kategori Kepesertaan JKN (Total JKN = Total PUS)
+        // Distribusi Kepesertaan JKN (Total JKN = Total PUS)
         const rawJkn = String(r.peserta_jkn || "").toUpperCase().trim();
         if (rawJkn === "PBI" || (rawJkn.includes("PBI") && !rawJkn.includes("BUKAN") && !rawJkn.includes("NON"))) {
           grouped[key].jkn_pbi++;
@@ -5511,12 +5663,12 @@
         }
       }
 
-      // B. PUS BARU
+      // 2. PUS BARU
       if (res.isPusBaru) {
         grouped[key].pus_baru++;
       }
 
-      // C. PESERTA KB AKTIF & AKSEPTOR KB BARU
+      // 3. PESERTA KB AKTIF
       if (cur.type === "PESERTA_KB" && !res.isMutasiOr50) {
         grouped[key].ber_kb++;
         if (cur.method === "PIL") grouped[key].pil++;
@@ -5541,7 +5693,7 @@
           grouped[key].ganti_cara++;
         }
 
-      // D. BUKAN PESERTA KB
+      // 4. BUKAN PESERTA KB
       } else if (cur.type === "BUKAN_PESERTA" && !res.isMutasiOr50) {
         grouped[key].tidak_kb++;
         
@@ -5555,7 +5707,7 @@
         else if (cur.reason === "TIAL") grouped[key].tial++;
         else if (cur.reason === "TKI") grouped[key].tki++;
 
-      // E. BUKAN PUS / MUTASI / USIA 50+
+      // 5. BUKAN PUS / MUTASI / USIA 50+
       } else if (res.isMutasiOr50) {          
         if (cur.type === "BUKAN_PUS" || cur.cat === "50+") {
           grouped[key].bukan_pus++;
@@ -7604,10 +7756,44 @@
         selDesa.disabled = false;
         populateDesaByKec(kdKec, "user_desa_select", kdKab);
       }
-      // Kosongkan checklist dusun jika kecamatan berganti
-      renderUserDusunCheckboxes();
+      onUserDesaChange();
     }
-  }  
+  }
+
+  function onUserDesaChange() {
+    const isKabOrProv = isProvRole() || isKabRole();
+    const kdKab = isProvRole() ? document.getElementById("user_kab_select")?.value : userKodeKab;
+    const kdKec = isKabOrProv ? document.getElementById("user_kec_select")?.value : userKodeKec;
+    const kdDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select")?.value;
+    const container = document.getElementById("userDusunContainer");
+    const dusunRow = document.getElementById("userDusunRow");
+
+    if (!kdKec || !kdDesa) {
+      if (dusunRow) dusunRow.style.display = "none";
+      if (container) container.innerHTML = "<small style='color:#64748b;'>Pilih Desa terlebih dahulu...</small>";
+      return;
+    }
+
+    const dsnList = getDusunList(kdKec, kdDesa, kdKab);
+    if (!dsnList || Object.keys(dsnList).length === 0) {
+      if (dusunRow) dusunRow.style.display = "flex";
+      if (container) container.innerHTML = "<small style='color:#ef4444;'>Tidak ada data dusun terdaftar di desa ini.</small>";
+      return;
+    }
+
+    if (dusunRow) dusunRow.style.display = "flex";
+    let html = "";
+    for (let kd in dsnList) {
+      let cleanKd = String(kd).padStart(4, '0');
+      html += `
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; font-size: 12px; margin-bottom: 5px; cursor: pointer; width: 100%;">
+          <input type="checkbox" name="user_dusun_checkbox" value="${cleanKd}">
+          <span><b>[${cleanKd}]</b> ${dsnList[kd].nama}</span>
+        </label>
+      `;
+    }
+    if (container) container.innerHTML = html;
+  }
 
   function renderUserDusunCheckboxes(selectedDusunArray = []) {
     const roleVal = document.getElementById("user_role_select").value;
@@ -7658,137 +7844,139 @@
   }
 
   function onUserRoleChange() {
-  const roleVal = document.getElementById("user_role_select").value;
-  const kabRow = document.getElementById("userKabRow");
-  const kecRow = document.getElementById("userKecRow");
-  const desaRow = document.getElementById("userDesaRow");
-  const selKab = document.getElementById("user_kab_select");
-  const selKec = document.getElementById("user_kec_select");
-  const selDesa = document.getElementById("user_desa_select");
+    const roleVal = document.getElementById("user_role_select").value;
+    const kabRow = document.getElementById("userKabRow");
+    const kecRow = document.getElementById("userKecRow");
+    const desaRow = document.getElementById("userDesaRow");
+    const selKab = document.getElementById("user_kab_select");
+    const selKec = document.getElementById("user_kec_select");
+    const selDesa = document.getElementById("user_desa_select");
 
-  // Reset visibilitas baris form
-  kabRow.style.display = "none";
-  kecRow.style.display = "none";
-  desaRow.style.display = "none";
+    // Reset visibilitas baris form
+    kabRow.style.display = "none";
+    kecRow.style.display = "none";
+    desaRow.style.display = "none";
 
-  if (!roleVal || roleVal === "Admin Prov") {
-    // Admin Prov tidak membutuhkan binding wilayah spesifik
-    return;
-  }
-
-  // ==========================================
-  // 1. PENGATURAN KABUPATEN
-  // ==========================================
-  kabRow.style.display = "flex";
-  if (isProvRole()) {
-    // Admin Provinsi: Bebas memilih kabupaten mana saja
-    populateKabupatenDropdown("user_kab_select");
-    selKab.disabled = false;
-  } else {
-    // Admin Kab / Admin Kec / User Desa: Terkunci ke kabupaten login
-    populateKabupatenDropdown("user_kab_select");
-    selKab.value = userKodeKab;
-    selKab.disabled = true;
-  }
-
-  // ==========================================
-  // 2. JIKA MEMBUAT AKUN: ADMIN KAB
-  // ==========================================
-  if (roleVal === "Admin Kab") {
-    return; // Cukup baris Kabupaten
-  }
-
-  // ==========================================
-  // 3. PENGATURAN KECAMATAN
-  // ==========================================
-  kecRow.style.display = "flex";
-  if (isProvRole()) {
-    selKec.disabled = false;
-    if (selKab.value) {
-      populateKecamatanByKab(selKab.value, "user_kec_select");
-    } else {
-      selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
+    if (!roleVal || roleVal === "Admin Prov") {
+      // Admin Prov tidak membutuhkan binding wilayah spesifik
+      return;
     }
-  } else if (isKabRole()) {
-    // Admin Kab: Bebas memilih seluruh kecamatan di kabupatennya
-    selKec.disabled = false;
-    populateKecamatanByKab(userKodeKab, "user_kec_select");
-  } else {
-    // Admin Kec & User Desa: Terkunci ke kecamatan login
-    populateKecamatanByKab(userKodeKab, "user_kec_select");
-    selKec.value = userKodeKec;
-    selKec.disabled = true;
-  }
 
-  // ==========================================
-  // 4. JIKA MEMBUAT AKUN: ADMIN KEC
-  // ==========================================
-  if (roleVal === "Admin Kec") {
-    return; // Cukup sampai baris Kecamatan
-  }
-
-  // ==========================================
-  // 5. JIKA MEMBUAT AKUN: USER DESA
-  // ==========================================
-  desaRow.style.display = "flex";
-  if (isProvRole()) {
-    selDesa.disabled = false;
-    if (selKec.value) {
-      populateDesaByKec(selKec.value, "user_desa_select", selKab.value);
+    // ==========================================
+    // 1. PENGATURAN KABUPATEN
+    // ==========================================
+    kabRow.style.display = "flex";
+    if (isProvRole()) {
+      // Admin Provinsi: Bebas memilih kabupaten mana saja
+      populateKabupatenDropdown("user_kab_select");
+      selKab.disabled = false;
     } else {
-      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+      // Admin Kab / Admin Kec / User Desa: Terkunci ke kabupaten login
+      populateKabupatenDropdown("user_kab_select");
+      selKab.value = userKodeKab;
+      selKab.disabled = true;
     }
-  } else if (isKabRole()) {
-    selDesa.disabled = false;
-    if (selKec.value) {
-      populateDesaByKec(selKec.value, "user_desa_select", userKodeKab);
+
+    // ==========================================
+    // 2. JIKA MEMBUAT AKUN: ADMIN KAB
+    // ==========================================
+    if (roleVal === "Admin Kab") {
+      return; // Cukup baris Kabupaten
+    }
+
+    // ==========================================
+    // 3. PENGATURAN KECAMATAN
+    // ==========================================
+    kecRow.style.display = "flex";
+    if (isProvRole()) {
+      selKec.disabled = false;
+      if (selKab.value) {
+        populateKecamatanByKab(selKab.value, "user_kec_select");
+      } else {
+        selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
+      }
+    } else if (isKabRole()) {
+      // Admin Kab: Bebas memilih seluruh kecamatan di kabupatennya
+      selKec.disabled = false;
+      populateKecamatanByKab(userKodeKab, "user_kec_select");
     } else {
-      selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+      // Admin Kec & User Desa: Terkunci ke kecamatan login
+      populateKecamatanByKab(userKodeKab, "user_kec_select");
+      selKec.value = userKodeKec;
+      selKec.disabled = true;
     }
-  } else if (isKecRole()) {
-    // Admin Kec: Bebas memilih seluruh desa di kecamatannya
-    selDesa.disabled = false;
-    populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
-  } else {
-    // User Desa: Terkunci ke desanya sendiri
-    populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
-    selDesa.value = userKodeDesa;
-    selDesa.disabled = true;
-  }
-}
 
-function onUserKabChange() {
-  const selKab = document.getElementById("user_kab_select");
-  const selKec = document.getElementById("user_kec_select");
-  const selDesa = document.getElementById("user_desa_select");
-  const roleVal = document.getElementById("user_role_select").value;
+    // ==========================================
+    // 4. JIKA MEMBUAT AKUN: ADMIN KEC
+    // ==========================================
+    if (roleVal === "Admin Kec") {
+      return; // Cukup sampai baris Kecamatan
+    }
 
-  const kdKab = selKab ? selKab.value : "";
-  if (!kdKab) {
-    if (selKec) selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
-    if (selDesa) selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
-    return;
+    // ==========================================
+    // 5. JIKA MEMBUAT AKUN: USER DESA
+    // ==========================================
+    desaRow.style.display = "flex";
+    if (isProvRole()) {
+      selDesa.disabled = false;
+      if (selKec.value) {
+        populateDesaByKec(selKec.value, "user_desa_select", selKab.value);
+      } else {
+        selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+      }
+    } else if (isKabRole()) {
+      selDesa.disabled = false;
+      if (selKec.value) {
+        populateDesaByKec(selKec.value, "user_desa_select", userKodeKab);
+      } else {
+        selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+      }
+    } else if (isKecRole()) {
+      // Admin Kec: Bebas memilih seluruh desa di kecamatannya
+      selDesa.disabled = false;
+      populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
+    } else {
+      // User Desa: Terkunci ke desanya sendiri
+      populateDesaByKec(userKodeKec, "user_desa_select", userKodeKab);
+      selDesa.value = userKodeDesa;
+      selDesa.disabled = true;
+    }
   }
 
-  // Refresh daftar kecamatan sesuai kabupaten terpilih
-  if (selKec && (roleVal === "Admin Kec" || roleVal === "User Desa")) {
-    selKec.disabled = false;
-    populateKecamatanByKab(kdKab, "user_kec_select");
+  function onUserKabChange() {
+    const selKab = document.getElementById("user_kab_select");
+    const selKec = document.getElementById("user_kec_select");
+    const selDesa = document.getElementById("user_desa_select");
+    const roleVal = document.getElementById("user_role_select").value;
+
+    const kdKab = selKab ? selKab.value : "";
+    if (!kdKab) {
+      if (selKec) selKec.innerHTML = '<option value="">-- PILIH KABUPATEN TERLEBIH DAHULU --</option>';
+      if (selDesa) selDesa.innerHTML = '<option value="">-- PILIH KECAMATAN TERLEBIH DAHULU --</option>';
+      return;
+    }
+
+    // Refresh daftar kecamatan sesuai kabupaten terpilih
+    if (selKec && (roleVal === "Admin Kec" || roleVal === "User Desa")) {
+      selKec.disabled = false;
+      populateKecamatanByKab(kdKab, "user_kec_select");
+    }
+    if (selDesa) {
+      selDesa.innerHTML = '<option value="">-- PILIH DESA --</option>';
+    }
   }
-  if (selDesa) {
-    selDesa.innerHTML = '<option value="">-- PILIH DESA --</option>';
-  }
-}
 
   function resetUserForm() {
     document.getElementById("formUserAccount").reset();
     document.getElementById("user_id").value = "";
-    document.getElementById("user_fullname_input").value = "";
+    document.getElementById("user_namalengkap_input").value = "";
     document.getElementById("user_name_input").readOnly = false;
     document.getElementById("btnSaveUserAcc").innerText = "💾 SIMPAN AKUN";
-    
+
+    const dusunContainer = document.getElementById("userDusunContainer");
+    if (dusunContainer) dusunContainer.innerHTML = "<small style='color: #64748b;'>Pilih Desa terlebih dahulu...</small>";
     const dusunRow = document.getElementById("userDusunRow");
-    if (dusunRow) dusunRow.style.display = "none";    
+    if (dusunRow) dusunRow.style.display = "none";
 
     onUserRoleChange();
   }
@@ -7802,7 +7990,6 @@ function onUserKabChange() {
     const roleVal = document.getElementById("user_role_select").value;
     const userId = document.getElementById("user_id").value;
 
-    // 1. Tentukan batasan wilayah secara hierarkis (Prov -> Kab -> Kec -> Desa)
     let targetProv = userKodeProv || "52";
     let targetKab = null;
     let targetKec = null;
@@ -7826,37 +8013,33 @@ function onUserKabChange() {
       targetDesa = isDesaRole() ? userKodeDesa : document.getElementById("user_desa_select").value;
     }
 
-    // 2. Ambil daftar dusun yang dicentang (khusus User Desa)
     const checkedBoxes = document.querySelectorAll('input[name="user_dusun_checkbox"]:checked');
     const selectedDusun = Array.from(checkedBoxes).map(cb => cb.value.padStart(4, '0'));
 
     const dusunString = (roleVal === "User Desa" && selectedDusun.length > 0) ? selectedDusun.join(',') : null;
     const dusunArray = (roleVal === "User Desa" && selectedDusun.length > 0) ? selectedDusun : null;
 
-    // 3. Susun Payload Dasar
     const payload = {
       username: document.getElementById("user_name_input").value.trim(),
-      nama_lengkap: document.getElementById("user_fullname_input")?.value.trim() || document.getElementById("user_namalengkap_input")?.value.trim() || null,
+      nama_lengkap: document.getElementById("user_namalengkap_input")?.value.trim() || null,
       password_hash: document.getElementById("user_pass_input").value.trim(),
       role: roleVal,
       kode_prov: targetProv ? targetProv.padStart(2, '0') : null,
       kode_kab: targetKab ? targetKab.padStart(2, '0') : null,
       kode_kec: targetKec ? targetKec.padStart(2, '0') : null,
       kode_desa: targetDesa ? targetDesa.padStart(4, '0') : null,
-      kode_dusun_list: dusunString // Nama kolom bawaan tabel users
+      kode_dusun_list: dusunString
     };
 
     try {
       let res;
-
-      // 4. Eksekusi simpan/update ke Supabase
       if (userId) {
         res = await db.from('users').update(payload).eq('id', userId);
       } else {
         res = await db.from('users').insert([payload]);
       }
 
-      // Jika terjadi error karena kolom kode_dusun_list tidak ada dan tabel memakai allowed_dusun
+      // Fallback jika database menggunakan kolom array allowed_dusun
       if (res.error && res.error.message && res.error.message.includes("kode_dusun_list")) {
         delete payload.kode_dusun_list;
         payload.allowed_dusun = dusunArray;
@@ -8159,49 +8342,54 @@ function onUserKabChange() {
     if (!item) return;
 
     document.getElementById("user_id").value = item.id;
-    document.getElementById("user_fullname_input").value = item.nama_lengkap || "";
+    document.getElementById("user_namalengkap_input").value = item.nama_lengkap || "";
     document.getElementById("user_name_input").value = item.username;
     document.getElementById("user_pass_input").value = item.password_hash;
     document.getElementById("user_role_select").value = item.role;
 
-    // 1. Tampilkan baris form sesuai role akun
     onUserRoleChange();
 
-    // 2. Set Kabupaten
     if (item.kode_kab) {
       const kabVal = String(item.kode_kab).padStart(2, '0');
       const selKab = document.getElementById("user_kab_select");
       if (selKab) {
         selKab.value = kabVal;
-        // Isi dropdown kecamatan berdasarkan kabupaten terpilih
         populateKecamatanByKab(kabVal, "user_kec_select");
       }
     }
 
-    // 3. Set Kecamatan
     if (item.kode_kec) {
       const kecVal = String(item.kode_kec).padStart(2, '0');
       const selKec = document.getElementById("user_kec_select");
       if (selKec) {
         selKec.value = kecVal;
-        // Isi dropdown desa berdasarkan kecamatan terpilih, sisipkan item.kode_kab
         populateDesaByKec(kecVal, "user_desa_select", item.kode_kab);
       }
     }
 
-    // 4. Set Desa
     if (item.kode_desa) {
       const desaVal = String(item.kode_desa).padStart(4, '0');
       const selDesa = document.getElementById("user_desa_select");
       if (selDesa) {
         selDesa.value = desaVal;
       }
+      
+      onUserDesaChange();
+
+      const rawAllowed = item.allowed_dusun || item.kode_dusun_list || null;
+      if (rawAllowed) {
+        const dsnArr = Array.isArray(rawAllowed)
+          ? rawAllowed.map(s => String(s).trim().padStart(4, '0'))
+          : String(rawAllowed).split(',').map(s => s.trim().padStart(4, '0'));
+
+        const checkboxes = document.querySelectorAll('input[name="user_dusun_checkbox"]');
+        checkboxes.forEach(cb => {
+          cb.checked = dsnArr.includes(String(cb.value).trim().padStart(4, '0'));
+        });
+      }
     }
 
-    renderUserDusunCheckboxes(item.allowed_dusun || []);
-
     document.getElementById("btnSaveUserAcc").innerText = "💾 PERBARUI AKUN";
-    // Pindah ke tab form dengan parameter isEdit = true agar form tidak di-reset
     switchUserTab('form', true);
   }
 
@@ -10628,16 +10816,39 @@ function onUserKabChange() {
 
   function openPelayananKbModal() {    
     const modal = document.getElementById("modalPelayananKb");
-    if (modal) modal.style.display = "block";
-    switchLayananTab('antrean');
-    resetFormPendaftaranLayanan();
+    if (!modal) return;
+    
+    modal.style.display = "block";
+    cachedAntreanLayanan = [];
+    
+    if (typeof populateDropdownFaskesLayanan === "function") {
+      populateDropdownFaskesLayanan();
+    }
+    
+    if (typeof switchLayananTab === "function") {
+      switchLayananTab('antrean');
+    }
+    
+    if (typeof resetFormPendaftaranLayanan === "function") {
+      resetFormPendaftaranLayanan();
+    }
     
     const currentMonth = new Date().getMonth() + 1;
     const blnEl = document.getElementById("reg_bulan_rencana");
     if (blnEl) blnEl.value = String(currentMonth);
 
+    const kaderInput = document.getElementById("reg_nama_kader");
+    if (kaderInput) {
+      kaderInput.value = (currentNamaLengkap || currentUser || "").toUpperCase();
+    }
+
     const tahunEl = document.getElementById("filterLayananTahun");
-    if (tahunEl) tahunEl.value = String(new Date().getFullYear());
+    if (tahunEl) {
+      const currentYear = String(new Date().getFullYear());
+      let exists = Array.from(tahunEl.options).some(opt => opt.value === currentYear);
+      if (!exists) tahunEl.add(new Option(currentYear, currentYear));
+      tahunEl.value = currentYear;
+    }
 
     const bMulaiEl = document.getElementById("filterLayananBulanMulai");
     const bSampaiEl = document.getElementById("filterLayananBulanSampai");
@@ -10650,6 +10861,10 @@ function onUserKabChange() {
     const tbody = document.getElementById("antreanLayananTbody");
     if (tbody) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Silakan pilih periode Bulan Mulai & Sampai terlebih dahulu.</td></tr>`;
+    }
+    
+    if (typeof updateStatusTombolCetak === "function") {
+      updateStatusTombolCetak();
     }
   }
 
@@ -11602,7 +11817,6 @@ function onUserKabChange() {
 
     const dynamicTitle = `KARTU_K_I_KB_${labelNamaIstri}`;
 
-    // KUNCI SOLUSI NAMA FILE PDF K/I/KB:
     const originalDocumentTitle = document.title;
     document.title = dynamicTitle;
 
@@ -12592,7 +12806,7 @@ function onUserKabChange() {
           <style>
             @page {
               size: A4 portrait;
-              margin: 0 !important; /* Menghilangkan otomatis header & footer URL/tanggal peramban */
+              margin: 0 !important;
             }
             * {
               box-sizing: border-box !important;
@@ -12618,7 +12832,6 @@ function onUserKabChange() {
               box-sizing: border-box;
               overflow: hidden;
             }
-            /* Ukuran Padding Persis index_prov.html */
             .page-kiv {
               padding: 20mm 15mm !important;
             }
@@ -12974,13 +13187,16 @@ function onUserKabChange() {
 
   function pilihPusUntukLayanan(item) {
     pusTerpilihDataLayanan = item;
-    const hasilContainer = document.getElementById("hasilPencarianPusLayanan");
-    if (hasilContainer) hasilContainer.style.display = "none";
+
+    const resultBox = document.getElementById("hasilPencarianPusLayanan");
+    if (resultBox) resultBox.style.display = "none";
+    
+    document.getElementById("cariPusLayananInput").value = item.nama_istri || "";
 
     document.getElementById("reg_id_pus").value = item.id_pus || "";
     document.getElementById("reg_tahun").value = item.tahun || new Date().getFullYear();
     document.getElementById("reg_kode_prov").value = item.kode_prov || userKodeProv || "52";
-    document.getElementById("reg_kode_kab").value = item.kode_kab || "";
+    document.getElementById("reg_kode_kab").value = item.kode_kab || userKodeKab || "";
     document.getElementById("reg_kode_kec").value = item.kode_kec || "";
     document.getElementById("reg_kode_desa").value = item.kode_desa || "";
     document.getElementById("reg_kode_dusun").value = item.kode_dusun || "";
@@ -12988,45 +13204,56 @@ function onUserKabChange() {
     document.getElementById("reg_nik_suami").value = item.nik_suami || "";
 
     document.getElementById("reg_nama_istri").value = item.nama_istri || "";
-    document.getElementById("reg_nik_istri").value = item.nik_istri || "-";
-    document.getElementById("reg_nama_suami").value = item.nama_suami || "-";
-    document.getElementById("reg_info_wilayah").value = `RT ${item.kode_rt || '-'}, DSN ${item.dusun_nama || '-'}, DESA ${item.desa_nama || '-'}`;
+    document.getElementById("reg_nik_istri").value = item.nik_istri || "";
+    document.getElementById("reg_nama_suami").value = item.nama_suami || "";
+    
+    // Format alamat domisili lengkap
+    const nmKec = item.kecamatan_nama || item.kode_kec || "-";
+    const nmDesa = item.desa_nama || item.kode_desa || "-";
+    const nmDsn = item.dusun_nama || item.kode_dusun || "-";
+    document.getElementById("reg_info_wilayah").value = `Kec. ${nmKec}, Desa ${nmDesa}, Dusun ${nmDsn} (RT ${item.kode_rt || '-'})`;
 
-    const curMetode = document.getElementById("reg_rencana_metode");
-    if (curMetode && curMetode.value) {
-      evaluasiOtomatisJenisAkseptor();
+    // Kosongkan metode & jenis akseptor terlebih dahulu
+    const selMetode = document.getElementById("reg_rencana_metode");
+    if (selMetode) selMetode.value = "";
+    
+    const jenisInput = document.getElementById("reg_jenis_akseptor");
+    if (jenisInput) jenisInput.value = "";
+    
+    const infoText = document.getElementById("infoRiwayatKb");
+    if (infoText) infoText.innerText = "Silakan pilih metode kontrasepsi di samping...";
+    
+    const badgeDisplay = document.getElementById("badgeJenisAkseptorDisplay");
+    if (badgeDisplay) {
+      badgeDisplay.innerText = "Menunggu metode...";
+      badgeDisplay.style.background = "#f8fafc";
+      badgeDisplay.style.color = "#64748b";
+      badgeDisplay.style.borderColor = "#cbd5e1";
     }
   }
 
   function onJenisPelayananChange() {
-    const jnsLayanan = document.getElementById("reg_jenis_pelayanan")?.value;
+    const jenisLayanan = document.getElementById("reg_jenis_pelayanan").value;
     const selMetode = document.getElementById("reg_rencana_metode");
     if (!selMetode) return;
 
-    selMetode.innerHTML = '<option value="">-- PILIH ALKON --</option>';
-
-    if (!jnsLayanan) {
+    if (!jenisLayanan) {
       selMetode.disabled = true;
+      selMetode.style.backgroundColor = "#e9ecef";
+      selMetode.innerHTML = '<option value=""></option>';
       evaluasiOtomatisJenisAkseptor();
       return;
     }
-
+    
     selMetode.disabled = false;
+    selMetode.style.backgroundColor = "#ffffff";
+    selMetode.innerHTML = '<option value="">-- PILIH METODE KB --</option>';
 
-    if (jnsLayanan === "CABUT/LEPAS" || jnsLayanan === "BONGKAR PASANG") {
-      selMetode.add(new Option("IMPLAN", "IMPLAN"));
-      selMetode.add(new Option("IUD", "IUD"));
-    } else {
-      // PEMASANGAN/PEMAKAIAN
-      selMetode.add(new Option("SUNTIK", "SUNTIK"));
-      selMetode.add(new Option("PIL", "PIL"));
-      selMetode.add(new Option("KONDOM", "KONDOM"));
-      selMetode.add(new Option("IMPLAN", "IMPLAN"));
-      selMetode.add(new Option("IUD", "IUD"));
-      selMetode.add(new Option("MOW", "MOW"));
-      selMetode.add(new Option("MOP", "MOP"));
-    }
+    let opsiMetode = (jenisLayanan === "CABUT/LEPAS" || jenisLayanan === "BONGKAR PASANG")
+      ? ["IMPLAN", "IUD", "MOW", "MOP"]
+      : ["IMPLAN", "IUD", "SUNTIK", "PIL", "KONDOM", "MOW", "MOP"];
 
+    opsiMetode.forEach(m => selMetode.add(new Option(m, m)));
     evaluasiOtomatisJenisAkseptor();
   }
 
@@ -13094,87 +13321,232 @@ function onUserKabChange() {
   function resetFormPendaftaranLayanan() {
     const f = document.getElementById("formPendaftaranLayanan");
     if (f) f.reset();
-    pusTerpilihDataLayanan = null;
+    
+    document.getElementById("reg_id_pus").value = "";
+    document.getElementById("reg_tahun").value = "";
+    document.getElementById("reg_kode_prov").value = "";
+    document.getElementById("reg_kode_kab").value = "";
+    document.getElementById("reg_kode_kec").value = "";
+    document.getElementById("reg_kode_desa").value = "";
+    document.getElementById("reg_kode_dusun").value = "";
+    document.getElementById("reg_kode_rt").value = "";
+    document.getElementById("reg_nik_suami").value = "";
+    document.getElementById("reg_info_wilayah").value = "";
+    
+    const selFaskes = document.getElementById("reg_faskes_tujuan");
+    if (selFaskes) selFaskes.value = "";
+    const kdFaskes = document.getElementById("reg_kode_faskes");
+    if (kdFaskes) kdFaskes.value = "";
 
-    const badgeEl = document.getElementById("badgeJenisAkseptorDisplay");
-    if (badgeEl) {
-      badgeEl.innerText = "Menunggu metode...";
-      badgeEl.style.color = "#64748b";
-      badgeEl.style.backgroundColor = "#f8fafc";
-    }
-    const infoRiwayat = document.getElementById("infoRiwayatKb");
-    if (infoRiwayat) infoRiwayat.innerText = "";
-
+    const cariInput = document.getElementById("cariPusLayananInput");
+    if (cariInput) cariInput.value = "";
     const hasilCari = document.getElementById("hasilPencarianPusLayanan");
-    if (hasilCari) hasilCari.style.display = "none";
+    if (hasilCari) {
+      hasilCari.style.display = "none";
+      hasilCari.innerHTML = "";
+    }
+
+    const jenisLayananEl = document.getElementById("reg_jenis_pelayanan");
+    if (jenisLayananEl) jenisLayananEl.value = "";
 
     const selMetode = document.getElementById("reg_rencana_metode");
     if (selMetode) {
       selMetode.innerHTML = '<option value=""></option>';
       selMetode.disabled = true;
+      selMetode.style.backgroundColor = "#e9ecef";
+    }
+
+    const currentMonth = new Date().getMonth() + 1;
+    const blnEl = document.getElementById("reg_bulan_rencana");
+    if (blnEl) blnEl.value = String(currentMonth);
+
+    const kaderInput = document.getElementById("reg_nama_kader");
+    if (kaderInput) {
+      kaderInput.value = (currentNamaLengkap || currentUser || "").toUpperCase();
+    }
+
+    pusTerpilihDataLayanan = null;
+    const infoText = document.getElementById("infoRiwayatKb");
+    if (infoText) infoText.innerText = "";
+    const jenisInput = document.getElementById("reg_jenis_akseptor");
+    if (jenisInput) jenisInput.value = "";
+
+    const badgeDisplay = document.getElementById("badgeJenisAkseptorDisplay");
+    if (badgeDisplay) {
+      badgeDisplay.innerText = "Menunggu metode...";
+      badgeDisplay.style.background = "#f8fafc";
+      badgeDisplay.style.color = "#64748b";
+      badgeDisplay.style.borderColor = "#cbd5e1";
     }
   }
 
+  // 3. Simpan Pendaftaran ke Tabel pendaftaran_layanan_kb (Standar Baku index_kab dengan Dukungan Provinsi)
   async function handleSimpanPendaftaranLayanan(event) {
     event.preventDefault();
-    const btn = document.getElementById("btnSimpanPendaftaranLayanan");
-    const idPus = document.getElementById("reg_id_pus")?.value;
 
-    if (!idPus) {
-      Swal.fire("Perhatian", "Silakan cari dan pilih data Calon Akseptor terlebih dahulu!", "warning");
+    const errors = [];
+    
+    // 1. Validasi Calon Akseptor Terpilih
+    const idPus = (document.getElementById("reg_id_pus")?.value || "").trim();
+    const namaIstri = (document.getElementById("reg_nama_istri")?.value || "").trim();
+    const nikIstri = (document.getElementById("reg_nik_istri")?.value || "").trim();
+
+    if (!idPus || !namaIstri || !nikIstri) {
+      errors.push("Calon Akseptor belum dipilih (Lakukan pencarian dan klik salah satu PUS pada Langkah 1)");
+    }
+
+    // 2. Validasi Tindakan & Alkon
+    const jenisPelayanan = (document.getElementById("reg_jenis_pelayanan")?.value || "").trim();
+    if (!jenisPelayanan) {
+      errors.push("Jenis Pelayanan belum dipilih");
+    }
+    
+    const rencanaMetode = (document.getElementById("reg_rencana_metode")?.value || "").trim();
+    const jenisAkseptor = (document.getElementById("reg_jenis_akseptor")?.value || "").trim();
+    const bulanRencana = (document.getElementById("reg_bulan_rencana")?.value || "").trim();
+    const tglRencana = (document.getElementById("reg_tgl_rencana")?.value || "").trim();
+
+    // 3. Validasi Faskes & Kader (Perbaikan Bug Variabel)
+    const faskesTujuanVal = (document.getElementById("reg_faskes_tujuan")?.value || "").trim().toUpperCase();
+    const kodeFaskesVal = (document.getElementById("reg_kode_faskes")?.value || "").trim().toUpperCase();
+    const namaKader = (document.getElementById("reg_nama_kader")?.value || "").trim();
+
+    if (!rencanaMetode) {
+      errors.push("Metode Kontrasepsi belum dipilih");
+    }
+    if (!jenisAkseptor) {
+      errors.push("Jenis Akseptor belum dipilih");
+    }
+    if (!bulanRencana) {
+      errors.push("Bulan Pelayanan belum dipilih");
+    }
+    if (!tglRencana) {
+      errors.push("Tanggal Rencana Tindakan wajib diisi");
+    }
+    if (!faskesTujuanVal) {
+      errors.push("Tempat / Fasilitas Pelayanan wajib dipilih");
+    }
+    if (!namaKader) {
+      errors.push("Nama Kader / Petugas Pendamping wajib diisi");
+    }
+
+    // Tampilkan Peringatan jika Belum Lengkap
+    if (errors.length > 0) {
+      const errorListHtml = errors.map(err => `<li style="margin-bottom: 5px;">${err}</li>`).join("");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Form Belum Lengkap!',
+        html: `
+          <div style="text-align: left; font-size: 13px; color: #333;">
+            <p style="margin-bottom: 8px;">Silakan lengkapi bagian berikut sebelum menyimpan pendaftaran:</p>
+            <ul style="margin: 0; padding-left: 20px; color: #dc2626; font-weight: 600;">
+              ${errorListHtml}
+            </ul>
+          </div>
+        `,
+        confirmButtonColor: '#0284c7'
+      });
       return;
     }
 
+    const btn = document.getElementById("btnSimpanPendaftaranLayanan");
     btn.disabled = true;
-    btn.innerText = "Mendaftarkan...";
+    btn.innerText = "Memeriksa data & mendaftarkan...";
 
-    const payload = {
-      id_pus: idPus,
-      tahun: parseInt(document.getElementById("reg_tahun")?.value || new Date().getFullYear(), 10),
-      kode_prov: document.getElementById("reg_kode_prov")?.value || userKodeProv || "52",
-      kode_kab: document.getElementById("reg_kode_kab")?.value || userKodeKab,
-      kabupaten_nama: (() => {
-        const kId = document.getElementById("reg_kode_kab")?.value || userKodeKab;
-        const pKey = userKodeProv || "52";
-        return (dataKabupaten[pKey] && dataKabupaten[pKey][kId]) ? dataKabupaten[pKey][kId] : "";
-      })(),
-      kode_kec: document.getElementById("reg_kode_kec")?.value || "",
-      kode_desa: document.getElementById("reg_kode_desa")?.value || "",
-      kode_dusun: document.getElementById("reg_kode_dusun")?.value || "",
-      kode_rt: document.getElementById("reg_kode_rt")?.value || "",
-      nama_suami: document.getElementById("reg_nama_suami")?.value || "",
-      nik_suami: document.getElementById("reg_nik_suami")?.value || "",
-      nama_istri: document.getElementById("reg_nama_istri")?.value || "",
-      nik_istri: document.getElementById("reg_nik_istri")?.value || "",
-      jenis_pelayanan: document.getElementById("reg_jenis_pelayanan")?.value || "",
-      rencana_metode: document.getElementById("reg_rencana_metode")?.value || "",
-      jenis_akseptor: document.getElementById("reg_jenis_akseptor")?.value || "BARU MURNI",
-      bulan_rencana: parseInt(document.getElementById("reg_bulan_rencana")?.value || 1, 10),
-      tgl_rencana_layanan: document.getElementById("reg_tgl_rencana")?.value || null,
-      faskes_tujuan: document.getElementById("reg_faskes_tujuan")?.value || "",
-      nama_kader: document.getElementById("reg_nama_kader")?.value || "",
-      catatan: document.getElementById("reg_catatan")?.value || "",
-      status: 'TERDAFTAR',
-      created_at: new Date().toISOString()
-    };
+    const targetTahun = parseInt(document.getElementById("reg_tahun")?.value || new Date().getFullYear(), 10);
+    const targetBulan = parseInt(bulanRencana, 10);
 
-    try {
-      const { error } = await db.from('pendaftaran_layanan_kb').insert([payload]);
-      if (error) throw error;
+    try {        
+      // =========================================================================
+      // FITUR KUNCI: CEK DUPLIKASI PENDAFTARAN AKTIF DI BULAN & TAHUN YANG SAMA
+      // =========================================================================
+      const { data: antreanExisting, error: errCheck } = await db
+        .from('pendaftaran_layanan_kb')
+        .select('id, status, rencana_metode, faskes_tujuan')
+        .eq('nik_istri', nikIstri)
+        .eq('tahun', targetTahun)
+        .eq('bulan_rencana', targetBulan)
+        .in('status', ['TERDAFTAR', 'SELESAI']);
+
+      if (errCheck) throw errCheck;
+
+      if (antreanExisting && antreanExisting.length > 0) {
+        const itemLama = antreanExisting[0];
+        const statusTeks = itemLama.status === 'TERDAFTAR' ? 'masih dalam antrean' : 'telah selesai dilayani';
+        
+        btn.disabled = false;
+        btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
+
+        Swal.fire({
+          icon: 'warning',
+          title: 'Pendaftaran Duplikat!',
+          html: `
+            <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.45;">
+              PUS atas nama <b>${namaIstri}</b> (NIK: <code>${nikIstri}</code>) <b>sudah didaftarkan</b> pada bulan yang sama.<br><br>
+              <b>Detail data sebelumnya:</b><br>
+              • Status: <span style="color:#0284c7; font-weight:bold;">${statusTeks.toUpperCase()}</span><br>
+              • Metode: <b>${itemLama.rencana_metode || '-'}</b><br>
+              • Tempat: <b>${itemLama.faskes_tujuan || '-'}</b><br><br>
+              <small style="color:#64748b;">*Satu akseptor tidak dapat didaftarkan lebih dari satu kali pada bulan pelayanan yang sama kecuali pendaftaran sebelumnya dibatalkan.</small>
+            </div>
+          `,
+          confirmButtonColor: '#0284c7'
+        });
+        return;
+      }
+
+      // Susun Payload Lengkap Skala Provinsi
+      const kdProv = document.getElementById("reg_kode_prov")?.value || userKodeProv || "52";
+      const kdKab = document.getElementById("reg_kode_kab")?.value || userKodeKab || "";
+      const nmKab = (dataKabupaten[kdProv] && dataKabupaten[kdProv][kdKab]) ? dataKabupaten[kdProv][kdKab] : "";
+
+      const payload = {
+        id_pus: idPus,
+        tahun: targetTahun,
+        bulan_rencana: targetBulan,
+        tgl_rencana_layanan: tglRencana,
+        nama_istri: namaIstri,
+        nik_istri: nikIstri,
+        nama_suami: document.getElementById("reg_nama_suami")?.value || "",
+        nik_suami: document.getElementById("reg_nik_suami")?.value || null,
+        kode_prov: String(kdProv).padStart(2, '0'),
+        kode_kab: String(kdKab).padStart(2, '0'),
+        kabupaten_nama: nmKab,
+        kode_kec: String(document.getElementById("reg_kode_kec")?.value || "").padStart(2, '0'),
+        kode_desa: String(document.getElementById("reg_kode_desa")?.value || "").padStart(4, '0'),
+        kode_dusun: String(document.getElementById("reg_kode_dusun")?.value || "").padStart(4, '0'),
+        kode_rt: document.getElementById("reg_kode_rt")?.value || null,
+        jenis_pelayanan: jenisPelayanan,
+        rencana_metode: rencanaMetode,
+        jenis_akseptor: jenisAkseptor,
+        faskes_tujuan: faskesTujuanVal,
+        kode_faskes: kodeFaskesVal || null,
+        nama_kader: namaKader.toUpperCase(),
+        catatan: document.getElementById("reg_catatan")?.value.trim() || null,
+        status: 'TERDAFTAR',
+        created_by: currentUser || "Petugas"
+      };
+
+      const { error: insertErr } = await db.from('pendaftaran_layanan_kb').insert([payload]);
+      if (insertErr) throw insertErr;
 
       Swal.fire({
         icon: 'success',
-        title: 'Akseptor Terdaftar!',
-        text: `Data calon akseptor [${payload.nama_istri}] berhasil didaftarkan ke antrean pelayanan.`,
-        timer: 1500,
+        title: 'Calon Akseptor Terdaftar!',
+        text: `PUS [${payload.nama_istri}] berhasil didaftarkan oleh Kader ${payload.nama_kader}.`,
+        timer: 1600,
         showConfirmButton: false
       });
 
       resetFormPendaftaranLayanan();
       switchLayananTab('antrean');
+      if (typeof updateDashboardBadgeLayanan === "function") {
+        updateDashboardBadgeLayanan();
+      }
 
     } catch (err) {
-      Swal.fire("Gagal Mendaftar", err.message, "error");
+      console.error("Gagal mendaftar layanan:", err);
+      Swal.fire("Gagal Mendaftar", err.message || "Terjadi kesalahan sistem saat mendaftarkan akseptor.", "error");
     } finally {
       btn.disabled = false;
       btn.innerText = "💾 DAFTARKAN CALON AKSEPTOR";
@@ -13196,20 +13568,20 @@ function onUserKabChange() {
       filePrefix = "TABEL_AKSEPTOR_BATAL";
     }
 
-    // Resolusi nama wilayah berskala provinsi
+    // Resolusi nama wilayah berskala provinsi/kabupaten
     const getNmKab = (kdKab) => {
       const provKey = userKodeProv || "52";
       return (dataKabupaten[provKey] && dataKabupaten[provKey][kdKab]) ? dataKabupaten[provKey][kdKab] : kdKab || "-";
     };
 
     const getNmKec = (kdKab, kdKec) => {
-      const cleanKab = String(kdKab || "").padStart(2, '0');
+      const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
       const cleanKec = String(kdKec || "").padStart(2, '0');
       return (dataKecamatan[cleanKab] && dataKecamatan[cleanKab][cleanKec]) ? dataKecamatan[cleanKab][cleanKec] : kdKec || "-";
     };
 
     const getNmDesa = (kdKab, kdKec, kdDesa) => {
-      const cleanKab = String(kdKab || "").padStart(2, '0');
+      const cleanKab = String(kdKab || userKodeKab || "").padStart(2, '0');
       const cleanKec = String(kdKec || "").padStart(2, '0');
       const cleanDesa = String(kdDesa || "").padStart(4, '0');
       const compositeKey = cleanKab + "_" + cleanKec;
@@ -13219,7 +13591,7 @@ function onUserKabChange() {
     };
 
     const getNmDsn = (kdKab, kdKec, kdDesa, kdDsn) => {
-      const dsnMap = getDusunList(kdKec, kdDesa, kdKab);
+      const dsnMap = (typeof getDusunList === "function") ? getDusunList(kdKec, kdDesa, kdKab) : null;
       return (dsnMap && dsnMap[kdDsn]) ? dsnMap[kdDsn].nama : kdDsn || "-";
     };
 
@@ -13232,7 +13604,7 @@ function onUserKabChange() {
 
     const rows = cachedAntreanLayanan.map((item, idx) => {
       const alkon = isPelayananKb ? (item.metode_realisasi || item.rencana_metode || "-") : (item.rencana_metode || "-");
-      const tgl = isPelayananKb ? (item.tgl_layanan_realisasi || item.tgl_rencana_layanan || "-") : (item.tgl_rencana_layanan || "-");
+      const tgl = isPelayananKb ? (item.tgl_realisasi || item.tgl_rencana_layanan || "-") : (item.tgl_rencana_layanan || "-");
 
       return [
         idx + 1,
@@ -13274,7 +13646,7 @@ function onUserKabChange() {
 
       const ws = XLSX.utils.aoa_to_sheet(sheetContent);
 
-      // Kunci kolom NIK Suami (index 7) dan NIK Istri (index 9) agar format string tidak hilang
+      // Kunci kolom NIK Suami (index 7) dan NIK Istri (index 9) agar digit tidak terpotong
       const range = XLSX.utils.decode_range(ws['!ref']);
       for (let R = 3; R <= range.e.r; ++R) {
         for (let C of [7, 9]) {
