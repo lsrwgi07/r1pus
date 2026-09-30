@@ -2733,7 +2733,9 @@
       tr.innerHTML = `
         <td><b>${m.toUpperCase()}</b></td>
         <td>
-          <select id="kb_${idx+1}" onchange="onKbMonthChange(${idx+1})">
+          <select id="kb_${idx+1}" 
+            onfocus="this.setAttribute('data-prev', this.value)" 
+            onchange="onKbMonthChange(${idx+1})">
             <option value="">--KOSONG--</option>
             <optgroup label="PESERTA KB">
               <option value="SUNTIK">SUNTIK</option>
@@ -3380,12 +3382,68 @@
 
   function onKbMonthChange(monthIndex) {
     const sel = document.getElementById("kb_" + monthIndex);
-    const val = sel ? sel.value : "";
-    
+    if (!sel) return;
+
+    const val = String(sel.value || "").trim().toUpperCase();
+    const prevVal = String(sel.getAttribute("data-prev") || "").trim().toUpperCase();
+
+    // 1. Kategori Metode Kontrasepsi Jangka Panjang (MKJP)
+    const listMkjp = ["IMPLAN", "IUD", "MOW", "MOP"];
+
+    // 2. Daftar Status yang DILARANG dipilih dari MKJP oleh User Desa/Kader:
+    //    - Non-MKJP: PIL, SUNTIK, KONDOM
+    //    - Bukan Peserta KB: IAT, TIAL
+    const listDilarangDariMkjp = ["PIL", "SUNTIK", "KONDOM", "IAT", "TIAL"];
+
+    // CEK PEMBATASAN KHUSUS USER DESA & USER DUSUN:
+    if (typeof isDesaRole === "function" && isDesaRole()) {
+      const isPrevMkjp = listMkjp.includes(prevVal);
+
+      // Jika sebelumnya berstatus MKJP, periksa apakah target baru dilarang atau dikosongkan
+      if (isPrevMkjp) {
+        const isTargetDilarang = listDilarangDariMkjp.includes(val);
+        const isTargetEmpty = (val === "" || val === "--KOSONG--");
+
+        if (isTargetDilarang || isTargetEmpty) {
+          const namaTarget = val === "" || val === "--KOSONG--" ? "KOSONG" : val;
+
+          Swal.fire({
+            icon: 'warning',
+            title: 'Perubahan Dibatasi!',
+            html: `
+              <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.55;">
+                Status akseptor pada bulan ini adalah <b>MKJP (${prevVal})</b>.<br><br>
+                Akun <b>User Desa/Kader</b> tidak diperkenankan mengubah status MKJP menjadi <b>${namaTarget}</b> secara langsung.<br><br>
+                <div style="background: #f8fafc; border-left: 3px solid #0284c7; padding: 6px 10px; font-size: 11.5px; color: #475569;">
+                  <b>Status yang diizinkan bagi kader:</b><br>
+                  • Sesama metode MKJP (ganti cara ke Implan/IUD/MOW/MOP)<br>
+                  • Hamil / Ingin Anak Segera (IAS) / TKI<br>
+                  • Mutasi (Pindah / Cerai / Meninggal)
+                </div>
+                <small style="display: block; margin-top: 8px; color: #64748b;">
+                  *Untuk perubahan menjadi Non-MKJP, IAT, TIAL, atau pengosongan data, silakan koordinasikan dengan Admin Kecamatan, Kabupaten, atau Provinsi.
+                </small>
+              </div>
+            `,
+            confirmButtonColor: '#0284c7'
+          });
+
+          // Batalkan perubahan, kembalikan pilihan dropdown ke status MKJP semula
+          sel.value = prevVal;
+          return;
+        }
+      }
+    }
+
+    // Perbarui nilai atribut data-prev jika perubahan disetujui
+    sel.setAttribute("data-prev", sel.value);
+
+    // Jalankan prosedur mutasi pindah jika memilih PINDAH
     if (val === "PINDAH") {
       promptPindahDomisili(monthIndex);
     }
-    
+
+    // Terapkan aturan kunci bulan berikutnya jika ada mutasi atau usia mencapai 50+
     applyMutationAndAgeLocks();
   }
 
@@ -6963,11 +7021,18 @@
     for (let i = 1; i <= 12; i++) {
       let mKey = ["kb_jan", "kb_feb", "kb_mar", "kb_apr", "kb_mei", "kb_jun", "kb_jul", "kb_agu", "kb_sep", "kb_okt", "kb_nov", "kb_des"][i - 1];
       let val = String(d[mKey] || "").trim().toUpperCase();
+      const elKb = document.getElementById("kb_" + i);
 
       if (mutationFound) {
-        document.getElementById("kb_" + i).value = "";
+        if (elKb) {
+          elKb.value = "";
+          elKb.setAttribute("data-prev", "");
+        }
       } else {
         setSelectValueCaseInsensitive("kb_" + i, val);
+        if (elKb) {
+          elKb.setAttribute("data-prev", elKb.value);
+        }
         if (val.includes("CERAI") || val.includes("MENINGGAL") || val.includes("PINDAH")) {
           mutationFound = true;
         }
