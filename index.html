@@ -1140,7 +1140,9 @@
       </div>
       <h2>DATA BNBA PASANGAN USIA SUBUR</h2>
       
-      <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+      <!-- KOTAK ABU-ABU PEMBUNGKUS FILTER & TOMBOL (SEBELUMNYA HILANG) -->
+      <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
           
           <!-- Baris Dropdown 2 Kolom: Kolom 1 (Level BNBA) | Kolom 2 (Tahun) -->
           <div class="filter-grid-2col">
@@ -1249,8 +1251,9 @@
           <button type="button" class="btn-nav btn-warning" onclick="exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS')">📥 EKSPOR EXCEL</button>
           <button type="button" class="btn-nav btn-danger" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
         </div>
-      </div>
+      </div> <!-- PENUTUP KOTAK ABU-ABU FILTER -->
 
+      <!-- TABEL BNBA DI DALAM KONTEN BNBA SECTION -->
       <div style="overflow-x: auto; margin-top: 15px;">
         <table id="bnbaTable" class="kb-table" style="font-size: 11px; white-space: nowrap;">
           <thead id="bnbaTableHeader"></thead>
