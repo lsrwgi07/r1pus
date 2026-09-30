@@ -2309,8 +2309,7 @@
                 Jenis Akseptor <span style="font-size: 10px; color: #0284c7; margin-left: 4px;">(OTOMATIS)</span>
               </label>
               <input type="hidden" id="reg_jenis_akseptor" value="">
-              <div id="badgeJenisAkseptorDisplay" class="input-control-kb" style="background: #f8fafc; font-weight: 700; color: #64748b; display: flex; align-items: center; border-style: dashed;">
-                Menunggu metode...
+              <div id="badgeJenisAkseptorDisplay" class="input-control-kb" style="background: #f8fafc; font-weight: 700; color: #64748b; display: flex; align-items: center; border-style: dashed;"></div>
               </div>
             </div>
           </div>
@@ -13039,7 +13038,7 @@ function onUserKabChange() {
 
     if (!alkon) {
       if (badgeEl) {
-        badgeEl.innerText = "Menunggu metode...";
+        badgeEl.innerText = "";
         badgeEl.style.color = "#64748b";
         badgeEl.style.backgroundColor = "#f8fafc";
       }
