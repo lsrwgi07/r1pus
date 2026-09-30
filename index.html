@@ -791,6 +791,7 @@
             <button type="button" id="btnAdminTambahTahun" class="btn-admin-sync" style="background-color: #28a745;" onclick="triggerOpenNewYear()">🚀 TAMBAH TAHUN</button>
             <button type="button" id="btnAdminSyncRollover" class="btn-admin-sync" style="display: none; background-color: #0284c7;" onclick="triggerManualCarryForward()">⚡ SINKRON STATUS KB</button>
             <button type="button" class="btn-admin-sync" style="background-color: #4f46e5;" onclick="openMasterFaskesModal()">🏥 KELOLA FASKES</button>
+            <button type="button" id="btnAdminCekNikGanda" class="btn-admin-sync" style="background-color: #e11d48;" onclick="auditNikIstriGandaProv()">🔍 CEK NIK GANDA</button>
             <button type="button" class="btn-admin-sync" style="background-color: #10b981;" onclick="openImportExcelModal()">📥 UPLOAD EXCEL</button>
           </div>
         </div>
@@ -4427,7 +4428,8 @@
     // Visibilitas bilah tombol admin dashboard
     const adminBox = document.getElementById("adminSyncContainer");
     const btnTambahTahun = document.getElementById("btnAdminTambahTahun");
-    const btnSyncRollover = document.getElementById("btnAdminSyncRollover"); // <-- TAMBAHKAN INI
+    const btnSyncRollover = document.getElementById("btnAdminSyncRollover");
+    const btnCekNik = document.getElementById("btnAdminCekNikGanda");
 
     if (adminBox) {
       adminBox.style.display = (isProvRole() || isKabRole() || isKecRole()) ? "block" : "none";
@@ -4436,10 +4438,13 @@
     if (btnTambahTahun) {
       btnTambahTahun.style.display = isProvRole() ? "inline-block" : "none";
     }
-
-    // <-- TAMBAHKAN BLOK INI AGAR TOMBOL MUNCUL UNTUK ADMIN PROV & KAB -->
+    
     if (btnSyncRollover) {
       btnSyncRollover.style.display = (isProvRole() || isKabRole()) ? "inline-block" : "none";
+    }
+
+    if (btnCekNik) {
+      btnCekNik.style.display = (isProvRole() || isKabRole()) ? "inline-block" : "none";
     }
 
     checkPendingMutasiNotifications();
@@ -7363,6 +7368,251 @@
         console.error("Carry forward error:", err);
         Swal.fire('Gagal', err.message || 'Terjadi kesalahan sistem.', 'error');
       }
+    }
+  }
+  
+  async function auditNikIstriGandaProv() {
+    if (!isProvRole() && !isKabRole()) {
+      Swal.fire("Akses Ditolak", "Fitur ini hanya dapat dijalankan oleh Admin Provinsi atau Admin Kabupaten!", "warning");
+      return;
+    }
+
+    // Opsi pilihan Kabupaten jika login sebagai Admin Provinsi
+    let kabSelectHtml = "";
+    if (isProvRole()) {
+      let optKab = `<option value="">-- SEMUA KABUPATEN / SE-PROVINSI --</option>`;
+      const pKey = userKodeProv || "52";
+      if (dataKabupaten && dataKabupaten[pKey]) {
+        for (let kd in dataKabupaten[pKey]) {
+          optKab += `<option value="${kd}">${dataKabupaten[pKey][kd].toUpperCase()}</option>`;
+        }
+      }
+      kabSelectHtml = `
+        <div style="text-align:left; font-size:12px; font-weight:bold; margin-bottom:4px; color:#475569;">Cakupan Wilayah:</div>
+        <select id="swalAuditKab" class="swal2-input" style="width:100%; margin:0 0 12px 0; font-size:13px;">
+          ${optKab}
+        </select>
+      `;
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Audit NIK Istri Ganda',
+      html: `
+        ${kabSelectHtml}
+        <div style="text-align:left; font-size:12px; font-weight:bold; margin-bottom:4px; color:#475569;">Tahun Pelaporan:</div>
+        <select id="swalAuditTahun" class="swal2-input" style="width:100%; margin:0; font-size:13px;">
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+          <option value="2028">2028</option>
+          <option value="2029">2029</option>
+          <option value="2030">2030</option>
+        </select>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Mulai Audit',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#e11d48',
+      preConfirm: () => {
+        return {
+          kab: isProvRole() ? document.getElementById("swalAuditKab")?.value : userKodeKab,
+          tahun: parseInt(document.getElementById("swalAuditTahun")?.value || new Date().getFullYear(), 10)
+        };
+      }
+    });
+
+    if (!formValues) return;
+
+    const tahunAudit = formValues.tahun;
+    const filterKabAudit = formValues.kab;
+
+    Swal.fire({
+      title: 'Memeriksa Seluruh Database...',
+      text: `Menarik data PUS tahun ${tahunAudit}...`,
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      let allRows = [];
+      let fromIdx = 0;
+      const step = 1000;
+      let hasMore = true;
+
+      // Tarik seluruh data PUS secara chunked menembus limit 1.000 baris
+      while (hasMore) {
+        let query = db.from('data_pus')
+          .select('id_pus, tahun, nik_istri, nama_istri, nama_suami, nik_suami, kabupaten_nama, kecamatan_nama, desa_nama, dusun_nama, kode_rt, kode_kab, kb_jan, kb_feb, kb_mar, kb_apr, kb_mei, kb_jun, kb_jul, kb_agu, kb_sep, kb_okt, kb_nov, kb_des')
+          .eq('tahun', tahunAudit);
+
+        if (userKodeProv) {
+          query = query.eq('kode_prov', String(userKodeProv).padStart(2, '0'));
+        }
+
+        if (filterKabAudit) {
+          query = query.eq('kode_kab', String(filterKabAudit).padStart(2, '0'));
+        }
+
+        const { data: chunk, error } = await query
+          .order('id_pus', { ascending: true })
+          .range(fromIdx, fromIdx + step - 1);
+
+        if (error) throw error;
+
+        if (chunk && chunk.length > 0) {
+          allRows = allRows.concat(chunk);
+          fromIdx += step;
+          if (chunk.length < step) hasMore = false;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      if (allRows.length === 0) {
+        Swal.fire("Data Kosong", `Tidak ada data PUS ditemukan pada tahun ${tahunAudit}.`, "info");
+        return;
+      }
+
+      const mKeysDesc = ["kb_des", "kb_nov", "kb_okt", "kb_sep", "kb_agu", "kb_jul", "kb_jun", "kb_mei", "kb_apr", "kb_mar", "kb_feb", "kb_jan"];
+      const nikMap = new Map();
+
+      allRows.forEach(r => {
+        const nik = String(r.nik_istri || "").trim();
+        // Lewati NIK dummy atau NIK tidak valid
+        if (!nik || nik === "9999999999999999" || nik.length !== 16) return;
+
+        let lastStatus = "-";
+        for (let mk of mKeysDesc) {
+          let val = String(r[mk] || "").trim().toUpperCase();
+          if (val && val !== "--KOSONG--" && val !== "-" && val !== "NULL") {
+            lastStatus = val;
+            break;
+          }
+        }
+
+        // PUS sah mutasi (Cerai, Meninggal, Pindah)
+        const isMutasiSah = lastStatus.includes("CERAI") || 
+                            lastStatus.includes("MENINGGAL") || 
+                            lastStatus.includes("PINDAH");
+
+        if (!nikMap.has(nik)) {
+          nikMap.set(nik, []);
+        }
+
+        nikMap.get(nik).push({
+          id_pus: r.id_pus || "-",
+          tahun: r.tahun,
+          nik_istri: nik,
+          nama_istri: r.nama_istri || "-",
+          nama_suami: r.nama_suami || "-",
+          nik_suami: r.nik_suami || "-",
+          kabupaten: r.kabupaten_nama || "-",
+          kecamatan: r.kecamatan_nama || "-",
+          desa: r.desa_nama || "-",
+          dusun: r.dusun_nama || "-",
+          rt: r.kode_rt || "-",
+          status_terakhir: lastStatus,
+          is_mutasi: isMutasiSah
+        });
+      });
+
+      // Saring NIK ganda di mana LEBIH DARI 1 baris sama-sama AKTIF
+      const listPelanggaran = [];
+
+      nikMap.forEach((records, nik) => {
+        if (records.length > 1) {
+          const aktifCount = records.filter(item => !item.is_mutasi).length;
+          if (aktifCount > 1) {
+            records.forEach(item => {
+              listPelanggaran.push({
+                ...item,
+                keterangan_audit: item.is_mutasi 
+                  ? "Riwayat Mutasi (Sah)" 
+                  : "GANDA AKTIF (Pelanggaran)"
+              });
+            });
+          }
+        }
+      });
+
+      Swal.close();
+
+      if (listPelanggaran.length === 0) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Database Bersih!',
+          text: `Tidak ditemukan NIK Istri ganda aktif tanpa status mutasi pada tahun ${tahunAudit}.`
+        });
+        return;
+      }
+
+      // Tampilkan notifikasi temuan
+      const previewHtml = listPelanggaran.slice(0, 6).map(d => 
+        `• <b>${d.nama_istri}</b> (${d.nik_istri}) - Kab. ${d.kabupaten}, Desa ${d.desa} [${d.keterangan_audit}]`
+      ).join("<br>");
+
+      Swal.fire({
+        icon: 'warning',
+        title: `Ditemukan ${listPelanggaran.length} Baris Duplikat!`,
+        html: `
+          <div style="text-align: left; font-size: 12.5px; color: #334155; line-height: 1.5;">
+            Ditemukan NIK Istri yang tercatat ganda pada lebih dari satu PUS aktif di tahun ${tahunAudit}:<br><br>
+            <div style="background:#fff1f2; padding:8px; border-radius:5px; border:1px solid #fecdd3; max-height:160px; overflow-y:auto; font-size:11.5px;">
+              ${previewHtml}
+              ${listPelanggaran.length > 6 ? `<br><i>...dan ${listPelanggaran.length - 6} baris lainnya.</i>` : ''}
+            </div>
+            <br>Silakan unduh berkas Excel untuk melihat lokasi detail dan menghapus baris duplikat yang tidak valid.
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '📥 Unduh Laporan (.xlsx)',
+        cancelButtonText: 'Tutup',
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b'
+      }).then((res) => {
+        if (res.isConfirmed) {
+          const exportData = listPelanggaran.map((item, i) => ({
+            "NO": i + 1,
+            "TAHUN": item.tahun,
+            "ID PUS": item.id_pus,
+            "NIK ISTRI": String(item.nik_istri),
+            "NAMA ISTRI": item.nama_istri,
+            "NAMA SUAMI": item.nama_suami,
+            "NIK SUAMI": String(item.nik_suami),
+            "KABUPATEN": item.kabupaten,
+            "KECAMATAN": item.kecamatan,
+            "DESA": item.desa,
+            "DUSUN": item.dusun,
+            "RT": item.rt,
+            "STATUS BULAN TERAKHIR": item.status_terakhir,
+            "STATUS AUDIT": item.keterangan_audit
+          }));
+
+          const ws = XLSX.utils.json_to_sheet(exportData);
+          const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+          for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C of [3, 6]) { // Kolom NIK Istri & NIK Suami
+              const cell = XLSX.utils.encode_cell({ r: R, c: C });
+              if (ws[cell]) ws[cell].t = 's';
+            }
+          }
+
+          ws['!cols'] = [
+            { wch: 5 }, { wch: 8 }, { wch: 22 }, { wch: 20 }, { wch: 24 },
+            { wch: 24 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 22 },
+            { wch: 20 }, { wch: 8 }, { wch: 22 }, { wch: 25 }
+          ];
+
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Audit_NIK_Prov");
+          const scopeLabel = filterKabAudit ? `KAB_${filterKabAudit}` : `SE_PROVINSI`;
+          XLSX.writeFile(wb, `AUDIT_NIK_GANDA_${scopeLabel}_${tahunAudit}.xlsx`);
+        }
+      });
+
+    } catch (err) {
+      console.error("Audit Prov Error:", err);
+      Swal.fire("Error", "Gagal memproses audit: " + err.message, "error");
     }
   }
 
