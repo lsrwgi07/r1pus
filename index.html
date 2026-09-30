@@ -4356,6 +4356,7 @@
     // Visibilitas bilah tombol admin dashboard
     const adminBox = document.getElementById("adminSyncContainer");
     const btnTambahTahun = document.getElementById("btnAdminTambahTahun");
+    const btnSyncRollover = document.getElementById("btnAdminSyncRollover"); // <-- TAMBAHKAN INI
 
     if (adminBox) {
       adminBox.style.display = (isProvRole() || isKabRole() || isKecRole()) ? "block" : "none";
@@ -4363,6 +4364,11 @@
 
     if (btnTambahTahun) {
       btnTambahTahun.style.display = isProvRole() ? "inline-block" : "none";
+    }
+
+    // <-- TAMBAHKAN BLOK INI AGAR TOMBOL MUNCUL UNTUK ADMIN PROV & KAB -->
+    if (btnSyncRollover) {
+      btnSyncRollover.style.display = (isProvRole() || isKabRole()) ? "inline-block" : "none";
     }
 
     checkPendingMutasiNotifications();
@@ -7209,7 +7215,7 @@
   }
 
   async function triggerManualCarryForward() {    
-    if (!isKabRole() && !isKecRole()) {
+    if (!isProvRole() && !isKabRole() && !isKecRole()) {
       Swal.fire("Akses Ditolak", "Fitur ini hanya dapat dijalankan oleh Admin!", "warning");
       return;
     }
