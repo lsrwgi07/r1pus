@@ -5747,13 +5747,21 @@
 
         // Distribusi Kelompok Umur
         const u = res.umurIstri;
-        if (u >= 15 && u <= 19) grouped[key].u15_19++;
-        else if (u >= 20 && u <= 24) grouped[key].u20_24++;
-        else if (u >= 25 && u <= 29) grouped[key].u25_29++;
-        else if (u >= 30 && u <= 34) grouped[key].u30_34++;
-        else if (u >= 35 && u <= 39) grouped[key].u35_39++;
-        else if (u >= 40 && u <= 44) grouped[key].u40_44++;
-        else if (u >= 45) grouped[key].u45_plus++;
+          if (u < 20) {
+            grouped[key].u15_19++;
+          } else if (u >= 20 && u <= 24) {
+            grouped[key].u20_24++;
+          } else if (u >= 25 && u <= 29) {
+            grouped[key].u25_29++;
+          } else if (u >= 30 && u <= 34) {
+            grouped[key].u30_34++;
+          } else if (u >= 35 && u <= 39) {
+            grouped[key].u35_39++;
+          } else if (u >= 40 && u <= 44) {
+            grouped[key].u40_44++;
+          } else {
+            grouped[key].u45_plus++;
+          }
 
         // Distribusi Kepesertaan JKN (Total JKN = Total PUS)
         const rawJkn = String(r.peserta_jkn || "").toUpperCase().trim();
