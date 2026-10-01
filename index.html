@@ -11783,6 +11783,7 @@
   }
 
   function downloadFaskesTemplate() {
+  try {
     const headers = [
       "Kabupaten", 
       "Kode Kabupaten", 
@@ -11793,26 +11794,37 @@
       "Kode Faskes", 
       "Nama Faskes"
     ];
+    
+    let w = {};
+    if (typeof getWilayahSampleRiil === 'function') {
+      try {
+        w = getWilayahSampleRiil() || {};
+      } catch (e) {
+        w = {};
+      }
+    }
 
-    const w = (typeof getWilayahSampleRiil === 'function') 
-      ? getWilayahSampleRiil() 
-      : { kabupaten: 'LOMBOK BARAT', kode_kab: '01', kecamatan: 'GUNUNGSARI', kode_kec: '01', desa: 'GUNUNGSARI', kode_desa: '0001' };
+    const kabNama = String(w.kabupaten || (typeof userKodeKab !== 'undefined' ? userKodeKab : 'LOMBOK BARAT')).toUpperCase();
+    const kabKode = String(w.kode_kab || (typeof userKodeKab !== 'undefined' ? userKodeKab : '01')).padStart(2, '0');
+    const kecNama = String(w.kecamatan || (typeof userKodeKec !== 'undefined' ? userKodeKec : 'GUNUNGSARI')).toUpperCase();
+    const kecKode = String(w.kode_kec || (typeof userKodeKec !== 'undefined' ? userKodeKec : '01')).padStart(2, '0');
+    const desaNama = String(w.desa || (typeof userKodeDesa !== 'undefined' ? userKodeDesa : 'GUNUNGSARI')).toUpperCase();
+    const desaKode = String(w.kode_desa || (typeof userKodeDesa !== 'undefined' ? userKodeDesa : '0001')).padStart(4, '0');
 
-    const sampleRows = [
-      // Contoh Faskes Induk 7 Digit
-      [w.kabupaten, w.kode_kab, w.kecamatan, w.kode_kec, w.desa || 'GUNUNGSARI', w.kode_desa || '0001', `${w.kode_kab}${w.kode_kec}054`, `PUSKESMAS ${w.kecamatan}`],
-      // Contoh Jejaring / PMB / Poskesdes 9 Digit
-      [w.kabupaten, w.kode_kab, w.kecamatan, w.kode_kec, w.desa || 'GUNUNGSARI', w.kode_desa || '0001', `${w.kode_kab}${w.kode_kec}05401`, `PUSTU / POSKESDES ${w.desa || 'GUNUNGSARI'}`]
+    const sampleRows = [      
+      [kabNama, kabKode, kecNama, kecKode, desaNama, desaKode, `${kabKode}${kecKode}054`, `PUSKESMAS ${kecNama}`],      
+      [kabNama, kabKode, kecNama, kecKode, desaNama, desaKode, `${kabKode}${kecKode}05401`, `PUSTU / POSKESDES ${desaNama}`]
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleRows]);
-
-    // Format kolom teks untuk semua kolom kode (Indeks kolom 1, 3, 5, 6)
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:H3');
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C of [1, 3, 5, 6]) {
-        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-        if (ws[cellRef]) ws[cellRef].t = 's';
+    
+    if (ws['!ref']) {
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C of [1, 3, 5, 6]) {
+          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+          if (ws[cellRef]) ws[cellRef].t = 's';
+        }
       }
     }
 
@@ -11822,11 +11834,24 @@
     ];
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "TEMPLATE_FASKES");    
+    XLSX.utils.book_append_sheet(wb, ws, "TEMPLATE_FASKES");
+    
+    let scopeName = "WILAYAH";
+    try {
+      if (typeof getUserScopeFileNameSuffix === 'function') {
+        scopeName = getUserScopeFileNameSuffix();
+      }
+    } catch (err) {
+      scopeName = kabNama.replace(/\s+/g, '_');
+    }
 
-    const scopeName = getUserScopeFileNameSuffix();
     XLSX.writeFile(wb, `TEMPLATE_MASTER_FASKES_${scopeName}.xlsx`);
+
+  } catch (err) {
+    console.error("Gagal mendownload template faskes:", err);
+    Swal.fire("Error", "Gagal mengunduh template faskes: " + err.message, "error");
   }
+}
 
   // Upload Excel Master Faskes (Membaca 8 Kolom)
   async function handleUploadFaskesExcel() {
