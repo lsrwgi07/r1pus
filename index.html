@@ -1250,7 +1250,7 @@
         <!-- Tombol Aksi BNBA Tetap 3 Kolom Simetris (1:1:1) -->
         <div class="action-btn-grid-3col">
           <button type="button" class="btn-action" onclick="fetchBnba()">📋 TAMPILKAN DATA BNBA</button>
-          <button type="button" class="btn-nav btn-warning" onclick="exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS')">📥 EKSPOR EXCEL</button>
+          <button type="button" class="btn-nav btn-warning" onclick="exportBnbaToExcel()">📥 EKSPOR EXCEL</button>
           <button type="button" class="btn-nav btn-danger" onclick="exportBnbaToPDF()">📄 EKSPOR PDF</button>
         </div>
       </div> <!-- PENUTUP KOTAK ABU-ABU FILTER -->
@@ -7083,125 +7083,823 @@
     if (btnDel) btnDel.style.display = "flex";
   }
 
-  function exportBnbaToExcel() {
-    if (isTableDataEmpty('bnbaTable')) {
+  async function exportBnbaToExcel() {
+    if (typeof isTableDataEmpty === "function" && isTableDataEmpty('bnbaTable')) {
       Swal.fire(
         "Data Kosong", 
-        "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", 
+        "Tabel BNBA belum memiliki data untuk diekspor. Silakan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", 
         "warning"
       );
       return;
     }
-    exportTableToExcel('bnbaTable', 'DATA_BNBA_PUS');
-  }
 
-  function exportBnbaToPDF() {
-    if (isTableDataEmpty('bnbaTable')) {
-      Swal.fire(
-        "Data Kosong", 
-        "Tabel BNBA belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", 
-        "warning"
-      );
+    if (typeof ExcelJS === "undefined") {
+      Swal.fire("Error", "Pustaka ExcelJS belum terpasang di dokumen!", "error");
       return;
     }
+
+    Swal.fire({
+      title: 'Menyiapkan Berkas Excel...',
+      text: 'Menyusun tabel BNBA dengan format zebra striping...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
 
     try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a2');
-      doc.setFontSize(16);
-      doc.text("DATA BNBA PASANGAN USIA SUBUR", 40, 35);
+      const table = document.getElementById("bnbaTable");
+      const thead = table.querySelector("thead");
+      const tbody = table.querySelector("tbody");
 
-      doc.autoTable({
-        html: '#bnbaTable',
-        startY: 50,
-        styles: { fontSize: 7, cellPadding: 3, halign: 'center' },
-        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
-        theme: 'grid'
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("DATA_BNBA_PUS", {
+        views: [{ showGridLines: true }]
       });
 
-      const timeStamp = new Date().toISOString().slice(0, 10);
-      doc.save(`DATA_BNBA_PASANGAN_USIA_SUBUR_${timeStamp}.pdf`);
-    } catch (err) {
-      console.error("Export PDF BNBA Error:", err);
-      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
-    }
-  }
+      // 1. Ambil Header dari <thead>
+      const headerThs = thead.querySelectorAll("tr th");
+      const headers = [];
+      headerThs.forEach(th => headers.push(th.innerText.trim().toUpperCase()));
 
-  function exportRecapToExcel() {
-    if (isTableDataEmpty('recapTable')) {
-      Swal.fire(
-        "Data Kosong", 
-        "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", 
-        "warning"
-      );
-      return;
-    }
-    exportTableToExcel('recapTable', 'REKAP_PUS');
-  }
+      const headerRow = worksheet.addRow(headers);
+      headerRow.height = 28;
 
-  function exportRecapToPDF() {
-    if (isTableDataEmpty('recapTable')) {
-      Swal.fire(
-        "Data Kosong", 
-        "Tabel Rekapitulasi belum memiliki data untuk diekspor, silahkan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!", 
-        "warning"
-      );
-      return;
-    }
-
-    try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('landscape', 'pt', 'a3');
-      doc.setFontSize(14);
-      doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN KB", 40, 30);
-
-      doc.autoTable({
-        html: '#recapTable',
-        startY: 45,
-        styles: { fontSize: 6.5, cellPadding: 2, halign: 'center' },
-        headStyles: { fillColor: [31, 78, 120], textColor: 255 },
-        theme: 'grid'
+      // 2. Styling Header: Teal-Navy Solid #174D58
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF174D58" }
+        };
+        cell.font = {
+          name: "Segoe UI",
+          size: 9.5,
+          bold: true,
+          color: { argb: "FFFFFFFF" }
+        };
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: "center",
+          wrapText: true
+        };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFE2E8F0" } },
+          left: { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          right: { style: "thin", color: { argb: "FFE2E8F0" } }
+        };
       });
 
-      const timeStamp = new Date().toISOString().slice(0, 10);
-      doc.save(`REKAP_PUS_${timeStamp}.pdf`);
+      // 3. Masukkan Baris Data dengan WARNA SELANG-SELING (Zebra Striping)
+      const trList = tbody.querySelectorAll("tr");
+      trList.forEach((tr, rowIdx) => {
+        const tdList = tr.querySelectorAll("td");
+        if (tdList.length === 0 || tdList.length < headers.length) return;
+
+        const rowValues = [];
+        tdList.forEach(td => rowValues.push(td.innerText.trim()));
+
+        const excelRow = worksheet.addRow(rowValues);
+        excelRow.height = 20;
+
+        // Logika Selang-Seling: Baris ganjil Putih, Baris genap Abu-abu muda / soft cyan
+        const isEven = (rowIdx % 2 === 1);
+        const rowBgColor = isEven ? "FFF1F5F9" : "FFFFFFFF";
+
+        excelRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const headerName = headers[colNumber - 1] || "";
+
+          // Terapkan latar belakang selang-seling
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: rowBgColor }
+          };
+
+          cell.font = {
+            name: "Segoe UI",
+            size: 9,
+            color: { argb: "FF1E293B" }
+          };
+
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFCBD5E1" } },
+            left: { style: "thin", color: { argb: "FFCBD5E1" } },
+            bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+            right: { style: "thin", color: { argb: "FFCBD5E1" } }
+          };
+
+          // Alignment presisi sesuai gambar lampiran
+          if (
+            headerName === "NO." || 
+            headerName === "RT" || 
+            headerName.startsWith("NIK") || 
+            headerName.includes("TGL LAHIR") || 
+            headerName.includes("UMUR") || 
+            headerName.includes("ANAK") || 
+            headerName.includes("KB") ||
+            headerName.length === 3
+          ) {
+            cell.alignment = { vertical: "middle", horizontal: "center" };
+          } else if (headerName === "ID PUS") {
+            cell.alignment = { vertical: "middle", horizontal: "center" };
+          } else {
+            cell.alignment = { vertical: "middle", horizontal: "left" };
+          }
+
+          // Kunci format String (Teks Murni) untuk NIK, ID PUS, dan RT agar 0 di depan tidak hilang
+          if (headerName.includes("NIK") || headerName === "ID PUS" || headerName === "RT") {
+            cell.numFmt = "@";
+          }
+        });
+      });
+
+      // 4. Pengaturan Lebar Kolom
+      worksheet.columns.forEach((col, idx) => {
+        const headerName = headers[idx] || "";
+        if (headerName === "NO.") col.width = 6;
+        else if (headerName === "ID PUS") col.width = 25;
+        else if (headerName === "PROVINSI") col.width = 20;
+        else if (headerName.includes("KABUPATEN")) col.width = 18;
+        else if (headerName === "KECAMATAN") col.width = 16;
+        else if (headerName === "DESA") col.width = 18;
+        else if (headerName === "DUSUN") col.width = 22;
+        else if (headerName === "RT") col.width = 7;
+        else if (headerName.startsWith("NAMA")) col.width = 24;
+        else if (headerName.startsWith("NIK")) col.width = 22;
+        else if (headerName.includes("TGL LAHIR")) col.width = 14;
+        else if (headerName.includes("UMUR")) col.width = 9;
+        else if (headerName.includes("ANAK")) col.width = 10;
+        else if (headerName.includes("JKN")) col.width = 16;
+        else col.width = 13;
+      });
+
+      // 5. Unduh Berkas
+      const activeTahun = document.getElementById("bnbaTahun")?.value || new Date().getFullYear();
+      const fileName = typeof generateExportFileName === "function"
+        ? generateExportFileName("DATA_BNBA_PUS", activeTahun)
+        : `DATA_BNBA_PUS_${activeTahun}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Ekspor Berhasil!',
+        text: `Berkas ${fileName} berhasil diunduh dengan baris selang-seling.`,
+        timer: 1500,
+        showConfirmButton: false
+      });
+
     } catch (err) {
-      console.error("Export PDF Recap Error:", err);
-      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor PDF: " + err.message, "error");
+      console.error("Gagal ekspor Excel BNBA:", err);
+      Swal.fire("Error", "Gagal mengekspor berkas Excel: " + err.message, "error");
     }
-  }   
+  }
 
-  // =========================================================================
-  // FUNGSI EKSPOR TABEL HTML KE BERKAS EXCEL (.xlsx)
-  // =========================================================================
-  function exportTableToExcel(tableId, filename) {
-    try {
-      const table = document.getElementById(tableId);
-      const ws = XLSX.utils.table_to_sheet(table, { raw: true });
+  async function exportBnbaToPDF() {
+  if (typeof isTableDataEmpty === "function" && isTableDataEmpty('bnbaTable')) {
+    Swal.fire(
+      "Data Kosong", 
+      "Tabel BNBA belum memiliki data untuk diekspor ke PDF. Silakan atur filter dan klik 'Tampilkan Data BNBA' terlebih dahulu!", 
+      "warning"
+    );
+    return;
+  }
 
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-          const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
-          if (ws[cell_ref]) {
-            const val = String(ws[cell_ref].v || "");
-            if (/^\d{16}$/.test(val) || /^0\d+/.test(val)) {
-              ws[cell_ref].t = 's';
-            }
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) {
+    Swal.fire("Error", "Pustaka jsPDF belum terpasang di dokumen!", "error");
+    return;
+  }
+
+  Swal.fire({
+    title: 'Menyiapkan Dokumen PDF...',
+    text: 'Menyusun halaman data BNBA...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  try {
+    const table = document.getElementById("bnbaTable");
+    const thead = table.querySelector("thead");
+    const tbody = table.querySelector("tbody");
+
+    const tahunSelect = document.getElementById("bnbaTahun");
+    const tahunVal = tahunSelect ? tahunSelect.value : new Date().getFullYear();
+    const bulanSelect = document.getElementById("bnbaBulan");
+    const namaBulan = (bulanSelect && bulanSelect.selectedIndex > 0) 
+      ? bulanSelect.options[bulanSelect.selectedIndex].text 
+      : "SEMUA BULAN";
+    const tingkatSelect = document.getElementById("bnbaTingkat");
+    const tingkatVal = (tingkatSelect && tingkatSelect.value) ? tingkatSelect.value.toUpperCase() : "WILAYAH";
+
+    const doc = new jsPDF('landscape', 'pt', 'a3');
+
+    // Header Laporan
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(23, 77, 88); // Teal Solid #174D58
+    doc.text("DATA BY NAME BY ADDRESS (BNBA) PASANGAN USIA SUBUR", 30, 32);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Tingkat: ${tingkatVal} | Periode: ${namaBulan} ${tahunVal} | Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`, 30, 46);
+
+    // Ambil Header
+    const headerThs = thead.querySelectorAll("tr th");
+    const headRow = [];
+    headerThs.forEach(th => headRow.push(th.innerText.trim().toUpperCase()));
+
+    // Ambil Data Baris
+    const trList = tbody.querySelectorAll("tr");
+    const bodyRows = [];
+    trList.forEach(tr => {
+      const tdList = tr.querySelectorAll("td");
+      if (tdList.length === 0 || tdList.length < headRow.length) return;
+      const rowData = [];
+      tdList.forEach(td => rowData.push(td.innerText.trim()));
+      bodyRows.push(rowData);
+    });
+
+    // Render Tabel AutoTable dengan Selang-Seling Otomatis
+    doc.autoTable({
+      head: [headRow],
+      body: bodyRows,
+      startY: 56,
+      theme: 'striped', // Mengaktifkan efek zebra striping
+      styles: {
+        font: "helvetica",
+        fontSize: 6.5,
+        cellPadding: 3,
+        valign: 'middle',
+        lineColor: [203, 213, 225],
+        lineWidth: 0.35,
+        textColor: [30, 41, 59],
+        fillColor: [255, 255, 255] // Warna baris ganjil (Putih)
+      },
+      headStyles: {
+        fillColor: [23, 77, 88], // Header Teal #174D58
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 7,
+        halign: 'center'
+      },
+      alternateRowStyles: {
+        fillColor: [241, 245, 249] // Warna baris genap (Soft Slate/Cyan sesuai lampiran)
+      },
+      didParseCell: function(data) {
+        if (data.section === 'body') {
+          const colHeader = headRow[data.column.index] || "";
+          if (
+            colHeader === "NO." ||
+            colHeader === "RT" ||
+            colHeader.startsWith("NIK") ||
+            colHeader.includes("TGL LAHIR") ||
+            colHeader.includes("UMUR") ||
+            colHeader.includes("ANAK") ||
+            colHeader.includes("KB") ||
+            colHeader.length === 3
+          ) {
+            data.cell.styles.halign = 'center';
+          } else if (colHeader === "ID PUS") {
+            data.cell.styles.halign = 'center';
+            data.cell.styles.font = 'courier';
+          } else {
+            data.cell.styles.halign = 'left';
           }
         }
       }
+    });
 
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "DATA");
+    Swal.close();
 
-      const timeStamp = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(wb, `${filename}_${timeStamp}.xlsx`);
+    const fileName = typeof generateExportFileName === "function"
+      ? generateExportFileName("DATA_BNBA_PUS", tahunVal).replace(/\.xlsx$/i, ".pdf")
+      : `DATA_BNBA_PUS_${tahunVal}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+    doc.save(fileName);
+
+  } catch (err) {
+    console.error("Gagal ekspor PDF BNBA:", err);
+    Swal.fire("Error", "Gagal mengekspor berkas PDF: " + err.message, "error");
+  }
+}
+
+  async function exportRecapToExcel() {
+    if (typeof isTableDataEmpty === "function" && isTableDataEmpty('recapTable')) {
+      Swal.fire(
+        "Data Kosong",
+        "Tabel Rekapitulasi belum memiliki data untuk diekspor. Silakan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!",
+        "warning"
+      );
+      return;
+    }
+
+    if (typeof ExcelJS === "undefined") {
+      Swal.fire("Error", "Pustaka ExcelJS belum terpasang di dokumen!", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: 'Menyiapkan Berkas Excel...',
+      text: 'Menerapkan format visual & warna rekap...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const table = document.getElementById("recapTable");
+      const thHeaderWilayah = document.getElementById("thHeaderWilayah");
+      const namaKolomWilayah = thHeaderWilayah ? thHeaderWilayah.innerText.trim().toUpperCase() : "WILAYAH";
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("REKAP_PUS", {
+        views: [{ showGridLines: true }]
+      });
+
+      // 1. DEFINISI STRUKTUR HEADER (BARIS 1 & BARIS 2)
+      const headerRow1 = [
+        "NO.", namaKolomWilayah, "TOTAL PUS", "PUS BARU",
+        "PESERTA KB AKTIF", "", "", "", "", "", "", "",
+        "AKSEPTOR KB BARU", "", "", "",
+        "GANTI CARA",
+        "METODE KONTRASEPSI", "",
+        "BUKAN PESERTA KB", "", "", "", "", "", "",
+        "KELOMPOK UMUR", "", "", "", "", "", "",
+        "KEPESERTAAN JKN", "", "", "",
+        "BUKAN PUS", "", "", "", ""
+      ];
+
+      const headerRow2 = [
+        "", "", "", "",
+        "BER-KB", "PIL", "SUNTIK", "KONDOM", "IMPLAN", "IUD", "MOW", "MOP",
+        "TOTAL BARU", "KBPP", "PASCA DO", "MURNI",
+        "",
+        "MKJP", "NON-MKJP",
+        "TDK-KB", "HAMIL", "HML-BARU", "IAS", "IAT", "TIAL", "TKI",
+        "15-19 THN", "20-24 THN", "25-29 THN", "30-34 THN", "35-39 THN", "40-44 TH", ">=45 THN",
+        "PBI", "NON PBI", "SWASTA", "TDK PUNYA",
+        "BKN-PUS", "CERAI", "MNGL", "PINDAH", "USIA 50+"
+      ];
+
+      const r1 = worksheet.addRow(headerRow1);
+      const r2 = worksheet.addRow(headerRow2);
+      r1.height = 25;
+      r2.height = 24;
+
+      // 2. MERGE CELL HEADER TINGKAT ATAS
+      worksheet.mergeCells('A1:A2'); // NO.
+      worksheet.mergeCells('B1:B2'); // WILAYAH
+      worksheet.mergeCells('C1:C2'); // TOTAL PUS
+      worksheet.mergeCells('D1:D2'); // PUS BARU
+      worksheet.mergeCells('E1:L1'); // PESERTA KB AKTIF
+      worksheet.mergeCells('M1:P1'); // AKSEPTOR KB BARU
+      worksheet.mergeCells('Q1:Q2'); // GANTI CARA
+      worksheet.mergeCells('R1:S1'); // METODE KONTRASEPSI
+      worksheet.mergeCells('T1:Z1'); // BUKAN PESERTA KB
+      worksheet.mergeCells('AA1:AG1'); // KELOMPOK UMUR
+      worksheet.mergeCells('AH1:AK1'); // KEPESERTAAN JKN
+      worksheet.mergeCells('AL1:AP1'); // BUKAN PUS
+
+      // 3. WARNA BACKGROUND HEADER TINGKAT 1 (HEX ARGB)
+      const header1Colors = {
+        1: "FF1F4E78", 2: "FF1F4E78", 3: "FF1F4E78", 4: "FF0284C7", // No, Wil, Tot PUS, PUS Baru
+        5: "FF28A745", 6: "FF28A745", 7: "FF28A745", 8: "FF28A745", 9: "FF28A745", 10: "FF28A745", 11: "FF28A745", 12: "FF28A745", // Peserta KB
+        13: "FF0284C7", 14: "FF0284C7", 15: "FF0284C7", 16: "FF0284C7", // KB Baru
+        17: "FFF59E0B", // Ganti Cara
+        18: "FF0D9488", 19: "FF0D9488", // Metode Kontrasepsi
+        20: "FFDC3545", 21: "FFDC3545", 22: "FFDC3545", 23: "FFDC3545", 24: "FFDC3545", 25: "FFDC3545", 26: "FFDC3545", // Bukan KB
+        27: "FF0F766E", 28: "FF0F766E", 29: "FF0F766E", 30: "FF0F766E", 31: "FF0F766E", 32: "FF0F766E", 33: "FF0F766E", // Kel Umur
+        34: "FF4338CA", 35: "FF4338CA", 36: "FF4338CA", 37: "FF4338CA", // JKN
+        38: "FF6C757D", 39: "FF6C757D", 40: "FF6C757D", 41: "FF6C757D", 42: "FF6C757D"  // Bukan PUS
+      };
+
+      // WARNA BACKGROUND SUB-HEADER (BARIS 2)
+      const header2Colors = {
+        5: { bg: "FFD4EDDA", fg: "FF155724" },  // BER-KB
+        13: { bg: "FFBAE6FD", fg: "FF0369A1" }, // TOTAL BARU
+        18: { bg: "FFCCFBF1", fg: "FF0F766E" }, // MKJP
+        20: { bg: "FFF8D7DA", fg: "FF721C24" }, // TDK-KB
+        22: { bg: "FFFED7AA", fg: "FF9A3412" }, // HML-BARU
+        34: { bg: "FFE0E7FF", fg: "FF312E81" }, // PBI
+        35: { bg: "FFE0E7FF", fg: "FF312E81" }, // NON PBI
+        36: { bg: "FFE0E7FF", fg: "FF312E81" }, // SWASTA
+        37: { bg: "FFFEE2E2", fg: "FF991B1B" }, // TDK PUNYA
+        38: { bg: "FFE2E3E5", fg: "FF383D41" }  // BKN-PUS
+      };
+
+      // Styling Baris 1
+      for (let c = 1; c <= 42; c++) {
+        const cell = r1.getCell(c);
+        const bg = header1Colors[c] || "FF1F4E78";
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+        cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FFFFFFFF" } };
+        cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFCBD5E1" } },
+          left: { style: "thin", color: { argb: "FFCBD5E1" } },
+          bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+          right: { style: "thin", color: { argb: "FFCBD5E1" } }
+        };
+      }
+
+      // Styling Baris 2
+      for (let c = 1; c <= 42; c++) {
+        const cell = r2.getCell(c);
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFCBD5E1" } },
+          left: { style: "thin", color: { argb: "FFCBD5E1" } },
+          bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+          right: { style: "thin", color: { argb: "FFCBD5E1" } }
+        };
+
+        if (header2Colors[c]) {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: header2Colors[c].bg } };
+          cell.font = { name: "Segoe UI", size: 7.5, bold: true, color: { argb: header2Colors[c].fg } };
+        } else if (![1, 2, 3, 4, 17].includes(c)) {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
+          cell.font = { name: "Segoe UI", size: 7.5, bold: true, color: { argb: "FF334155" } };
+        }
+        cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      }
+
+      // 4. MEMBACA BARIS DATA DARI TABEL HTML
+      const tbody = table.querySelector("tbody");
+      const trList = tbody.querySelectorAll("tr");
+
+      trList.forEach(tr => {
+        const tdList = tr.querySelectorAll("td");
+        if (tdList.length === 0) return;
+
+        const rowValues = [];
+        const isTotalRow = tr.innerText.toUpperCase().includes("JUMLAH / TOTAL");
+
+        tdList.forEach(td => {
+          const text = td.innerText.trim();
+          const num = Number(text.replace(/[^0-9.-]+/g, ""));
+          rowValues.push(!isNaN(num) && text !== "" && !isNaN(text) ? num : text);
+        });
+
+        // Menangani baris total yang di-colspan 2 sel
+        if (isTotalRow && rowValues.length === 41) {
+          rowValues.unshift("");
+          rowValues[1] = "JUMLAH / TOTAL";
+        }
+
+        const excelRow = worksheet.addRow(rowValues);
+        excelRow.height = isTotalRow ? 22 : 19;
+
+        if (isTotalRow) {
+          worksheet.mergeCells(`A${excelRow.number}:B${excelRow.number}`);
+        }
+
+        // 5. STYLING SEL DATA (WARNA DAN POSISI SESUAI GAMBAR)
+        for (let colIdx = 1; colIdx <= 42; colIdx++) {
+          const cell = excelRow.getCell(colIdx);
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFCBD5E1" } },
+            left: { style: "thin", color: { argb: "FFCBD5E1" } },
+            bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+            right: { style: "thin", color: { argb: "FFCBD5E1" } }
+          };
+
+          // Alignment
+          if (colIdx === 2 && !isTotalRow) {
+            cell.alignment = { vertical: "middle", horizontal: "left" };
+          } else {
+            cell.alignment = { vertical: "middle", horizontal: "center" };
+          }
+
+          // Font default baris data
+          cell.font = {
+            name: "Segoe UI",
+            size: isTotalRow ? 9.5 : 8.5,
+            bold: isTotalRow || [1, 2, 3, 4, 5, 13, 17, 18, 20, 22, 38].includes(colIdx),
+            color: { argb: "FF1E293B" }
+          };
+
+          // Warna Latar Khusus Kolom Ringkasan
+          if (isTotalRow) {
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE9ECEF" } };
+            if (colIdx === 4 || colIdx === 13) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFBAE6FD" } };
+              cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF0369A1" } };
+            } else if (colIdx === 5) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC3E6CB" } };
+              cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF155724" } };
+            } else if (colIdx === 17) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE68A" } };
+              cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FFB45309" } };
+            } else if (colIdx === 18) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF99F6E4" } };
+              cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF0F766E" } };
+            } else if (colIdx === 20) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5C6CB" } };
+              cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF721C24" } };
+            } else if (colIdx === 22) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFED7AA" } };
+              cell.font = { name: "Segoe UI", size: 9.5, bold: true, color: { argb: "FF9A3412" } };
+            } else if ([34, 35, 36].includes(colIdx)) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEDE9FE" } };
+              cell.font = { name: "Segoe UI", size: 9, bold: true, color: { argb: "FF312E81" } };
+            } else if (colIdx === 37) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFECDD3" } };
+              cell.font = { name: "Segoe UI", size: 9, bold: true, color: { argb: "FF991B1B" } };
+            } else if (colIdx === 38) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD6D8D9" } };
+            }
+          } else {
+            // Baris data biasa
+            if (colIdx === 4 || colIdx === 13) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE0F2FE" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FF0284C7" } };
+            } else if (colIdx === 5) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD4EDDA" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FF155724" } };
+            } else if (colIdx === 17) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3C7" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FFD97706" } };
+            } else if (colIdx === 18) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCCFBF1" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FF0F766E" } };
+            } else if (colIdx === 20) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8D7DA" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FF721C24" } };
+            } else if (colIdx === 22) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF7ED" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FFC2410C" } };
+            } else if ([34, 35, 36].includes(colIdx)) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F3FF" } };
+            } else if (colIdx === 37) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF1F2" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FF991B1B" } };
+            } else if (colIdx === 38) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E3E5" } };
+              cell.font = { name: "Segoe UI", size: 8.5, bold: true, color: { argb: "FF383D41" } };
+            }
+          }
+        }
+      });
+
+      // 6. PENGATURAN LEBAR KOLOM AGAR PRESISI
+      worksheet.columns.forEach((col, idx) => {
+        if (idx === 0) col.width = 5.5;        // No
+        else if (idx === 1) col.width = 24;    // Wilayah
+        else if (idx === 2) col.width = 11;    // Total PUS
+        else if (idx === 3) col.width = 10;    // PUS Baru
+        else if (idx === 4) col.width = 9.5;   // Ber-KB
+        else col.width = 7.5;                  // Kolom angka lainnya
+      });
+
+      // 7. UNDUH BERKAS KE BROWSER
+      const activeTahun = document.getElementById("recapTahun")?.value || new Date().getFullYear();
+      const fileName = typeof generateExportFileName === "function"
+        ? generateExportFileName("REKAP_PUS", activeTahun)
+        : `REKAP_PUS_${activeTahun}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Ekspor Berhasil!',
+        text: `Berkas ${fileName} berhasil diunduh dengan format visual lengkap.`,
+        timer: 1500,
+        showConfirmButton: false
+      });
+
     } catch (err) {
-      console.error("Export Excel Error:", err);
-      Swal.fire("Gagal Ekspor", "Terjadi kesalahan saat mengekspor ke Excel: " + err.message, "error");
+      console.error("Gagal ekspor Excel rekap:", err);
+      Swal.fire("Error", "Gagal mengekspor berkas Excel: " + err.message, "error");
     }
   }
+
+  async function exportRecapToPDF() {
+    if (typeof isTableDataEmpty === "function" && isTableDataEmpty('recapTable')) {
+      Swal.fire(
+        "Data Kosong",
+        "Tabel Rekapitulasi belum memiliki data untuk diekspor ke PDF. Silakan atur filter dan klik 'Tampilkan Rekap' terlebih dahulu!",
+        "warning"
+      );
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    if (!jsPDF) {
+      Swal.fire("Error", "Pustaka jsPDF belum terpasang di dokumen!", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: 'Menyiapkan PDF...',
+      text: 'Menyusun tabel rekap berwarna...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const table = document.getElementById("recapTable");
+      const thHeaderWilayah = document.getElementById("thHeaderWilayah");
+      const namaKolomWilayah = thHeaderWilayah ? thHeaderWilayah.innerText.trim().toUpperCase() : "WILAYAH";
+
+      const tahunSelect = document.getElementById("recapTahun");
+      const tahunVal = tahunSelect ? tahunSelect.value : new Date().getFullYear();
+      const bulanSelect = document.getElementById("recapBulan");
+      const namaBulan = (bulanSelect && bulanSelect.selectedIndex > 0) 
+        ? bulanSelect.options[bulanSelect.selectedIndex].text 
+        : "SEMUA BULAN";
+      const tingkatSelect = document.getElementById("recapTingkat");
+      const tingkatVal = (tingkatSelect && tingkatSelect.value) ? tingkatSelect.value.toUpperCase() : "WILAYAH";
+
+      // Gunakan ukuran A3 Landscape agar 42 kolom termuat proporsional tanpa terpotong
+      const doc = new jsPDF('landscape', 'pt', 'a3');
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      // 1. JUDUL & INFORMASI LAPORAN
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(31, 78, 120);
+      doc.text("LAPORAN REKAPITULASI PUS & KESERTAAN BER-KB", 30, 32);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`Tingkat: ${tingkatVal} | Periode: ${namaBulan} ${tahunVal} | Waktu Ekspor: ${new Date().toLocaleString('id-ID')}`, 30, 46);
+
+      // 2. STRUKTUR HEADER BERTINGKAT (2 BARIS)
+      const headRows = [
+        [
+          { content: "NO.", rowSpan: 2, styles: { fillColor: [31, 78, 120] } },
+          { content: namaKolomWilayah, rowSpan: 2, styles: { fillColor: [31, 78, 120] } },
+          { content: "TOTAL PUS", rowSpan: 2, styles: { fillColor: [31, 78, 120] } },
+          { content: "PUS BARU", rowSpan: 2, styles: { fillColor: [2, 132, 199] } },
+          { content: "PESERTA KB AKTIF", colSpan: 8, styles: { fillColor: [40, 167, 69] } },
+          { content: "AKSEPTOR KB BARU", colSpan: 4, styles: { fillColor: [2, 132, 199] } },
+          { content: "GANTI CARA", rowSpan: 2, styles: { fillColor: [245, 158, 11] } },
+          { content: "METODE KONTRASEPSI", colSpan: 2, styles: { fillColor: [13, 148, 136] } },
+          { content: "BUKAN PESERTA KB", colSpan: 7, styles: { fillColor: [220, 53, 69] } },
+          { content: "KELOMPOK UMUR", colSpan: 7, styles: { fillColor: [15, 118, 110] } },
+          { content: "KEPESERTAAN JKN", colSpan: 4, styles: { fillColor: [67, 56, 202] } },
+          { content: "BUKAN PUS", colSpan: 5, styles: { fillColor: [108, 117, 125] } }
+        ],
+        [
+          // Sub-kolom Peserta KB
+          { content: "BER-KB", styles: { fillColor: [212, 237, 218], textColor: [21, 87, 36] } },
+          { content: "PIL" }, { content: "SUNTIK" }, { content: "KONDOM" }, { content: "IMPLAN" }, { content: "IUD" }, { content: "MOW" }, { content: "MOP" },
+          // Sub-kolom KB Baru
+          { content: "TOTAL BARU", styles: { fillColor: [186, 230, 253], textColor: [3, 105, 161] } },
+          { content: "KBPP" }, { content: "PASCA DO" }, { content: "MURNI" },
+          // Sub-kolom Metode
+          { content: "MKJP", styles: { fillColor: [204, 251, 241], textColor: [15, 118, 110] } },
+          { content: "NON-MKJP" },
+          // Sub-kolom Bukan KB
+          { content: "TDK-KB", styles: { fillColor: [248, 215, 218], textColor: [114, 28, 36] } },
+          { content: "HAMIL" },
+          { content: "HML-BARU", styles: { fillColor: [254, 215, 170], textColor: [154, 52, 18] } },
+          { content: "IAS" }, { content: "IAT" }, { content: "TIAL" }, { content: "TKI" },
+          // Sub-kolom Umur
+          { content: "15-19 THN" }, { content: "20-24 THN" }, { content: "25-29 THN" }, { content: "30-34 THN" }, { content: "35-39 THN" }, { content: "40-44 TH" }, { content: ">=45 THN" },
+          // Sub-kolom JKN
+          { content: "PBI", styles: { fillColor: [224, 231, 255], textColor: [49, 46, 129] } },
+          { content: "NON PBI", styles: { fillColor: [224, 231, 255], textColor: [49, 46, 129] } },
+          { content: "SWASTA", styles: { fillColor: [224, 231, 255], textColor: [49, 46, 129] } },
+          { content: "TDK PUNYA", styles: { fillColor: [254, 226, 226], textColor: [153, 27, 27] } },
+          // Sub-kolom Bukan PUS
+          { content: "BKN-PUS", styles: { fillColor: [226, 227, 229], textColor: [56, 61, 65] } },
+          { content: "CERAI" }, { content: "MNGL" }, { content: "PINDAH" }, { content: "USIA 50+" }
+        ]
+      ];
+
+      // 3. EKSTRAK DATA DARI TABEL HTML
+      const tbody = table.querySelector("tbody");
+      const trList = tbody.querySelectorAll("tr");
+      const bodyRows = [];
+
+      trList.forEach(tr => {
+        const tdList = tr.querySelectorAll("td");
+        if (tdList.length === 0) return;
+
+        const isTotalRow = tr.innerText.toUpperCase().includes("JUMLAH / TOTAL");
+        const rowData = [];
+
+        if (isTotalRow) {
+          // Gabungkan sel No & Wilayah pada baris Jumlah/Total
+          rowData.push({
+            content: "JUMLAH / TOTAL",
+            colSpan: 2,
+            styles: { fontStyle: "bold", halign: "center", fillColor: [233, 236, 239], textColor: [31, 78, 120] }
+          });
+
+          // Loop sel angka mulai indeks ke-2
+          for (let i = 1; i < tdList.length; i++) {
+            rowData.push(tdList[i].innerText.trim());
+          }
+        } else {
+          tdList.forEach((td, idx) => {
+            const val = td.innerText.trim();
+            if (idx === 1) {
+              rowData.push({ content: val, styles: { halign: "left" } });
+            } else {
+              rowData.push(val);
+            }
+          });
+        }
+
+        bodyRows.push(rowData);
+      });
+
+      // 4. GAMBAR TABEL KE PDF DENGAN PEWARNAAN DETAIL
+      doc.autoTable({
+        head: headRows,
+        body: bodyRows,
+        startY: 55,
+        theme: 'grid',
+        styles: {
+          fontSize: 5.5,
+          cellPadding: 2,
+          halign: 'center',
+          valign: 'middle',
+          lineColor: [203, 213, 225],
+          lineWidth: 0.4,
+          font: "helvetica",
+          textColor: [30, 41, 59]
+        },
+        headStyles: {
+          fontSize: 5.8,
+          fontStyle: 'bold',
+          textColor: [255, 255, 255],
+          fillColor: [241, 245, 249]
+        },
+        columnStyles: {
+          0: { cellWidth: 20 },  // No
+          1: { cellWidth: 85 }   // Nama Wilayah
+        },
+        didParseCell: function (data) {
+          // Terapkan warna sel pada baris data biasa
+          if (data.section === 'body') {
+            const rowRaw = data.row.raw;
+            const isTotal = rowRaw[0] && typeof rowRaw[0] === 'object' && rowRaw[0].content === "JUMLAH / TOTAL";
+            const colIdx = data.column.index;
+
+            if (isTotal) {
+              data.cell.styles.fontStyle = 'bold';
+              // Pewarnaan khusus baris JUMLAH / TOTAL
+              if (colIdx === 2) { data.cell.styles.fillColor = [233, 236, 239]; }
+              else if (colIdx === 3) { data.cell.styles.fillColor = [186, 230, 253]; data.cell.styles.textColor = [3, 105, 161]; } // PUS Baru
+              else if (colIdx === 4) { data.cell.styles.fillColor = [195, 230, 203]; data.cell.styles.textColor = [21, 87, 36]; }  // Ber-KB
+              else if (colIdx === 12) { data.cell.styles.fillColor = [186, 230, 253]; data.cell.styles.textColor = [3, 105, 161]; } // Total Baru
+              else if (colIdx === 16) { data.cell.styles.fillColor = [253, 230, 138]; data.cell.styles.textColor = [180, 83, 9]; }  // Ganti Cara
+              else if (colIdx === 17) { data.cell.styles.fillColor = [153, 246, 228]; data.cell.styles.textColor = [15, 118, 110]; } // MKJP
+              else if (colIdx === 19) { data.cell.styles.fillColor = [245, 198, 203]; data.cell.styles.textColor = [114, 28, 36]; } // Tdk-KB
+              else if (colIdx === 21) { data.cell.styles.fillColor = [254, 215, 170]; data.cell.styles.textColor = [154, 52, 18]; } // Hml-Baru
+              else if ([33, 34, 35].includes(colIdx)) { data.cell.styles.fillColor = [237, 233, 254]; data.cell.styles.textColor = [49, 46, 129]; } // JKN
+              else if (colIdx === 36) { data.cell.styles.fillColor = [254, 205, 211]; data.cell.styles.textColor = [153, 27, 27]; } // Tdk Punya JKN
+              else if (colIdx === 37) { data.cell.styles.fillColor = [214, 216, 217]; } // Bukan PUS
+              else { data.cell.styles.fillColor = [233, 236, 239]; }
+            } else {
+              // Pewarnaan sel baris data biasa sesuai palet web
+              if (colIdx === 3) { data.cell.styles.fillColor = [224, 242, 254]; data.cell.styles.textColor = [2, 132, 199]; data.cell.styles.fontStyle = 'bold'; }
+              else if (colIdx === 4) { data.cell.styles.fillColor = [212, 237, 218]; data.cell.styles.textColor = [21, 87, 36]; data.cell.styles.fontStyle = 'bold'; }
+              else if (colIdx === 12) { data.cell.styles.fillColor = [224, 242, 254]; data.cell.styles.textColor = [2, 132, 199]; data.cell.styles.fontStyle = 'bold'; }
+              else if (colIdx === 16) { data.cell.styles.fillColor = [254, 243, 199]; data.cell.styles.textColor = [217, 119, 6]; data.cell.styles.fontStyle = 'bold'; }
+              else if (colIdx === 17) { data.cell.styles.fillColor = [204, 251, 241]; data.cell.styles.textColor = [15, 118, 110]; data.cell.styles.fontStyle = 'bold'; }
+              else if (colIdx === 19) { data.cell.styles.fillColor = [248, 215, 218]; data.cell.styles.textColor = [114, 28, 36]; data.cell.styles.fontStyle = 'bold'; }
+              else if (colIdx === 21) { data.cell.styles.fillColor = [255, 247, 237]; data.cell.styles.textColor = [194, 65, 12]; data.cell.styles.fontStyle = 'bold'; }
+              else if ([33, 34, 35].includes(colIdx)) { data.cell.styles.fillColor = [245, 243, 255]; }
+              else if (colIdx === 36) { data.cell.styles.fillColor = [255, 241, 242]; data.cell.styles.textColor = [153, 27, 27]; }
+              else if (colIdx === 37) { data.cell.styles.fillColor = [226, 227, 229]; data.cell.styles.fontStyle = 'bold'; }
+            }
+          }
+        }
+      });
+
+      Swal.close();
+
+      const activeTahun = tahunVal || new Date().getFullYear();
+      const fileName = typeof generateExportFileName === "function"
+        ? generateExportFileName("REKAP_PUS", activeTahun).replace(/\.xlsx$/i, ".pdf")
+        : `REKAP_PUS_${activeTahun}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      doc.save(fileName);
+
+    } catch (err) {
+      console.error("Gagal ekspor PDF rekap:", err);
+      Swal.fire("Error", "Gagal mengekspor berkas PDF: " + err.message, "error");
+    }
+  }  
     
   // --- MODAL TRIGGER LAINNYA ---
   function openSearchModal() {
