@@ -788,8 +788,8 @@
         <div id="adminSyncContainer" style="display: none; margin-top: 20px; width: 100%;">
           <div class="admin-btn-group">
             <button type="button" class="btn-admin-sync" style="background-color: #0891b2;" onclick="openMasterWilayahModal()">📍 KELOLA WILAYAH</button>
-            <button type="button" class="btn-admin-sync" style="background-color: #d97706;" onclick="openManageUsersModal()">🔑 KELOLA LOGIN</button>
-            <button type="button" id="btnAdminTambahTahun" class="btn-admin-sync" style="background-color: #28a745;" onclick="triggerOpenNewYear()">🚀 TAMBAH TAHUN</button>
+            <button type="button" class="btn-admin-sync" style="background-color: #d97706;" onclick="openManageUsersModal()">🔑 KELOLA LOGIN</button>            
+            <button type="button" id="btnAdminTambahTahun" class="btn-admin-sync" style="background-color: #28a745;" onclick="triggerOpenNewYear()">🚀 ROLLOVER TAHUN</button>
             <button type="button" id="btnAdminSyncRollover" class="btn-admin-sync" style="display: none; background-color: #0284c7;" onclick="triggerManualCarryForward()">⚡ SINKRON STATUS KB</button>
             <button type="button" class="btn-admin-sync" style="background-color: #4f46e5;" onclick="openMasterFaskesModal()">🏥 KELOLA FASKES</button>
             <button type="button" id="btnAdminCekNikGanda" class="btn-admin-sync" style="background-color: #e11d48;" onclick="auditNikIstriGandaProv()">🔍 CEK NIK GANDA</button>
@@ -7303,19 +7303,124 @@
     if (details) details.removeAttribute("open");
   }
 
-  function triggerOpenNewYear() {
-    Swal.fire({
-      title: 'Tambah Tahun Baru',
-      input: 'number',
-      inputValue: new Date().getFullYear() + 1,
+  async function triggerOpenNewYear() {
+    if (!isProvRole() && !isKabRole()) {
+      Swal.fire("Akses Ditolak", "Fitur ini hanya dapat dijalankan oleh Admin Provinsi atau Admin Kabupaten!", "warning");
+      return;
+    }
+
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+
+    // Siapkan opsi dropdown kabupaten khusus untuk Admin Provinsi
+    let kabFilterHtml = "";
+    if (isProvRole()) {
+      let optKab = `<option value="">-- SEMUA KABUPATEN (SE-PROVINSI) --</option>`;
+      const pKey = userKodeProv || "52";
+      if (dataKabupaten && dataKabupaten[pKey]) {
+        for (let kd in dataKabupaten[pKey]) {
+          optKab += `<option value="${kd}">${dataKabupaten[pKey][kd].toUpperCase()}</option>`;
+        }
+      }
+      kabFilterHtml = `
+        <div style="margin-bottom: 12px; text-align: left;">
+          <label style="font-weight: bold; font-size: 11px; color: #475569;">CAKUPAN WILAYAH ROLLOVER:</label>
+          <select id="swalRolloverKab" class="swal2-input" style="width: 100%; margin: 4px 0 0 0; font-size: 12.5px; height: 38px;">
+            ${optKab}
+          </select>
+        </div>
+      `;
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: '🚀 Rollover Data Tahun Baru',
+      html: `
+        <div style="text-align: left; font-size: 12.5px; color: #334155; line-height: 1.5; margin-bottom: 14px;">
+          Fitur ini akan menyalin seluruh data <b>PUS Aktif</b> ke tahun berikutnya sehingga kader di desa tidak perlu input ulang dari nol.<br><br>
+          • Status Mutasi (Cerai, Meninggal, Pindah) <b>dieliminasi otomatis</b>.<br>
+          • Istri yang genap/lewat usia <b>50 tahun dieliminasi otomatis</b>.<br>
+          • Status KB bulan terakhir dilanjutkan otomatis ke bulan Januari tahun target.
+        </div>
+        ${kabFilterHtml}
+        <div style="display: flex; gap: 10px; text-align: left;">
+          <div style="flex: 1;">
+            <label style="font-weight: bold; font-size: 11px; color: #475569;">TAHUN ASAL (SUMBER):</label>
+            <input type="number" id="swalTahunAsal" class="swal2-input" value="${currentYear}" style="margin: 4px 0 0 0; width: 100%; font-size: 13px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-weight: bold; font-size: 11px; color: #475569;">TAHUN TARGET (BARU):</label>
+            <input type="number" id="swalTahunTujuan" class="swal2-input" value="${nextYear}" style="margin: 4px 0 0 0; width: 100%; font-size: 13px;">
+          </div>
+        </div>
+      `,
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Buka Tahun',
-      confirmButtonColor: '#28a745'
-    }).then(async (res) => {
-      if (res.isConfirmed && res.value) {
-        Swal.fire('Tahun Baru Dibuat', `Sistem siap untuk input tahun ${res.value}`, 'success');
+      confirmButtonText: '⚡ Mulai Rollover',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#64748b',
+      preConfirm: () => {
+        const asal = parseInt(document.getElementById('swalTahunAsal').value, 10);
+        const tujuan = parseInt(document.getElementById('swalTahunTujuan').value, 10);
+        const kab = isProvRole() ? (document.getElementById('swalRolloverKab')?.value || null) : userKodeKab;
+
+        if (!asal || !tujuan) {
+          Swal.showValidationMessage('Tahun asal dan target wajib diisi!');
+          return false;
+        }
+        if (tujuan <= asal) {
+          Swal.showValidationMessage('Tahun target harus lebih besar dari tahun asal!');
+          return false;
+        }
+        return { asal, tujuan, kab };
       }
     });
+
+    if (!formValues) return;
+
+    const scopeNama = formValues.kab ? `Kabupaten kode ${formValues.kab}` : `Seluruh Wilayah Provinsi`;
+
+    Swal.fire({
+      title: 'Memproses Rollover...',
+      html: `Menyalin data PUS aktif [<b>${scopeNama}</b>] dari tahun <b>${formValues.asal}</b> ke <b>${formValues.tujuan}</b>...`,
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const { data, error } = await db.rpc('rollover_tahun_baru_pus', {
+        p_tahun_asal: formValues.asal,
+        p_tahun_tujuan: formValues.tujuan,
+        p_kode_prov: userKodeProv || '52',
+        p_kode_kab: formValues.kab || null
+      });
+
+      if (error) throw error;
+
+      if (!data.success) {
+        Swal.fire('Gagal Rollover', data.message, 'warning');
+        return;
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Rollover Berhasil!',
+        html: `
+          <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.5;">
+            ${data.message}<br><br>
+            • <b>Cakupan Wilayah:</b> ${scopeNama}<br>
+            • <b>Total Data Sumber:</b> ${data.total_asal.toLocaleString()} PUS<br>
+            • <b>Berhasil Diperpanjang:</b> ${data.total_rollover.toLocaleString()} PUS Aktif<br><br>
+            <small style="color: #64748b;">*Data tahun ${formValues.tujuan} sudah aktif dan status bulan Januari telah terisi otomatis di database.</small>
+          </div>
+        `,
+        confirmButtonColor: '#0284c7'
+      });
+
+    } catch (err) {
+      console.error("Rollover Prov Error:", err);
+      Swal.fire('Error', err.message || 'Terjadi kesalahan sistem saat rollover tahun.', 'error');
+    }
   }
 
   async function triggerManualCarryForward() {    
